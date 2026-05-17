@@ -31,13 +31,13 @@ The target fantasy is simple: a player can scoop up a baby animal, run and jump 
 
 ## Gameplay
 
-Players pick up an eligible baby animal by sneak-right-clicking it with empty hands. Players put the animal down by sneak-right-clicking again while carrying. Drop placement should be safe and predictable, preferably just in front of the player.
+Players pick up an eligible baby animal by sneak-right-clicking it with empty hands. Players put the animal down by sneak-right-clicking again while carrying. Drop placement should be safe and predictable, preferably just in front of the player. If a player is already carrying a baby and sneak-right-clicks another eligible baby, the new pickup is ignored. The player must drop the current animal first.
 
 Movement remains normal while carrying. Players can run, jump, swim, and travel naturally. Carrying occupies the player's hands, so normal hand actions are blocked while carrying. Attacking, placing blocks, eating, using bows, and similar item actions should not work until the animal is dropped.
 
-Left-click while carrying pets the baby instead of attacking. Petting has no effect on health, taming, breeding, loyalty, age, AI, or other gameplay state. It only creates affectionate feedback:
+All left-clicks while carrying are intercepted. Attacks on any target are blocked, and petting fires instead. Petting has no effect on health, taming, breeding, loyalty, age, AI, or other gameplay state. It only creates affectionate feedback:
 
-- Heart particles spawn around the carried baby.
+- Server-side heart particles spawn around the carried baby.
 - Nearby players can see the hearts.
 - A short cooldown, around one second, prevents spam.
 - A soft vanilla sound can be added if it feels good, but particles alone are enough for v1.
@@ -51,8 +51,10 @@ The server owns the gameplay truth. It tracks which player is carrying which bab
 The visual model is hybrid:
 
 - Modded clients render the baby in a held-in-hands position relative to the player model.
-- Vanilla clients see the real baby attached near the player through the safest vanilla-visible method available.
+- Vanilla clients see the real baby riding the player through Minecraft's passenger system.
 - The fallback prioritizes correctness over beauty: the animal must be real, visible, not duplicated, and not lost.
+
+The passenger system is the committed vanilla fallback. While carried, the baby rides the player, which suppresses the baby's normal AI through passenger mechanics. Vanilla clients are expected to see the baby above the player's head. This is not a perfect carrying visual, but it is acceptable because it is safe, visible, server-authoritative, and non-duplicating.
 
 The server should not require every connecting client to have the mod. Client-side rendering is an upgrade, not the source of truth. Gameplay must remain correct when some players use vanilla clients.
 
@@ -84,12 +86,13 @@ Example shape:
   "allowedAnimals": ["cow", "pig", "sheep", "chicken", "goat", "cat", "dog"],
   "blockedAnimals": [],
   "allowCarryingOtherPlayersTamedAnimals": false,
-  "carryingOccupiesHands": true,
   "pettingCooldownTicks": 20
 }
 ```
 
-Internally, the mod maps friendly aliases to canonical entity IDs. For example, `dog` can map to the wolf entity if that remains the correct vanilla entity in Minecraft 26.1.2. Unknown names should be logged clearly and ignored rather than crashing the server.
+Internally, the mod maps friendly aliases to canonical entity IDs. `dog` maps to tamed wolves only and `wolf` maps to all wolves including wild wolves; both resolve to `minecraft:wolf` internally, and tamed ownership rules determine final eligibility. Unknown names should be logged clearly and ignored rather than crashing the server.
+
+`carryingOccupiesHands` is not configurable. It is a core invariant of the mod design.
 
 The config should support both broad defaults and server-specific limitations. If `allowedAnimals` is empty or omitted, the mod can use its default supported set. `blockedAnimals` should remove names from that default or allowed set.
 
@@ -122,7 +125,8 @@ Server-side components:
 - Carry manager: tracks one carried baby per player.
 - Interaction handler: handles sneak-right-click pickup and drop.
 - Validity checker: evaluates age, entity type, config, ownership, current carry state, and permissions.
-- Attachment updater: keeps the carried baby near or attached to the player using the safest vanilla-visible method available.
+- Attachment updater: starts and maintains the carried baby as a passenger riding the player for the vanilla-visible fallback.
+- AI suppressor: disables the carried baby's pathfinding and wandering AI on pickup, then re-enables pathfinding on drop.
 - Cleanup hooks: force safe drops on death, logout, dimension change, growth, removal, or invalid state.
 - Hand-action blocker: blocks or replaces normal hand actions while carrying.
 - Petting handler: converts left-click while carrying into cosmetic heart feedback with cooldown.
@@ -131,7 +135,8 @@ Client-side components:
 
 - Renderer hook: detects carried baby entities for players.
 - Held-pose renderer: draws the baby in a hands-carried position for modded clients.
-- Fallback tolerance: if custom rendering is unavailable or unsupported for an entity, the vanilla-visible attachment still shows the real animal.
+- Vanilla render suppressor: suppresses vanilla entity rendering of the carried baby on modded clients so it appears only at the player's hand position, not both at the passenger position and the hand position.
+- Fallback tolerance: if custom rendering is unavailable or unsupported for an entity, the passenger fallback still shows the real animal.
 
 Networking should be minimal. Vanilla entity tracking may provide enough information for the fallback. Custom packets should only carry visual polish or compact carry-state hints needed by the client renderer. The server remains authoritative.
 
@@ -166,8 +171,7 @@ Testing should focus on the behavior that can lose animals, duplicate animals, o
 
 These should be answered during implementation planning by inspecting the actual Minecraft 26.1.2 and Fabric API surfaces:
 
-- Which vanilla-visible attachment method gives the safest fallback for baby animals.
 - Which exact entity types qualify as technically reasonable passive baby animals.
-- Whether custom held rendering should suppress, reposition, or supplement vanilla rendering for modded clients.
 - Which interaction hooks best block hand actions while still allowing petting and dropping.
-- Whether petting hearts should be spawned only by the server or assisted by client-side visual packets.
+- Which exact API should spawn server-side heart particles around the carried baby.
+- Verify that Fabric 26.x exposes a baby-to-adult growth event; if not, document a tick-check approach and acknowledge the one-tick race window.
