@@ -166,6 +166,29 @@ final class CarryConfigManagerTest {
         }
     }
 
+    @Test
+    void saveDefaultIncludesSupportedAnimalCommentAndStillLoads() throws IOException {
+        CarryConfigManager manager = new CarryConfigManager();
+        Path path = Path.of("carrybabyanimals-save-default-comment-test.json");
+        Files.deleteIfExists(path);
+
+        try {
+            manager.saveDefault(path);
+
+            String saved = Files.readString(path);
+            assertTrue(saved.contains("// Supported animal names:"));
+            assertTrue(saved.contains("cow"));
+            assertTrue(saved.contains("trader_llama"));
+            assertTrue(saved.contains("dog"));
+
+            CarryConfigManager loaded = new CarryConfigManager();
+            loaded.load(path);
+            assertEquals(CarryConfig.defaultConfig(), loaded.config());
+        } finally {
+            Files.deleteIfExists(path);
+        }
+    }
+
     private static CarryConfigManager loadConfig(String json) throws IOException {
         CarryConfigManager manager = new CarryConfigManager();
         Path path = Path.of("carrybabyanimals-load-test.json");

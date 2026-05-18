@@ -3,6 +3,8 @@ package dev.jasmine.carrybabyanimals.config;
 import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 final class AnimalAliasRegistryTest {
@@ -42,5 +44,34 @@ final class AnimalAliasRegistryTest {
         assertTrue(aliases.resolve(null).isEmpty());
         assertTrue(aliases.resolve("").isEmpty());
         assertTrue(aliases.resolve("   ").isEmpty());
+    }
+
+    @Test
+    void defaultAliasOrderIsStableForGeneratedConfigComments() {
+        AnimalAliasRegistry aliases = AnimalAliasRegistry.createDefault();
+
+        assertEquals(
+                List.of(
+                        "cow",
+                        "pig",
+                        "sheep",
+                        "chicken",
+                        "goat",
+                        "rabbit",
+                        "cat",
+                        "fox",
+                        "horse",
+                        "donkey",
+                        "mule",
+                        "llama",
+                        "trader_llama",
+                        "camel",
+                        "panda",
+                        "turtle",
+                        "wolf",
+                        "dog"
+                ),
+                List.copyOf(aliases.aliases().keySet())
+        );
     }
 }

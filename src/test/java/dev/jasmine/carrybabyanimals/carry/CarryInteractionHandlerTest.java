@@ -157,9 +157,15 @@ final class CarryInteractionHandlerTest {
     }
 
     @Test
-    void carryFeedbackTextNamesTheVisibleAction() {
-        assertEquals("Carrying Baby Panda", CarryInteractionHandler.pickupFeedbackText("Baby Panda"));
-        assertEquals("Set down baby animal", CarryInteractionHandler.dropFeedbackText());
+    void carryFeedbackTextUsesBabyTypeForUnnamedAnimals() {
+        assertEquals("Carrying baby Pig", CarryInteractionHandler.pickupFeedbackText("Pig", false));
+        assertEquals("Set down baby Pig", CarryInteractionHandler.dropFeedbackText("Pig", false));
+    }
+
+    @Test
+    void carryFeedbackTextUsesCustomNameForNamedAnimals() {
+        assertEquals("Carrying KittyKat", CarryInteractionHandler.pickupFeedbackText("KittyKat", true));
+        assertEquals("Set down KittyKat", CarryInteractionHandler.dropFeedbackText("KittyKat", true));
     }
 
     private CarryInteractionHandler newHandler() {

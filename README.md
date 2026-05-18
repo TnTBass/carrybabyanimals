@@ -2,18 +2,45 @@
 
 Carry Baby Animals is a Fabric mod for Minecraft 26.1.2 that lets players pick up, carry, pet, and safely put down baby animals.
 
+This is a father-daughter project by Tyler and Jasmine, built around the kind of small Minecraft moment that should feel gentle, useful, and a little bit magical.
+
 The mod is built around a simple idea: baby animals stay as real world entities, not inventory items. A carried baby remains attached to the player on the server, so the behavior is visible, multiplayer-safe, and tolerant of clients that do not have the mod installed.
+
+## Requirements
+
+- Minecraft 26.1.2
+- Fabric Loader 0.19.2 or newer
+- Java 25 or newer
+- Fabric API
+- Fabric Permissions API
+
+## Installation
+
+Install Carry Baby Animals on the server to enable the gameplay.
+
+Players can also install the mod on their clients for the nicer held-in-arms rendering and first-person petting feedback. Players without the mod can still join a modded server and use the carry behavior through the vanilla passenger fallback.
 
 ## Features
 
-- Pick up one baby animal at a time with empty hands.
+- Pick up one baby animal at a time by sneak-right-clicking it with empty hands.
 - Carry the baby while walking, sprinting, jumping, and swimming.
-- Put the baby down again with empty hands and sneak-use.
+- Put the baby down again by sneak-right-clicking while carrying with empty hands.
 - Pet the carried baby with left-click for heart particles.
 - Block normal hand actions while carrying, so carrying feels like it occupies both hands.
 - Drop the baby safely if the carry state becomes invalid, including logout, death, dimension changes, growth, or server shutdown.
 - Keep a vanilla-compatible fallback by using the passenger system.
 - Show a held-in-hands style render on modded clients.
+
+## How To Use
+
+1. Empty both hands.
+2. Sneak-right-click a supported baby animal to pick it up.
+3. Left-click while carrying to pet the baby.
+4. Sneak-right-click again with empty hands to set the baby down.
+
+Pickup and set-down messages use the animal's custom name when it has one, such as `Carrying KittyKat` and `Set down KittyKat`. Unnamed animals use the baby animal type, such as `Carrying baby Pig` and `Set down baby Pig`.
+
+Doors and trapdoors can still be used while carrying a baby animal.
 
 ## Client Compatibility
 
@@ -33,13 +60,14 @@ Tamed animals follow ownership rules. Players can carry their own tamed baby ani
 
 Server owners can configure friendly animal names in:
 
-```json
+```text
 config/carrybabyanimals.json
 ```
 
 Example:
 
-```json
+```jsonc
+// Supported animal names: cow, pig, sheep, chicken, goat, rabbit, cat, fox, horse, donkey, mule, llama, trader_llama, camel, panda, turtle, wolf, dog
 {
   "allowedAnimals": ["cow", "pig", "sheep", "chicken", "goat", "cat", "dog"],
   "blockedAnimals": [],
@@ -50,6 +78,7 @@ Example:
 
 Notes:
 
+- New default config files include a comment listing every supported animal name.
 - `allowedAnimals` restricts carrying to the listed animals. Leave it empty to use the default supported set.
 - `blockedAnimals` removes animals from the default or allowed set.
 - `dog` means tamed wolves only.
@@ -76,7 +105,3 @@ Default behavior:
 - `carrybabyanimals.carry.tamed`: allowed by default for the player's own tamed baby animals.
 - `carrybabyanimals.carry.others_tamed`: denied by default.
 - `carrybabyanimals.reload`: reserved for reload support and defaults to vanilla game-master command permission when exposed.
-
-## Project Status
-
-Carry Baby Animals is early and should be tested on a non-production world before being used on a long-running survival server. The core design prioritizes animal safety, server authority, and graceful fallback behavior.

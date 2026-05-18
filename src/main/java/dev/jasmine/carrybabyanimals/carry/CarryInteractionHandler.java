@@ -2,8 +2,6 @@ package dev.jasmine.carrybabyanimals.carry;
 
 import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
 import dev.jasmine.carrybabyanimals.network.CarryNetworking;
-import dev.jasmine.carrybabyanimals.permissions.CarryPermissions;
-import net.minecraft.resources.Identifier;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -11,10 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.TamableAnimal;
-import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
@@ -25,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class CarryInteractionHandler {
@@ -65,39 +61,28 @@ public final class CarryInteractionHandler {
             offHandEmpty
         );
         if (shouldDropFromEntityInteract(isCarrying, isMainHand, isSneaking, mainHandEmpty, offHandEmpty)) {
-            dropCurrent(player);
-            showActionBar(player, dropFeedbackText());
+            dropCurrentWithFeedback(player);
             return InteractionResult.SUCCESS;
         }
         if (decision != InteractionResult.SUCCESS || carryManager.isCarrying(player.getUUID())) {
-            logSkippedBabyAnimalPickup(player, target, "interaction_gate", isCarrying, isSneaking, mainHandEmpty, offHandEmpty);
             return decision;
         }
         if (!eligibility.canPickUp(player, target, configManager.config())) {
-            logSkippedBabyAnimalPickup(player, target, eligibilityReason(player, target), isCarrying, isSneaking, mainHandEmpty, offHandEmpty);
             return InteractionResult.PASS;
         }
         if (!carryManager.beginCarry(player.getUUID(), target.getId())) {
-            logSkippedBabyAnimalPickup(player, target, "already_carried_or_busy", isCarrying, isSneaking, mainHandEmpty, offHandEmpty);
             return InteractionResult.PASS;
         }
         if (!attachment.attach(player, target)) {
             carryManager.endCarry(player.getUUID());
             clearPetCooldown(player.getUUID());
-            logSkippedBabyAnimalPickup(player, target, "attachment_failed", isCarrying, isSneaking, mainHandEmpty, offHandEmpty);
             return InteractionResult.PASS;
         }
         if (target instanceof Mob mob) {
             aiController.suppress(mob);
         }
         CarryNetworking.sendSetCarried(player, target);
-        showActionBar(player, pickupFeedbackText(target.getDisplayName().getString()));
-        LOGGER.info(
-                "Carry Baby Animals pickup started: player={} target={} entityId={}",
-                player.getName().getString(),
-                entityTypeName(target),
-                target.getId()
-        );
+        showActionBar(player, pickupFeedbackText(target.getDisplayName().getString(), target.hasCustomName()));
         return InteractionResult.SUCCESS;
     }
 
@@ -166,8 +151,7 @@ public final class CarryInteractionHandler {
                 player.getOffhandItem().isEmpty()
         );
         if (result == InteractionResult.SUCCESS) {
-            dropCurrent(player);
-            showActionBar(player, dropFeedbackText());
+            dropCurrentWithFeedback(player);
         }
         return result;
     }
@@ -181,8 +165,7 @@ public final class CarryInteractionHandler {
                 isNavigationUseBlock(state)
         );
         if (result == InteractionResult.SUCCESS) {
-            dropCurrent(player);
-            showActionBar(player, dropFeedbackText());
+            dropCurrentWithFeedback(player);
         }
         return result;
     }
@@ -193,6 +176,12 @@ public final class CarryInteractionHandler {
 
     public void dropCurrent(ServerPlayer player) {
         dropCurrent(player, true);
+    }
+
+    private void dropCurrentWithFeedback(ServerPlayer player) {
+        Optional<String> feedbackName = carriedBabyFeedbackName(player);
+        dropCurrent(player);
+        showActionBar(player, feedbackName.map(CarryInteractionHandler::dropFeedbackText).orElse(dropFeedbackText()));
     }
 
     public void dropCurrent(ServerPlayer player, boolean loadDestinationChunk) {
@@ -263,58 +252,10 @@ public final class CarryInteractionHandler {
         return null;
     }
 
-    private void logSkippedBabyAnimalPickup(
-            ServerPlayer player,
-            Entity target,
-            String reason,
-            boolean isCarrying,
-            boolean isSneaking,
-            boolean mainHandEmpty,
-            boolean offHandEmpty
-    ) {
-        if (!(target instanceof Animal animal) || !animal.isBaby()) {
-            return;
-        }
-        LOGGER.info(
-                "Carry Baby Animals pickup skipped: reason={} player={} target={} entityId={} sneaking={} mainHandEmpty={} offHandEmpty={} carrying={}",
-                reason,
-                player.getName().getString(),
-                entityTypeName(target),
-                target.getId(),
-                isSneaking,
-                mainHandEmpty,
-                offHandEmpty,
-                isCarrying
-        );
-    }
-
-    private String eligibilityReason(ServerPlayer player, Entity target) {
-        if (!CarryPermissions.canCarry(player)) {
-            return "carry_permission_denied";
-        }
-        if (!(target instanceof Animal animal)) {
-            return "not_an_animal";
-        }
-        if (!animal.isBaby()) {
-            return "not_a_baby";
-        }
-        Identifier entityId = EntityType.getKey(target.getType());
-        boolean tamed = animal instanceof TamableAnimal tamable && tamable.isTame();
-        boolean ownedByPlayer = animal instanceof TamableAnimal tamable && tamable.isOwnedBy(player);
-        CarryEligibility.PermissionSnapshot permissions = new CarryEligibility.PermissionSnapshot(
-                CarryPermissions.canCarryTamed(player),
-                CarryPermissions.canCarryOthersTamed(player)
-        );
-        CarryEligibility.PickupDecision decision = eligibility.pickupDecision(
-                new CarryEligibility.CarryCandidate(entityId, tamed, ownedByPlayer),
-                configManager.config(),
-                permissions
-        );
-        return decision.name().toLowerCase();
-    }
-
-    private String entityTypeName(Entity entity) {
-        return EntityType.getKey(entity.getType()).toString();
+    private Optional<String> carriedBabyFeedbackName(ServerPlayer player) {
+        return carryManager.carriedEntityId(player.getUUID())
+                .map(carriedEntityId -> findCarriedEntity(player, carriedEntityId))
+                .map(CarryInteractionHandler::feedbackName);
     }
 
     private void showActionBar(ServerPlayer player, String message) {
@@ -395,8 +336,24 @@ public final class CarryInteractionHandler {
         return isCarrying && isMainHand && isSneaking && mainHandEmpty && offHandEmpty;
     }
 
-    static String pickupFeedbackText(String targetName) {
-        return "Carrying " + targetName;
+    private static String feedbackName(Entity baby) {
+        return feedbackName(baby.getDisplayName().getString(), baby.hasCustomName());
+    }
+
+    static String feedbackName(String displayName, boolean hasCustomName) {
+        return hasCustomName ? displayName : "baby " + displayName;
+    }
+
+    static String pickupFeedbackText(String displayName, boolean hasCustomName) {
+        return "Carrying " + feedbackName(displayName, hasCustomName);
+    }
+
+    static String dropFeedbackText(String displayName, boolean hasCustomName) {
+        return "Set down " + feedbackName(displayName, hasCustomName);
+    }
+
+    private static String dropFeedbackText(String feedbackName) {
+        return "Set down " + feedbackName;
     }
 
     static String dropFeedbackText() {

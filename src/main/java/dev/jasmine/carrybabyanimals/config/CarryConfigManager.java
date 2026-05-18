@@ -35,7 +35,15 @@ public final class CarryConfigManager {
         if (parent != null) {
             Files.createDirectories(parent);
         }
-        Files.writeString(path, GSON.toJson(RawConfig.from(CarryConfig.defaultConfig())));
+        Files.writeString(path, defaultConfigText());
+    }
+
+    private static String defaultConfigText() {
+        String supportedNames = String.join(", ", AnimalAliasRegistry.createDefault().aliases().keySet());
+        return """
+            // Supported animal names: %s
+            %s
+            """.formatted(supportedNames, GSON.toJson(RawConfig.from(CarryConfig.defaultConfig())));
     }
 
     public static CarryConfig parse(String json) {

@@ -2,6 +2,7 @@ package dev.jasmine.carrybabyanimals.config;
 
 import net.minecraft.resources.Identifier;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -11,7 +12,7 @@ public final class AnimalAliasRegistry {
     private final Map<String, ResolvedAnimal> aliases;
 
     private AnimalAliasRegistry(Map<String, ResolvedAnimal> aliases) {
-        this.aliases = Map.copyOf(aliases);
+        this.aliases = Collections.unmodifiableMap(new LinkedHashMap<>(aliases));
     }
 
     public static AnimalAliasRegistry createDefault() {

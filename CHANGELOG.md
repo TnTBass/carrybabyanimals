@@ -4,8 +4,12 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
-- Added client-side carry visuals for modded clients: carried babies stay server-authoritative as passengers, while supported clients hide the vanilla passenger render and show the baby near the carrier's hands.
-- Improved carried-baby presentation and interactions: carriers now pose their arms around the baby, petting cancels local attacks before creative block-break prediction, and doors/trapdoors can still be used while carrying.
-- Refined carried-baby placement so animals sit closer to the carrier's arms, and made petting hearts visible for the carrier in first-person view.
-- Improved vanilla-client feedback: picking up or setting down a baby now shows action-bar text, and sneak-right-clicking an entity while already carrying sets the current baby down instead of silently consuming the click.
-- Fixed vanilla-client passenger fallback syncing so carried babies visibly attach to the player immediately after pickup instead of appearing to remain on the ground until set down.
+## 0.1.0
+
+- Initial release for Minecraft 26.1.2.
+- Pick up baby animals by sneak-right-clicking them with empty hands, carry them with you, and set them back down when you are ready.
+- Supported modded clients show carried babies tucked into the player's arms with a matching carry pose.
+- Vanilla clients can still use the mod, with carried babies shown as passengers and action-bar messages that name the carried baby or animal type.
+- Carried babies can be petted, with heart particles visible to nearby players and to the carrier in first-person view.
+- Doors and trapdoors remain usable while carrying a baby animal.
+- Server config includes a comment listing every supported animal name for allow/block lists.
