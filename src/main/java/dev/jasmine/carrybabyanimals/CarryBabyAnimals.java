@@ -122,7 +122,7 @@ public final class CarryBabyAnimals implements ModInitializer {
                 .resolve(MOD_ID + ".json");
         try {
             CONFIG.load(configPath);
-            CONFIG.logUnknownAnimalNames(AnimalAliasRegistry.createDefault(), LOGGER);
+            CONFIG.filterAndLogUnknownAnimalNames(AnimalAliasRegistry.createDefault(), LOGGER);
         } catch (IOException exception) {
             LOGGER.error("Failed to load Carry Baby Animals config from {}", configPath, exception);
         }

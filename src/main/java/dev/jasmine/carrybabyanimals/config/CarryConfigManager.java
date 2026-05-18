@@ -53,7 +53,7 @@ public final class CarryConfigManager {
         );
     }
 
-    public void logUnknownAnimalNames(AnimalAliasRegistry registry, Logger logger) {
+    public void filterAndLogUnknownAnimalNames(AnimalAliasRegistry registry, Logger logger) {
         UnknownAnimalNames unknownNames = unknownAnimalNames(config, registry);
         for (String name : unknownNames.allowedAnimals()) {
             logger.warn("Unknown allowed animal name in Carry Baby Animals config: {}", name);

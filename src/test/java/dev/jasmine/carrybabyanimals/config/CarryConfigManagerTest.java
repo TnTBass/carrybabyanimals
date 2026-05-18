@@ -110,7 +110,7 @@ final class CarryConfigManagerTest {
             }
             """);
 
-        manager.logUnknownAnimalNames(AnimalAliasRegistry.createDefault(), LoggerFactory.getLogger(CarryConfigManagerTest.class));
+        manager.filterAndLogUnknownAnimalNames(AnimalAliasRegistry.createDefault(), LoggerFactory.getLogger(CarryConfigManagerTest.class));
 
         assertTrue(manager.config().allowedAnimals().isEmpty());
         assertTrue(manager.config().restrictToAllowedAnimals());
@@ -125,7 +125,7 @@ final class CarryConfigManagerTest {
             }
             """);
 
-        manager.logUnknownAnimalNames(AnimalAliasRegistry.createDefault(), LoggerFactory.getLogger(CarryConfigManagerTest.class));
+        manager.filterAndLogUnknownAnimalNames(AnimalAliasRegistry.createDefault(), LoggerFactory.getLogger(CarryConfigManagerTest.class));
 
         assertEquals(List.of("cow", "dog"), manager.config().allowedAnimals());
         assertEquals(List.of("panda"), manager.config().blockedAnimals());

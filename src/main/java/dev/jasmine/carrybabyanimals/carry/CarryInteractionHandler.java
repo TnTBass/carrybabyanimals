@@ -9,12 +9,16 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public final class CarryInteractionHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CarryInteractionHandler.class);
+
     private final CarryManager carryManager;
     private final CarryEligibility eligibility;
     private final CarryConfigManager configManager;
@@ -73,29 +77,27 @@ public final class CarryInteractionHandler {
         }
         long gameTime = serverLevel.getGameTime();
         UUID playerId = player.getUUID();
+        int entityId = carryManager.carriedEntityId(playerId).orElse(-1);
+        Entity baby = serverLevel.getEntity(entityId);
+        if (baby == null) {
+            carryManager.endCarry(playerId);
+            clearPetCooldown(playerId);
+            CarryNetworking.sendClearCarriedToCarrier(player, entityId);
+            return InteractionResult.PASS;
+        }
         if (canPet(playerId, gameTime, configManager.config().pettingCooldownTicks())) {
-            carryManager.carriedEntityId(playerId).ifPresent(entityId -> {
-                Entity baby = serverLevel.getEntity(entityId);
-                if (baby == null) {
-                    carryManager.endCarry(playerId);
-                    clearPetCooldown(playerId);
-                    CarryNetworking.sendClearCarriedToCarrier(player, entityId);
-                    return;
-                }
-
-                serverLevel.sendParticles(
-                        ParticleTypes.HEART,
-                        baby.getX(),
-                        baby.getY() + baby.getBbHeight() * 0.75D,
-                        baby.getZ(),
-                        5,
-                        0.25D,
-                        0.25D,
-                        0.25D,
-                        0.0D
-                );
-                rememberPet(playerId, gameTime);
-            });
+            serverLevel.sendParticles(
+                    ParticleTypes.HEART,
+                    baby.getX(),
+                    baby.getY() + baby.getBbHeight() * 0.75D,
+                    baby.getZ(),
+                    5,
+                    0.25D,
+                    0.25D,
+                    0.25D,
+                    0.0D
+            );
+            rememberPet(playerId, gameTime);
         }
         return InteractionResult.SUCCESS;
     }
@@ -146,7 +148,22 @@ public final class CarryInteractionHandler {
         carryManager.carriedEntityId(player.getUUID()).ifPresent(carriedEntityId -> {
             Entity baby = level.getEntity(carriedEntityId);
             if (baby == null) {
-                dropCurrent(player, loadDestinationChunk);
+                LOGGER.warn(
+                        "Carried baby {} was not found in {} during level-change cleanup for {}; clearing carry state",
+                        carriedEntityId,
+                        level.dimension(),
+                        player.getName().getString()
+                );
+                Entity carriedElsewhere = findCarriedEntity(player, carriedEntityId);
+                if (carriedElsewhere instanceof Mob mob) {
+                    aiController.restore(mob);
+                }
+                if (carriedElsewhere != null) {
+                    attachment.dropInPlace(carriedElsewhere, loadDestinationChunk);
+                }
+                carryManager.endCarry(player.getUUID());
+                clearPetCooldown(player.getUUID());
+                CarryNetworking.sendClearCarriedToCarrier(player, carriedEntityId);
                 return;
             }
 
