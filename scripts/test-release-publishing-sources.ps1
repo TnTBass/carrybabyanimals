@@ -70,6 +70,8 @@ function Test-CurseForgeUploadDocumentsSideLimitAndDependencies {
     $script = Get-Text 'scripts/upload-curseforge.ps1'
 
     Assert-Contains $script 'CurseForge upload API does not expose Modrinth-style client/server side fields' 'CurseForge upload script must document the side metadata limitation.'
+    Assert-Contains $script 'Get-CurseForgeGameVersionId' 'CurseForge upload must resolve numeric game version IDs.'
+    Assert-Contains $script 'metadata=<' 'CurseForge upload must send metadata as a multipart JSON file part.'
     Assert-Contains $script 'slug = "fabric-api"' 'CurseForge upload must include Fabric API as a required relation.'
     Assert-Contains $script 'type = "requiredDependency"' 'CurseForge upload must mark supported dependencies required.'
 }

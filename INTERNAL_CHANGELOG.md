@@ -4,6 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Switched CurseForge uploads to resolve numeric game version IDs and send metadata as a multipart JSON file part.
 - Made the Modrinth release step tolerate reruns when a version was already created.
 - Switched Modrinth version uploads to send the version metadata as a multipart JSON file part.
 - Corrected the Modrinth release workflow slug to match the live project page.
