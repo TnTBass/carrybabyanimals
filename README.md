@@ -15,7 +15,7 @@ The mod is built around a simple idea: baby animals stay as real world entities,
 
 Optional:
 
-- Fabric Permissions API, if you want permission-plugin integration through tools such as LuckPerms.
+- Fabric Permissions API is optional, not required. Install it only if you want permission-plugin integration through tools such as LuckPerms.
 
 ## Installation
 
@@ -141,7 +141,7 @@ Example: allow trusted servers to carry other players' tamed babies and slow pet
 
 ## Permissions
 
-Carry Baby Animals can integrate with Fabric Permissions API, so permission providers such as LuckPerms can manage server rules.
+Carry Baby Animals can integrate with Fabric Permissions API, but Fabric Permissions API is not required. If it is installed, permission providers such as LuckPerms can manage server rules.
 
 If Fabric Permissions API is not installed:
 

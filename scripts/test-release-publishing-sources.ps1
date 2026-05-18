@@ -127,7 +127,8 @@ function Test-MarketplaceDescriptionExists {
     Assert-Contains $description 'client' 'Marketplace description must explain optional client setup.'
     Assert-Contains $description 'server-required and the client mod is highly recommended' 'Marketplace description must describe the player-facing setup as server-required with the client mod highly recommended.'
     Assert-Contains $description 'Marketplace environment metadata may list the client as optional' 'Marketplace description must explain why marketplace environment metadata can still list the client as optional.'
-    Assert-Contains $description 'Fabric Permissions API, if you want permission-plugin integration' 'Marketplace description must present Fabric Permissions API as optional.'
+    Assert-Contains $description 'Fabric Permissions API is optional, not required' 'Marketplace description must present Fabric Permissions API as optional, not required.'
+    Assert-Contains $description 'Fabric Permissions API is not required' 'Marketplace description must make the permissions API fallback clear.'
 }
 
 function Test-ReadmeContainsReleaseCriticalFacts {
@@ -143,7 +144,8 @@ function Test-ReadmeContainsReleaseCriticalFacts {
     Assert-Contains $readme 'allowCarryingOtherPlayersTamedAnimals' 'README must document the tamed-animal ownership configuration option.'
     Assert-Contains $readme 'pettingCooldownTicks' 'README must document the petting cooldown configuration option.'
     Assert-Contains $readme 'Supported animal names:' 'README must document supported config animal names.'
-    Assert-Contains $readme 'Fabric Permissions API, if you want permission-plugin integration' 'README must present Fabric Permissions API as optional.'
+    Assert-Contains $readme 'Fabric Permissions API is optional, not required' 'README must present Fabric Permissions API as optional, not required.'
+    Assert-Contains $readme 'Fabric Permissions API is not required' 'README must make the permissions API fallback clear.'
     Assert-Contains $readme 'If Fabric Permissions API is not installed' 'README must document permission behavior without Fabric Permissions API.'
     Assert-Contains $readme 'Players cannot carry another player''s tamed baby animals.' 'README must document the no-permissions fallback for other players'' tamed animals.'
 }

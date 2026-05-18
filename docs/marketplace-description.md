@@ -33,7 +33,7 @@ Players can also install the mod on their clients for the held-in-arms rendering
 
 Optional:
 
-- Fabric Permissions API, if you want permission-plugin integration through tools such as LuckPerms.
+- Fabric Permissions API is optional, not required. Install it only if you want permission-plugin integration through tools such as LuckPerms.
 
 ## Configuration
 
@@ -66,7 +66,7 @@ cow, pig, sheep, chicken, goat, rabbit, cat, fox, horse, donkey, mule, llama, tr
 
 `dog` means tamed wolves only. `wolf` means wolves generally, with normal tamed ownership rules still applied.
 
-The mod can also use Fabric Permissions API for carry permissions, including separate rules for tamed baby animals and other players' tamed baby animals.
+The mod can also use Fabric Permissions API for carry permissions, but Fabric Permissions API is not required. If it is installed, it supports separate rules for tamed baby animals and other players' tamed baby animals.
 
 If Fabric Permissions API is not installed:
 
