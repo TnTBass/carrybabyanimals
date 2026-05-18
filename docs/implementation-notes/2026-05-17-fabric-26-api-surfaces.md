@@ -24,12 +24,16 @@ Record the final hook names used for:
   - If the player is already carrying, the handler returns `InteractionResult.SUCCESS` for sneaking entity interactions. This is intentional: carrying occupies the interaction and clicking another baby while carrying is ignored until the current baby is dropped.
 - Carry cleanup ticker / growth fallback: `net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_SERVER_TICK`, signature `(MinecraftServer server) -> void`.
 - Left-click attack interception while carrying: `net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT`, signature `(Player player, Level world, InteractionHand hand, Entity entity, EntityHitResult hitResult) -> InteractionResult`.
+- Left-click block attack interception while carrying: `net.fabricmc.fabric.api.event.player.AttackBlockCallback.EVENT`, signature `(Player player, Level world, InteractionHand hand, BlockPos pos, Direction direction) -> InteractionResult`.
+- Block break prevention fallback while carrying: `net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.BEFORE`, signature `(Level world, Player player, BlockPos pos, BlockState state, BlockEntity blockEntity) -> boolean`.
 - Use-item interaction blocking while carrying: `net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT`, signature `(Player player, Level world, InteractionHand hand) -> InteractionResult`.
 - Use-block interaction blocking while carrying: `net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT`, signature `(Player player, Level world, InteractionHand hand, BlockHitResult hitResult) -> InteractionResult`.
 - Logout cleanup: `net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT`, signature `(ServerGamePacketListenerImpl handler, MinecraftServer server) -> void`.
 - Server stop cleanup: `net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING`, signature `(MinecraftServer server) -> void`.
   - Shutdown cleanup intentionally drops carried babies through the normal safe placement/collision path before world save completes. It skips only the final destination chunk force-load during `SERVER_STOPPING` to avoid extra late chunk work.
-- Death and dimension change cleanup are not registered in Task 6.
+- Death cleanup: `net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents.ALLOW_DEATH`, signature `(ServerPlayer player, DamageSource damageSource, float damageAmount) -> boolean`.
+- Dimension change cleanup: `net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL`, signature `(ServerPlayer player, ServerLevel origin, ServerLevel destination) -> void`.
+  - Dimension cleanup drops in the origin level when the carried baby did not move with the player, then clears the carrier's visual state.
 
 ## Renderer Hooks
 

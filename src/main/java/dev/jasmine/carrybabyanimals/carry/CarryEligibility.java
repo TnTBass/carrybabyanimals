@@ -44,6 +44,9 @@ public final class CarryEligibility {
         if (config.restrictToAllowedAnimals() && !matchesAny(config.allowedAnimals(), candidate)) {
             return false;
         }
+        if (!config.restrictToAllowedAnimals() && !isDefaultSupported(candidate)) {
+            return false;
+        }
         return passesTamedRules(candidate, config, permissions);
     }
 
@@ -58,6 +61,10 @@ public final class CarryEligibility {
 
     private boolean matches(AnimalAliasRegistry.ResolvedAnimal resolved, CarryCandidate candidate) {
         return resolved.id().equals(candidate.entityId()) && (!resolved.requiresTamed() || candidate.tamed());
+    }
+
+    private boolean isDefaultSupported(CarryCandidate candidate) {
+        return aliases.aliases().values().stream().anyMatch(resolved -> matches(resolved, candidate));
     }
 
     private boolean passesTamedRules(CarryCandidate candidate, CarryConfig config, PermissionSnapshot permissions) {

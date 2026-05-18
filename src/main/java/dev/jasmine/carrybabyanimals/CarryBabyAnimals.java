@@ -10,9 +10,13 @@ import dev.jasmine.carrybabyanimals.config.AnimalAliasRegistry;
 import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
 import dev.jasmine.carrybabyanimals.network.CarryNetworking;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
@@ -62,6 +66,15 @@ public final class CarryBabyAnimals implements ModInitializer {
             }
             return INTERACTIONS.onAttack(serverPlayer);
         });
+        AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
+            if (world.isClientSide() || !(player instanceof ServerPlayer serverPlayer)) {
+                return InteractionResult.PASS;
+            }
+            return INTERACTIONS.onAttack(serverPlayer);
+        });
+        PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) ->
+                !(player instanceof ServerPlayer serverPlayer) || !INTERACTIONS.isCarrying(serverPlayer)
+        );
         UseItemCallback.EVENT.register((player, world, hand) -> {
             if (world.isClientSide() || !(player instanceof ServerPlayer serverPlayer)) {
                 return InteractionResult.PASS;
@@ -87,6 +100,13 @@ public final class CarryBabyAnimals implements ModInitializer {
         );
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 INTERACTIONS.dropCurrent(handler.getPlayer())
+        );
+        ServerPlayerEvents.ALLOW_DEATH.register((player, damageSource, damageAmount) -> {
+            INTERACTIONS.dropCurrent(player);
+            return true;
+        });
+        ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) ->
+                INTERACTIONS.dropCurrentInLevel(player, origin, false)
         );
         ServerLifecycleEvents.SERVER_STOPPING.register(server ->
                 server.getPlayerList().getPlayers().forEach(player ->

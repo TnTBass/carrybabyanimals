@@ -33,6 +33,14 @@ final class CarryEligibilityTest {
     }
 
     @Test
+    void defaultConfigAllowsKnownAnimalAliasesOnly() {
+        CarryConfig config = CarryConfig.defaultConfig();
+
+        assertTrue(eligibility.canPickUpResolved(wild(COW), config, ALL_TAMED_PERMISSIONS));
+        assertFalse(eligibility.canPickUpResolved(wild(Identifier.withDefaultNamespace("zoglin")), config, ALL_TAMED_PERMISSIONS));
+    }
+
+    @Test
     void dogBlockedOnlyBlocksTamedWolves() {
         CarryConfig config = config(List.of("wolf"), List.of("dog"), true);
 

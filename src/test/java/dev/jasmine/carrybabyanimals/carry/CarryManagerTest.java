@@ -46,6 +46,18 @@ final class CarryManagerTest {
     }
 
     @Test
+    void sameAnimalCannotBeCarriedByMultiplePlayers() {
+        CarryManager manager = new CarryManager();
+        UUID firstPlayer = UUID.randomUUID();
+        UUID secondPlayer = UUID.randomUUID();
+
+        assertTrue(manager.beginCarry(firstPlayer, 10));
+        assertFalse(manager.beginCarry(secondPlayer, 10));
+        assertEquals(firstPlayer, manager.carrierIdFor(10).orElseThrow());
+        assertTrue(manager.carriedEntityId(secondPlayer).isEmpty());
+    }
+
+    @Test
     void activeCarriesSnapshotDoesNotMutateManager() {
         CarryManager manager = new CarryManager();
         UUID player = UUID.randomUUID();

@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.Level;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -112,13 +113,17 @@ public final class CarryInteractionHandler {
         return result;
     }
 
+    public boolean isCarrying(ServerPlayer player) {
+        return carryManager.isCarrying(player.getUUID());
+    }
+
     public void dropCurrent(ServerPlayer player) {
         dropCurrent(player, true);
     }
 
     public void dropCurrent(ServerPlayer player, boolean loadDestinationChunk) {
         carryManager.carriedEntityId(player.getUUID()).ifPresent(carriedEntityId -> {
-            Entity baby = player.level().getEntity(carriedEntityId);
+            Entity baby = findCarriedEntity(player, carriedEntityId);
             if (baby == null) {
                 // The carried id is stale, so clearing manager state is the cleanup itself.
                 carryManager.endCarry(player.getUUID());
@@ -135,6 +140,38 @@ public final class CarryInteractionHandler {
             clearPetCooldown(player.getUUID());
             CarryNetworking.sendClearCarried(player, baby);
         });
+    }
+
+    public void dropCurrentInLevel(ServerPlayer player, Level level, boolean loadDestinationChunk) {
+        carryManager.carriedEntityId(player.getUUID()).ifPresent(carriedEntityId -> {
+            Entity baby = level.getEntity(carriedEntityId);
+            if (baby == null) {
+                dropCurrent(player, loadDestinationChunk);
+                return;
+            }
+
+            if (baby instanceof Mob mob) {
+                aiController.restore(mob);
+            }
+            attachment.dropInPlace(baby, loadDestinationChunk);
+            carryManager.endCarry(player.getUUID());
+            clearPetCooldown(player.getUUID());
+            CarryNetworking.sendClearCarriedToCarrier(player, carriedEntityId);
+        });
+    }
+
+    private Entity findCarriedEntity(ServerPlayer player, int carriedEntityId) {
+        Entity currentLevelEntity = player.level().getEntity(carriedEntityId);
+        if (currentLevelEntity != null) {
+            return currentLevelEntity;
+        }
+        for (ServerLevel level : player.level().getServer().getAllLevels()) {
+            Entity entity = level.getEntity(carriedEntityId);
+            if (entity != null) {
+                return entity;
+            }
+        }
+        return null;
     }
 
     boolean canPet(UUID playerId, long gameTime, int cooldownTicks) {
