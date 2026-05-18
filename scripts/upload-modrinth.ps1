@@ -19,6 +19,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $RepoRoot = Split-Path -Parent $PSScriptRoot
+$UploadDir = Join-Path $RepoRoot "build/modrinth-upload"
+$VersionDataPath = Join-Path $UploadDir "modrinth-version-data.json"
+$Curl = if ($IsWindows) { "curl.exe" } else { "curl" }
 
 function Get-RequiredEnv {
     param([string] $Name)
@@ -87,6 +90,7 @@ function Invoke-ModrinthApi {
 
 $token = Get-RequiredEnv "MODRINTH_TOKEN"
 $minecraftVersion = Get-GradleProperty "minecraft_version"
+New-Item -ItemType Directory -Force -Path $UploadDir | Out-Null
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
     $JarPath = "build/libs/carry-baby-animals-$Version.jar"
@@ -148,13 +152,25 @@ $versionData = @{
     project_id = $projectId
     file_parts = @("file", "sources")
     primary_file = "file"
+} | ConvertTo-Json -Depth 20
+$versionData | Set-Content -LiteralPath $VersionDataPath -Encoding UTF8
+
+$versionResponse = & $Curl -sS `
+    -X POST "https://api.modrinth.com/v2/version" `
+    -H "Authorization: $token" `
+    -H "User-Agent: TnTBass/carrybabyanimals" `
+    -H "Accept: application/json" `
+    -F "data=<$VersionDataPath;type=application/json" `
+    -F "file=@$jarFullPath" `
+    -F "sources=@$sourcesFullPath"
+
+if ($LASTEXITCODE -ne 0) {
+    throw "curl failed while creating Modrinth version."
 }
 
-$form = @{
-    data = ($versionData | ConvertTo-Json -Depth 20 -Compress)
-    file = Get-Item -LiteralPath $jarFullPath
-    sources = Get-Item -LiteralPath $sourcesFullPath
+$modrinthVersion = $versionResponse | ConvertFrom-Json
+if ($modrinthVersion.error) {
+    throw "Modrinth version creation failed: $($modrinthVersion.error): $($modrinthVersion.description)"
 }
 
-Invoke-RestMethod -Method "POST" -Uri "https://api.modrinth.com/v2/version" -Headers $headers -Form $form | Out-Null
 Write-Host "Published Modrinth $Slug $Version. EnvironmentSynced=$EnvironmentSynced"

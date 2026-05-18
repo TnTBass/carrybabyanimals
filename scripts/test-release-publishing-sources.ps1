@@ -59,6 +59,8 @@ function Test-ModrinthUploadEnforcesRequiredServerOptionalClient {
     Assert-Contains $script 'server_side = "required"' 'Modrinth upload must set server_side required.'
     Assert-Contains $script 'P7dR8mSH' 'Modrinth upload must include Fabric API as a required dependency.'
     Assert-Contains $script 'lzVo0Dll' 'Modrinth upload must include fabric-permissions-api as a required dependency.'
+    Assert-Contains $script 'data=<' 'Modrinth upload must send version JSON as a multipart JSON file part.'
+    Assert-Contains $script 'curl' 'Modrinth upload must use curl for multipart version upload.'
     Assert-Contains $script 'EnvironmentSynced' 'Modrinth upload must report environment sync status.'
 }
 

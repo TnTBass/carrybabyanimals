@@ -4,6 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Switched Modrinth version uploads to send the version metadata as a multipart JSON file part.
 - Corrected the Modrinth release workflow slug to match the live project page.
 - Made the GitHub release workflow safe to rerun for an existing tag by updating notes and replacing assets.
 - Fixed the release workflow to make the Gradle wrapper executable on Linux runners before building.
