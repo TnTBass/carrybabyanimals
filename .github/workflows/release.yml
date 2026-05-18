@@ -72,11 +72,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           version="${{ steps.version.outputs.version }}"
-          gh release create "${GITHUB_REF_NAME}" \
-            --title "Carry Baby Animals ${version}" \
-            --notes-file release-notes.md \
-            "build/libs/carry-baby-animals-${version}.jar" \
-            "build/libs/carry-baby-animals-${version}-sources.jar"
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release edit "${GITHUB_REF_NAME}" \
+              --title "Carry Baby Animals ${version}" \
+              --notes-file release-notes.md
+            gh release upload "${GITHUB_REF_NAME}" --clobber \
+              "build/libs/carry-baby-animals-${version}.jar" \
+              "build/libs/carry-baby-animals-${version}-sources.jar"
+          else
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "Carry Baby Animals ${version}" \
+              --notes-file release-notes.md \
+              "build/libs/carry-baby-animals-${version}.jar" \
+              "build/libs/carry-baby-animals-${version}-sources.jar"
+          fi
 
       - name: Publish to Modrinth
         shell: pwsh

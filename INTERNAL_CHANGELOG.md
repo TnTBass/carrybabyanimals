@@ -4,6 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Made the GitHub release workflow safe to rerun for an existing tag by updating notes and replacing assets.
 - Fixed the release workflow to make the Gradle wrapper executable on Linux runners before building.
 - Added release publishing automation for GitHub Releases, Modrinth, and CurseForge, including a source gate for public release notes and Modrinth server-required/client-optional metadata.
 - Added server-side pickup diagnostic logging for baby-animal interaction troubleshooting.
