@@ -1,0 +1,28 @@
+name: Sync Marketplace Metadata
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync marketplace metadata
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Sync Modrinth description and environment
+        shell: pwsh
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          ./scripts/upload-modrinth.ps1 `
+            -Slug "carrybabyanimals" `
+            -DescriptionPath "docs/marketplace-description.md" `
+            -SyncDescriptionOnly
+
+      - name: CurseForge manual description note
+        run: |
+          echo "CurseForge upload API does not expose project-page description updates."
+          echo "Copy docs/marketplace-description.md into the CurseForge project description manually."

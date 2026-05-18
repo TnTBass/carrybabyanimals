@@ -2,8 +2,8 @@ param(
     [Parameter(Mandatory = $false)]
     [string] $Slug = "carrybabyanimals",
 
-    [Parameter(Mandatory = $true)]
-    [string] $Version,
+    [Parameter(Mandatory = $false)]
+    [string] $Version = "",
 
     [Parameter(Mandatory = $false)]
     [string] $JarPath,
@@ -12,7 +12,12 @@ param(
     [string] $SourcesJarPath,
 
     [Parameter(Mandatory = $false)]
-    [string] $ChangelogPath = "release-notes.md"
+    [string] $ChangelogPath = "release-notes.md",
+
+    [Parameter(Mandatory = $false)]
+    [string] $DescriptionPath = "docs/marketplace-description.md",
+
+    [switch] $SyncDescriptionOnly
 )
 
 Set-StrictMode -Version Latest
@@ -73,6 +78,20 @@ function Read-PublicChangelog {
     return (Get-Content -Raw -LiteralPath $resolvedPath).Trim()
 }
 
+function Read-PublicDescription {
+    param([string] $Path)
+
+    $resolvedPath = Resolve-RepoPath $Path
+    if (-not (Test-Path -LiteralPath $resolvedPath)) {
+        throw "Description path does not exist: $Path"
+    }
+    $content = (Get-Content -Raw -LiteralPath $resolvedPath).Trim()
+    if ([string]::IsNullOrWhiteSpace($content)) {
+        throw "Description path is empty: $Path"
+    }
+    return $content
+}
+
 function Invoke-ModrinthApi {
     param(
         [string] $Method,
@@ -92,20 +111,8 @@ $token = Get-RequiredEnv "MODRINTH_TOKEN"
 $minecraftVersion = Get-GradleProperty "minecraft_version"
 New-Item -ItemType Directory -Force -Path $UploadDir | Out-Null
 
-if ([string]::IsNullOrWhiteSpace($JarPath)) {
-    $JarPath = "build/libs/carry-baby-animals-$Version.jar"
-}
-if ([string]::IsNullOrWhiteSpace($SourcesJarPath)) {
-    $SourcesJarPath = "build/libs/carry-baby-animals-$Version-sources.jar"
-}
-
-$jarFullPath = Resolve-RepoPath $JarPath
-$sourcesFullPath = Resolve-RepoPath $SourcesJarPath
-if (-not (Test-Path -LiteralPath $jarFullPath)) {
-    throw "Jar not found: $JarPath"
-}
-if (-not (Test-Path -LiteralPath $sourcesFullPath)) {
-    throw "Sources jar not found: $SourcesJarPath"
+if ([string]::IsNullOrWhiteSpace($Version) -and -not $SyncDescriptionOnly) {
+    throw "Version is required unless -SyncDescriptionOnly is used."
 }
 
 $headers = @{
@@ -122,14 +129,37 @@ $projectPatch = @{
     client_side = "optional"
     server_side = "required"
 }
+$projectPatch.body = Read-PublicDescription $DescriptionPath
 Invoke-ModrinthApi -Method "PATCH" -Uri "https://api.modrinth.com/v2/project/$projectId" -Headers $headers -Body $projectPatch | Out-Null
 $EnvironmentSynced = $true
+$DescriptionSynced = $true
+
+if ($SyncDescriptionOnly) {
+    Write-Host "Synced Modrinth $Slug project metadata. EnvironmentSynced=$EnvironmentSynced DescriptionSynced=$DescriptionSynced"
+    return
+}
+
+if ([string]::IsNullOrWhiteSpace($JarPath)) {
+    $JarPath = "build/libs/carry-baby-animals-$Version.jar"
+}
+if ([string]::IsNullOrWhiteSpace($SourcesJarPath)) {
+    $SourcesJarPath = "build/libs/carry-baby-animals-$Version-sources.jar"
+}
+
+$jarFullPath = Resolve-RepoPath $JarPath
+$sourcesFullPath = Resolve-RepoPath $SourcesJarPath
+if (-not (Test-Path -LiteralPath $jarFullPath)) {
+    throw "Jar not found: $JarPath"
+}
+if (-not (Test-Path -LiteralPath $sourcesFullPath)) {
+    throw "Sources jar not found: $SourcesJarPath"
+}
 
 $existingVersion = Invoke-ModrinthApi -Method "GET" -Uri "https://api.modrinth.com/v2/project/$projectId/version" -Headers $headers |
     Where-Object { $_.version_number -eq $Version } |
     Select-Object -First 1
 if ($null -ne $existingVersion) {
-    Write-Host "Modrinth $Slug $Version already exists. EnvironmentSynced=$EnvironmentSynced"
+    Write-Host "Modrinth $Slug $Version already exists. EnvironmentSynced=$EnvironmentSynced DescriptionSynced=$DescriptionSynced"
     return
 }
 
@@ -181,4 +211,4 @@ if ($modrinthVersion.PSObject.Properties.Name -contains "error") {
     throw "Modrinth version creation failed: $($modrinthVersion.error): $($modrinthVersion.description)"
 }
 
-Write-Host "Published Modrinth $Slug $Version. EnvironmentSynced=$EnvironmentSynced"
+Write-Host "Published Modrinth $Slug $Version. EnvironmentSynced=$EnvironmentSynced DescriptionSynced=$DescriptionSynced"

@@ -9,7 +9,10 @@ param(
     [string] $JarPath,
 
     [Parameter(Mandatory = $false)]
-    [string] $ChangelogPath = "release-notes.md"
+    [string] $ChangelogPath = "release-notes.md",
+
+    [Parameter(Mandatory = $false)]
+    [string] $DescriptionPath = "docs/marketplace-description.md"
 )
 
 Set-StrictMode -Version Latest
@@ -70,6 +73,18 @@ function Read-PublicChangelog {
     return (Get-Content -Raw -LiteralPath $resolvedPath).Trim()
 }
 
+function Assert-PublicDescriptionExists {
+    param([string] $Path)
+
+    $resolvedPath = Resolve-RepoPath $Path
+    if (-not (Test-Path -LiteralPath $resolvedPath)) {
+        throw "Description path does not exist: $Path"
+    }
+    if ([string]::IsNullOrWhiteSpace((Get-Content -Raw -LiteralPath $resolvedPath))) {
+        throw "Description path is empty: $Path"
+    }
+}
+
 function Get-CurseForgeGameVersionId {
     param(
         [object[]] $GameVersions,
@@ -92,6 +107,7 @@ $token = Get-RequiredEnv "CURSEFORGE_TOKEN"
 $projectId = Get-RequiredEnv "CURSEFORGE_PROJECT_ID"
 $minecraftVersion = Get-GradleProperty "minecraft_version"
 New-Item -ItemType Directory -Force -Path $UploadDir | Out-Null
+Assert-PublicDescriptionExists $DescriptionPath
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
     $JarPath = "build/libs/carry-baby-animals-$Version.jar"
@@ -110,6 +126,8 @@ $gameVersions = Invoke-RestMethod -Uri "https://minecraft.curseforge.com/api/gam
 
 # CurseForge upload API does not expose Modrinth-style client/server side fields.
 # Keep the CurseForge project listing set to server required / client optional in the site UI.
+# CurseForge upload API does not expose project-page description updates.
+# Copy docs/marketplace-description.md into the CurseForge description field manually.
 $metadata = @{
     changelog = Read-PublicChangelog $ChangelogPath
     changelogType = "markdown"
@@ -149,4 +167,4 @@ if (
     throw "CurseForge file upload failed: $uploadResponse"
 }
 
-Write-Host "Published CurseForge $Slug $Version. Verify project listing side metadata remains server required / client optional."
+Write-Host "Published CurseForge $Slug $Version. Verify project listing side metadata remains server required / client optional. Copy $DescriptionPath into the CurseForge project description manually."

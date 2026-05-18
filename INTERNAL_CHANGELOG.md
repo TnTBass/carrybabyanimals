@@ -4,6 +4,8 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Added a manual marketplace metadata sync workflow for Modrinth description-only updates.
+- Added a shared marketplace description and wired Modrinth release automation to sync it.
 - Switched CurseForge uploads to resolve numeric game version IDs and send metadata as a multipart JSON file part.
 - Made the Modrinth release step tolerate reruns when a version was already created.
 - Switched Modrinth version uploads to send the version metadata as a multipart JSON file part.
