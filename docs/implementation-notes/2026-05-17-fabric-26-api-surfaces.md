@@ -28,3 +28,10 @@ Record the final hook names used for:
 ## Renderer Hooks
 
 Record the final hook used to suppress vanilla rendering for carried baby passengers and the renderer path used for the held-in-hands replacement.
+
+## Task 4 Carry Eligibility Substitutions
+
+- Use `net.minecraft.resources.Identifier` instead of the plan's `net.minecraft.resources.ResourceLocation`.
+- `EntityType.getKey(entity.getType())` returns `Identifier` in this repo's Minecraft 26.1.2 generated sources.
+- Use `TamableAnimal#isOwnedBy(LivingEntity)` instead of the older `getOwnerUUID()` owner check.
+- Use `ServerPlayer#permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)` instead of the older `hasPermissions(2)` command-level check.
