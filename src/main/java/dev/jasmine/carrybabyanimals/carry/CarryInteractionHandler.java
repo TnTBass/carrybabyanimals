@@ -1,10 +1,16 @@
 package dev.jasmine.carrybabyanimals.carry;
 
 import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public final class CarryInteractionHandler {
     private final CarryManager carryManager;
@@ -12,6 +18,7 @@ public final class CarryInteractionHandler {
     private final CarryConfigManager configManager;
     private final CarryAttachment attachment;
     private final CarryAiController aiController;
+    private final Map<UUID, Long> lastPetTick = new HashMap<>();
 
     public CarryInteractionHandler(
             CarryManager carryManager,
@@ -46,12 +53,52 @@ public final class CarryInteractionHandler {
         }
         if (!attachment.attach(player, target)) {
             carryManager.endCarry(player.getUUID());
+            clearPetCooldown(player.getUUID());
             return InteractionResult.PASS;
         }
         if (target instanceof Mob mob) {
             aiController.suppress(mob);
         }
         return InteractionResult.SUCCESS;
+    }
+
+    public InteractionResult onAttack(ServerPlayer player) {
+        if (!carryManager.isCarrying(player.getUUID())) {
+            return InteractionResult.PASS;
+        }
+        if (!(player.level() instanceof ServerLevel serverLevel)) {
+            return InteractionResult.PASS;
+        }
+        long gameTime = serverLevel.getGameTime();
+        UUID playerId = player.getUUID();
+        if (canPet(playerId, gameTime, configManager.config().pettingCooldownTicks())) {
+            carryManager.carriedEntityId(playerId).ifPresent(entityId -> {
+                Entity baby = serverLevel.getEntity(entityId);
+                if (baby == null) {
+                    carryManager.endCarry(playerId);
+                    clearPetCooldown(playerId);
+                    return;
+                }
+
+                serverLevel.sendParticles(
+                        ParticleTypes.HEART,
+                        baby.getX(),
+                        baby.getY() + baby.getBbHeight() * 0.75D,
+                        baby.getZ(),
+                        5,
+                        0.25D,
+                        0.25D,
+                        0.25D,
+                        0.0D
+                );
+                rememberPet(playerId, gameTime);
+            });
+        }
+        return InteractionResult.SUCCESS;
+    }
+
+    public InteractionResult onUseWhileCarrying(ServerPlayer player) {
+        return carryManager.isCarrying(player.getUUID()) ? InteractionResult.FAIL : InteractionResult.PASS;
     }
 
     public void dropCurrent(ServerPlayer player) {
@@ -64,6 +111,7 @@ public final class CarryInteractionHandler {
             if (baby == null) {
                 // The carried id is stale, so clearing manager state is the cleanup itself.
                 carryManager.endCarry(player.getUUID());
+                clearPetCooldown(player.getUUID());
                 return;
             }
 
@@ -72,6 +120,20 @@ public final class CarryInteractionHandler {
             }
             attachment.dropInFront(player, baby, loadDestinationChunk);
             carryManager.endCarry(player.getUUID());
+            clearPetCooldown(player.getUUID());
         });
+    }
+
+    boolean canPet(UUID playerId, long gameTime, int cooldownTicks) {
+        Long last = lastPetTick.get(playerId);
+        return last == null || gameTime - last >= cooldownTicks;
+    }
+
+    void rememberPet(UUID playerId, long gameTime) {
+        lastPetTick.put(playerId, gameTime);
+    }
+
+    void clearPetCooldown(UUID playerId) {
+        lastPetTick.remove(playerId);
     }
 }

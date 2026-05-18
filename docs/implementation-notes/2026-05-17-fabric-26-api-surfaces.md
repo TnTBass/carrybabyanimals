@@ -23,8 +23,9 @@ Record the final hook names used for:
 - Sneak-right-click entity interaction: `net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT`, signature `(Player player, Level world, InteractionHand hand, Entity entity, EntityHitResult hitResult) -> InteractionResult`.
   - If the player is already carrying, the handler returns `InteractionResult.SUCCESS` for sneaking entity interactions. This is intentional: carrying occupies the interaction and clicking another baby while carrying is ignored until the current baby is dropped.
 - Carry cleanup ticker / growth fallback: `net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_SERVER_TICK`, signature `(MinecraftServer server) -> void`.
-- Left-click attack interception while carrying.
-- Use-item/block interaction blocking while carrying.
+- Left-click attack interception while carrying: `net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT`, signature `(Player player, Level world, InteractionHand hand, Entity entity, EntityHitResult hitResult) -> InteractionResult`.
+- Use-item interaction blocking while carrying: `net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT`, signature `(Player player, Level world, InteractionHand hand) -> InteractionResult`.
+- Use-block interaction blocking while carrying: `net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT`, signature `(Player player, Level world, InteractionHand hand, BlockHitResult hitResult) -> InteractionResult`.
 - Logout cleanup: `net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT`, signature `(ServerGamePacketListenerImpl handler, MinecraftServer server) -> void`.
 - Server stop cleanup: `net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING`, signature `(MinecraftServer server) -> void`.
   - Shutdown cleanup intentionally drops carried babies through the normal safe placement/collision path before world save completes. It skips only the final destination chunk force-load during `SERVER_STOPPING` to avoid extra late chunk work.
@@ -45,3 +46,7 @@ Record the final hook used to suppress vanilla rendering for carried baby passen
 
 - Use `Entity#startRiding(Entity, boolean force, boolean sendEventAndTriggers)` instead of the plan's two-argument `startRiding(Entity, boolean)` overload.
 - Use `Entity#snapTo(double, double, double, float, float)` instead of the older `moveTo(double, double, double, float, float)` repositioning call.
+
+## Task 7 Petting Substitutions
+
+- Use `ServerPlayer#level()` and cast to `ServerLevel` instead of the plan's `ServerPlayer#serverLevel()` helper, which is not exposed by this repo's Minecraft 26.1.2 mappings.
