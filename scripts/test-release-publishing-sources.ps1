@@ -73,7 +73,8 @@ function Test-ModrinthUploadEnforcesRequiredServerOptionalClient {
     Assert-Contains $script 'client_side = "optional"' 'Modrinth upload must set client_side optional.'
     Assert-Contains $script 'server_side = "required"' 'Modrinth upload must set server_side required.'
     Assert-Contains $script 'P7dR8mSH' 'Modrinth upload must include Fabric API as a required dependency.'
-    Assert-Contains $script 'lzVo0Dll' 'Modrinth upload must include fabric-permissions-api as a required dependency.'
+    Assert-Contains $script 'lzVo0Dll' 'Modrinth upload must include fabric-permissions-api as an optional dependency.'
+    Assert-Contains $script 'dependency_type = "optional"' 'Modrinth upload must mark optional integrations optional.'
     Assert-Contains $script 'version_number -eq $Version' 'Modrinth upload must skip an already-created release version on reruns.'
     Assert-Contains $script 'PSObject.Properties.Name -contains "error"' 'Modrinth upload must check API error payloads safely under StrictMode.'
     Assert-Contains $script 'data=<' 'Modrinth upload must send version JSON as a multipart JSON file part.'
@@ -103,6 +104,17 @@ function Test-GradleRunsReleasePublishingSourceGate {
     Assert-Contains $build 'dependsOn tasks.named("checkReleasePublishingSources")' 'Gradle check must depend on checkReleasePublishingSources.'
 }
 
+function Test-FabricPermissionsApiIsOptional {
+    $modJson = Get-Text 'src/main/resources/fabric.mod.json' | ConvertFrom-Json
+
+    if ($modJson.depends.PSObject.Properties.Name -contains 'fabric-permissions-api-v0') {
+        throw 'Fabric Permissions API must not be a required dependency.'
+    }
+    if ($modJson.suggests.PSObject.Properties.Name -notcontains 'fabric-permissions-api-v0') {
+        throw 'Fabric Permissions API should remain suggested for permission-plugin integration.'
+    }
+}
+
 function Test-MarketplaceDescriptionExists {
     $description = Get-Text 'docs/marketplace-description.md'
 
@@ -110,6 +122,27 @@ function Test-MarketplaceDescriptionExists {
     Assert-Contains $description 'father-daughter project by Tyler and Jasmine' 'Marketplace description must include the father-daughter project note.'
     Assert-Contains $description 'server' 'Marketplace description must explain server setup.'
     Assert-Contains $description 'client' 'Marketplace description must explain optional client setup.'
+    Assert-Contains $description 'server-required and the client mod is highly recommended' 'Marketplace description must describe the player-facing setup as server-required with the client mod highly recommended.'
+    Assert-Contains $description 'Marketplace environment metadata may list the client as optional' 'Marketplace description must explain why marketplace environment metadata can still list the client as optional.'
+    Assert-Contains $description 'Fabric Permissions API, if you want permission-plugin integration' 'Marketplace description must present Fabric Permissions API as optional.'
+}
+
+function Test-ReadmeContainsReleaseCriticalFacts {
+    $readme = Get-Text 'README.md'
+
+    Assert-Contains $readme 'Carry Baby Animals' 'README must name the mod.'
+    Assert-Contains $readme 'father-daughter project by Tyler and Jasmine' 'README must include the father-daughter project note.'
+    Assert-Contains $readme 'server-required and the client mod is highly recommended' 'README must describe the player-facing setup as server-required with the client mod highly recommended.'
+    Assert-Contains $readme 'Marketplace environment metadata may list the client as optional' 'README must explain why marketplace environment metadata can still list the client as optional.'
+    Assert-Contains $readme 'Players without the mod can still connect to a modded server' 'README must explain the vanilla-client fallback.'
+    Assert-Contains $readme 'allowedAnimals' 'README must document the allowedAnimals configuration option.'
+    Assert-Contains $readme 'blockedAnimals' 'README must document the blockedAnimals configuration option.'
+    Assert-Contains $readme 'allowCarryingOtherPlayersTamedAnimals' 'README must document the tamed-animal ownership configuration option.'
+    Assert-Contains $readme 'pettingCooldownTicks' 'README must document the petting cooldown configuration option.'
+    Assert-Contains $readme 'Supported animal names:' 'README must document supported config animal names.'
+    Assert-Contains $readme 'Fabric Permissions API, if you want permission-plugin integration' 'README must present Fabric Permissions API as optional.'
+    Assert-Contains $readme 'If Fabric Permissions API is not installed' 'README must document permission behavior without Fabric Permissions API.'
+    Assert-Contains $readme 'Players cannot carry another player''s tamed baby animals.' 'README must document the no-permissions fallback for other players'' tamed animals.'
 }
 
 function Test-PowerShellPublishingScriptsParse {
@@ -122,7 +155,9 @@ Test-MarketplaceMetadataSyncWorkflow
 Test-ModrinthUploadEnforcesRequiredServerOptionalClient
 Test-CurseForgeUploadDocumentsSideLimitAndDependencies
 Test-GradleRunsReleasePublishingSourceGate
+Test-FabricPermissionsApiIsOptional
 Test-MarketplaceDescriptionExists
+Test-ReadmeContainsReleaseCriticalFacts
 Test-PowerShellPublishingScriptsParse
 
 Write-Host 'release publishing source tests passed'

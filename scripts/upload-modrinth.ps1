@@ -178,7 +178,7 @@ $versionData = @{
             project_id = "lzVo0Dll"
             version_id = $null
             file_name = $null
-            dependency_type = "required"
+            dependency_type = "optional"
         }
     )
     game_versions = @($minecraftVersion)

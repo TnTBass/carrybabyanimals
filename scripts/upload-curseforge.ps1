@@ -142,6 +142,10 @@ $metadata = @{
             @{
                 slug = "fabric-api"
                 type = "requiredDependency"
+            },
+            @{
+                slug = "fabric-permissions-api"
+                type = "optionalDependency"
             }
         )
     }

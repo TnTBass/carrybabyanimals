@@ -41,3 +41,16 @@ These notes capture implementation/review lessons from the first full CarryBabyA
 
 - Keep dirty support files out of feature commits until they are intentionally reviewed.
 - `.claude/`, workflow/changelog scripts, generated logs, and release automation files may be useful, but they should not get swept into gameplay commits.
+
+## Release And Marketplace Publishing
+
+- Optional dependencies need to be optional in every layer: `fabric.mod.json`, Gradle dependency scope, runtime code paths, Modrinth metadata, CurseForge metadata, README text, and marketplace description text should all tell the same story.
+- Marketplace project descriptions are separate from release artifacts. A successful GitHub release, Modrinth version upload, or CurseForge file upload does not prove the project-page description changed.
+- CurseForge project-page description updates are not covered by the same upload path as file changelogs. Treat CurseForge description changes as manual unless a supported authenticated update path is verified.
+- Initial release notes should read like shipped product behavior for players and server admins, not like a development task log. Internal cleanup, debugging, and release workflow details belong in `INTERNAL_CHANGELOG.md`.
+- After a public release exists, retagging is operationally risky because GitHub, Modrinth, and CurseForge each handle replacement or duplicate files differently. Do one final metadata and artifact readiness pass before the first public tag push.
+- Server-required/client-optional support needs explicit plumbing and verification across Fabric metadata, README wording, Modrinth environment metadata, CurseForge relation metadata, and release scripts.
+- Default config comments are public UX. Keep supported animal names deterministic and readable because server admins will copy from that file.
+- Player feedback text should stay symmetric across pickup, drop, and pet actions. Named animals should use their custom names, and unnamed animals should use clear baby-animal wording.
+- Public docs should explain behavior and defaults, not only show a sample file. Configuration and permission docs need options, defaults, supported values, fallback behavior, and practical examples.
+- Keep public and internal release channels separate. `CHANGELOG.md` is marketplace-safe; `INTERNAL_CHANGELOG.md` is where publishing quirks, automation changes, and maintainer workflow notes belong.

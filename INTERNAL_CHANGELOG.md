@@ -4,6 +4,9 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Documented release and marketplace publishing lessons learned for future 0.1.x release work.
+- Made Fabric Permissions API optional and documented the vanilla permission fallback.
+- Expanded public configuration docs with every option, defaults, supported names, and example configs.
 - Added a manual marketplace metadata sync workflow for Modrinth description-only updates.
 - Added a shared marketplace description and wired Modrinth release automation to sync it.
 - Switched CurseForge uploads to resolve numeric game version IDs and send metadata as a multipart JSON file part.
