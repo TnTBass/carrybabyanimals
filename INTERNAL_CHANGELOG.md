@@ -4,6 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Added a release workflow gate that prints the manual CurseForge project description update instructions and exact `docs/marketplace-description.md` contents after publishing, and documented the 0.1.1 CurseForge follow-up lessons.
 - Documented release and marketplace publishing lessons learned for future 0.1.x release work.
 - Made Fabric Permissions API optional and documented the vanilla permission fallback.
 - Expanded public configuration docs with every option, defaults, supported names, and example configs.

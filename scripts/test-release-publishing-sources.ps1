@@ -87,6 +87,9 @@ function Test-CurseForgeUploadDocumentsSideLimitAndDependencies {
     $workflow = Get-Text '.github/workflows/release.yml'
 
     Assert-Contains $workflow '-DescriptionPath "docs/marketplace-description.md"' 'Release workflow must pass the public marketplace description to CurseForge upload script.'
+    Assert-Contains $workflow 'Manual CurseForge project description update' 'Release workflow must end by flagging the manual CurseForge project description update.'
+    Assert-Contains $workflow 'Copy the full contents of docs/marketplace-description.md' 'Release workflow must tell the maintainer exactly what to copy into CurseForge.'
+    Assert-Contains $workflow 'cat docs/marketplace-description.md' 'Release workflow must print the exact CurseForge description source text.'
     Assert-Contains $script '[string] $DescriptionPath = "docs/marketplace-description.md"' 'CurseForge upload must point at the shared marketplace description.'
     Assert-Contains $script 'CurseForge upload API does not expose project-page description updates' 'CurseForge upload script must document the project description limitation.'
     Assert-Contains $script 'CurseForge upload API does not expose Modrinth-style client/server side fields' 'CurseForge upload script must document the side metadata limitation.'

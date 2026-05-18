@@ -114,3 +114,14 @@ jobs:
             -JarPath "build/libs/carry-baby-animals-$version.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
+
+      - name: Manual CurseForge project description update
+        shell: bash
+        run: |
+          echo "Manual CurseForge project description update required."
+          echo "Copy the full contents of docs/marketplace-description.md into the CurseForge project description."
+          echo "Also manually verify CurseForge project side metadata remains server required / client optional."
+          echo
+          echo "----- BEGIN docs/marketplace-description.md -----"
+          cat docs/marketplace-description.md
+          echo "----- END docs/marketplace-description.md -----"

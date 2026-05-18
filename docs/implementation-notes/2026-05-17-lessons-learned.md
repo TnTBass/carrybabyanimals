@@ -54,3 +54,10 @@ These notes capture implementation/review lessons from the first full CarryBabyA
 - Player feedback text should stay symmetric across pickup, drop, and pet actions. Named animals should use their custom names, and unnamed animals should use clear baby-animal wording.
 - Public docs should explain behavior and defaults, not only show a sample file. Configuration and permission docs need options, defaults, supported values, fallback behavior, and practical examples.
 - Keep public and internal release channels separate. `CHANGELOG.md` is marketplace-safe; `INTERNAL_CHANGELOG.md` is where publishing quirks, automation changes, and maintainer workflow notes belong.
+- A green release workflow is not the same thing as verified marketplace state. For each marketplace, prefer a live readback or dashboard confirmation over trusting the upload step alone.
+- CurseForge needs more conservative wording than GitHub or Modrinth. The upload script should say that the file was submitted or accepted by the upload API unless it can verify the file id, approval state, and public/project-dashboard visibility.
+- CurseForge project approval and file moderation can make a successful upload invisible on the public project page. Check the author dashboard before assuming an upload failed.
+- Do not rerun the full tag release workflow to repair one marketplace leg after GitHub and Modrinth are already correct. Add or use a targeted CurseForge-only retry path for the same version and artifact.
+- CurseForge upload logs should print the returned file id/status and should fail or warn if the API response does not prove what the script claims.
+- Post-publish closeout should include the manual CurseForge project description step: copy the full contents of `docs/marketplace-description.md` into CurseForge and verify project side metadata remains server required / client optional.
+- Approval gates should be explicit before every mutating release step: commit, push, tag, workflow dispatch, marketplace retry, or any tag/release rewrite.
