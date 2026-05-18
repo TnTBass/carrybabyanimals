@@ -125,6 +125,14 @@ $projectPatch = @{
 Invoke-ModrinthApi -Method "PATCH" -Uri "https://api.modrinth.com/v2/project/$projectId" -Headers $headers -Body $projectPatch | Out-Null
 $EnvironmentSynced = $true
 
+$existingVersion = Invoke-ModrinthApi -Method "GET" -Uri "https://api.modrinth.com/v2/project/$projectId/version" -Headers $headers |
+    Where-Object { $_.version_number -eq $Version } |
+    Select-Object -First 1
+if ($null -ne $existingVersion) {
+    Write-Host "Modrinth $Slug $Version already exists. EnvironmentSynced=$EnvironmentSynced"
+    return
+}
+
 $versionData = @{
     name = "Carry Baby Animals $Version for Minecraft $minecraftVersion"
     version_number = $Version
@@ -169,7 +177,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $modrinthVersion = $versionResponse | ConvertFrom-Json
-if ($modrinthVersion.error) {
+if ($modrinthVersion.PSObject.Properties.Name -contains "error") {
     throw "Modrinth version creation failed: $($modrinthVersion.error): $($modrinthVersion.description)"
 }
 
