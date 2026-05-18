@@ -59,8 +59,15 @@ tasks.register("checkChangelog", Exec) {
     commandLine "pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${rootDir}/scripts/check-changelogs.ps1", "-RepoRoot", rootDir
 }
 
+tasks.register("checkReleasePublishingSources", Exec) {
+    group = "verification"
+    description = "Ensures release publishing scripts use public notes and required marketplace metadata."
+    commandLine "pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${rootDir}/scripts/test-release-publishing-sources.ps1"
+}
+
 tasks.named("check") {
     dependsOn tasks.named("checkChangelog")
+    dependsOn tasks.named("checkReleasePublishingSources")
 }
 
 tasks.register("showPublicReleaseNotes", Exec) {

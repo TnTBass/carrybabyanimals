@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a
+
+      - name: Set up Java
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tags must look like v0.1.0, got ${GITHUB_REF_NAME}" >&2
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify release artifacts
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          test -f "build/libs/carry-baby-animals-${version}.jar"
+          test -f "build/libs/carry-baby-animals-${version}-sources.jar"
+
+      - name: Extract public release notes
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          awk -v version="$version" '
+            $0 == "## " version { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md | sed '/./,$!d' > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "No public CHANGELOG.md notes found for ${version}" >&2
+            exit 1
+          fi
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "Carry Baby Animals ${version}" \
+            --notes-file release-notes.md \
+            "build/libs/carry-baby-animals-${version}.jar" \
+            "build/libs/carry-baby-animals-${version}-sources.jar"
+
+      - name: Publish to Modrinth
+        shell: pwsh
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          ./scripts/upload-modrinth.ps1 `
+            -Slug "carry-baby-animals" `
+            -Version $version `
+            -JarPath "build/libs/carry-baby-animals-$version.jar" `
+            -SourcesJarPath "build/libs/carry-baby-animals-$version-sources.jar" `
+            -ChangelogPath "release-notes.md"
+
+      - name: Publish to CurseForge
+        shell: pwsh
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          ./scripts/upload-curseforge.ps1 `
+            -Slug "carry-baby-animals" `
+            -Version $version `
+            -JarPath "build/libs/carry-baby-animals-$version.jar" `
+            -ChangelogPath "release-notes.md"
