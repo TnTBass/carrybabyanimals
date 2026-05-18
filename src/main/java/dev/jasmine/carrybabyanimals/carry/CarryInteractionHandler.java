@@ -139,6 +139,7 @@ public final class CarryInteractionHandler {
             );
             rememberPet(playerId, gameTime);
             CarryNetworking.sendPetFeedbackToCarrier(player, baby.getId());
+            showActionBar(player, petFeedbackText(baby.getDisplayName().getString(), baby.hasCustomName()));
         }
         return InteractionResult.SUCCESS;
     }
@@ -350,6 +351,11 @@ public final class CarryInteractionHandler {
 
     static String dropFeedbackText(String displayName, boolean hasCustomName) {
         return "Set down " + feedbackName(displayName, hasCustomName);
+    }
+
+    static String petFeedbackText(String displayName, boolean hasCustomName) {
+        String feedbackName = hasCustomName ? displayName : "Baby " + displayName;
+        return feedbackName + " loves you.";
     }
 
     private static String dropFeedbackText(String feedbackName) {

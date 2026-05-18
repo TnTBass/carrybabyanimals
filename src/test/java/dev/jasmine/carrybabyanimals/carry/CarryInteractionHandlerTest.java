@@ -168,6 +168,16 @@ final class CarryInteractionHandlerTest {
         assertEquals("Set down KittyKat", CarryInteractionHandler.dropFeedbackText("KittyKat", true));
     }
 
+    @Test
+    void petFeedbackTextUsesBabyTypeForUnnamedAnimals() {
+        assertEquals("Baby Pig loves you.", CarryInteractionHandler.petFeedbackText("Pig", false));
+    }
+
+    @Test
+    void petFeedbackTextUsesCustomNameForNamedAnimals() {
+        assertEquals("Shelly loves you.", CarryInteractionHandler.petFeedbackText("Shelly", true));
+    }
+
     private CarryInteractionHandler newHandler() {
         return new CarryInteractionHandler(null, null, null, null, null);
     }
