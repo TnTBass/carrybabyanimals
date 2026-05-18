@@ -33,7 +33,31 @@ Record the final hook names used for:
 
 ## Renderer Hooks
 
-Record the final hook used to suppress vanilla rendering for carried baby passengers and the renderer path used for the held-in-hands replacement.
+- Clientbound carry sync payloads:
+  - Use `net.minecraft.resources.Identifier` and `new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(...))` for payload ids.
+  - Use `PayloadTypeRegistry.clientboundPlay().register(type, StreamCodec<RegistryFriendlyByteBuf, payload>)` in common init before gameplay callbacks.
+  - Use `StreamCodec.composite(ByteBufCodecs.VAR_INT, ...)` for the minimal integer entity-id payloads.
+  - Use `ServerPlayNetworking.canSend(ServerPlayer, CustomPacketPayload.Type<?>)` before `ServerPlayNetworking.send(...)` so vanilla/unmodded clients keep the passenger fallback without receiving unknown custom payloads.
+  - Use `PlayerLookup.tracking(Entity)` plus the carrier as the S2C recipient set.
+  - Use `EntityTrackingEvents.START_TRACKING`, signature `(Entity entity, ServerPlayer player) -> void`, to replay `SET_CARRIED` when a modded client starts tracking a baby that is already carried.
+  - Use `EntityTrackingEvents.STOP_TRACKING`, signature `(Entity entity, ServerPlayer player) -> void`, to send `CLEAR_CARRIED` when a client stops tracking a carried baby.
+  - Use `ServerPlayConnectionEvents.JOIN`, signature `(ServerGamePacketListenerImpl handler, PacketSender sender, MinecraftServer server) -> void`, to replay currently visible carried babies after a modded client finishes joining. The replay is limited to carries already visible through `PlayerLookup.tracking(baby)` or the carrier itself; later visibility is covered by `START_TRACKING`.
+- Client packet handlers:
+  - Use `ClientPlayNetworking.registerGlobalReceiver(type, (payload, context) -> context.client().execute(...))`.
+  - The Fabric 26.1 handler signature is `receive(T payload, ClientPlayNetworking.Context context)`.
+  - Use `ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ...)` to clear client-side render state when leaving a server/world.
+- Vanilla render suppression:
+  - Use a client mixin on `net.minecraft.client.renderer.entity.LivingEntityRenderer`.
+  - The verified extraction descriptor is `extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V`.
+  - The verified submit descriptor is `submit(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V`.
+  - The mixin stores a Fabric `RenderStateDataKey<Boolean>` on the extracted `LivingEntityRenderState`, then cancels only submit calls marked as carried babies.
+- Held replacement render:
+  - The older `WorldRenderEvents` API was not present in Fabric API 0.149.0+26.1.2.
+  - Use `net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents.COLLECT_SUBMITS` with `LevelRenderContext`.
+  - `LevelRenderContext` exposes `poseStack()`, `submitNodeCollector()`, and `levelState().cameraRenderState`; it does not expose the old world-render context names.
+  - Use `Minecraft.getInstance().getEntityRenderDispatcher().extractEntity(entity, tickDelta)` to build an `EntityRenderState`, adjust its world-space `x/y/z`, then call `EntityRenderDispatcher.submit(state, cameraRenderState, x - camera.x, y - camera.y, z - camera.z, poseStack, submitNodeCollector)`.
+  - Client render state prunes entries during `COLLECT_SUBMITS` when the baby or carrier entity is missing, and clears individual entries when either entity is dead. This keeps missed server clears from hiding future same-id entities indefinitely.
+  - The Task 8 held pose is intentionally modest: the baby is moved near the carrier's upper body/main-arm side. Exact hand bone attachment remains a later polish item because the new submit pipeline does not expose a simple per-limb attachment event here.
 
 ## Task 4 Carry Eligibility Substitutions
 

@@ -2,7 +2,9 @@
   "required": true,
   "package": "dev.jasmine.carrybabyanimals.client.mixin",
   "compatibilityLevel": "JAVA_25",
-  "client": [],
+  "client": [
+    "LivingEntityRendererMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

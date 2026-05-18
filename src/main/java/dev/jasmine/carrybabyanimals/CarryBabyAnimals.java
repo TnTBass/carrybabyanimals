@@ -8,6 +8,7 @@ import dev.jasmine.carrybabyanimals.carry.CarryManager;
 import dev.jasmine.carrybabyanimals.carry.CarryTicker;
 import dev.jasmine.carrybabyanimals.config.AnimalAliasRegistry;
 import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
+import dev.jasmine.carrybabyanimals.network.CarryNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -15,6 +16,7 @@ import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
@@ -39,6 +41,7 @@ public final class CarryBabyAnimals implements ModInitializer {
     @Override
     public void onInitialize() {
         LOGGER.info("Carry Baby Animals initialized");
+        CarryNetworking.registerS2CPayloads();
         CarryTicker ticker = new CarryTicker(CARRY_MANAGER, INTERACTIONS);
 
         ServerTickEvents.END_SERVER_TICK.register(ticker::tick);
@@ -66,6 +69,17 @@ public final class CarryBabyAnimals implements ModInitializer {
             }
             return INTERACTIONS.onUseWhileCarrying(serverPlayer);
         });
+        EntityTrackingEvents.START_TRACKING.register((entity, player) ->
+                CarryNetworking.replayTrackedCarry(CARRY_MANAGER, entity, player)
+        );
+        EntityTrackingEvents.STOP_TRACKING.register((entity, player) -> {
+            if (CARRY_MANAGER.carrierIdFor(entity.getId()).isPresent()) {
+                CarryNetworking.sendClearCarriedToPlayer(player, entity.getId());
+            }
+        });
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
+                CarryNetworking.replayVisibleCarries(CARRY_MANAGER, handler.getPlayer())
+        );
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 INTERACTIONS.dropCurrent(handler.getPlayer())
         );

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class CarryManagerTest {
@@ -29,5 +30,30 @@ final class CarryManagerTest {
         assertTrue(manager.beginCarry(player, 10));
         assertTrue(manager.endCarry(player).isPresent());
         assertTrue(manager.carriedEntityId(player).isEmpty());
+    }
+
+    @Test
+    void findsCarrierByCarriedAnimalId() {
+        CarryManager manager = new CarryManager();
+        UUID firstPlayer = UUID.randomUUID();
+        UUID secondPlayer = UUID.randomUUID();
+
+        assertTrue(manager.beginCarry(firstPlayer, 10));
+        assertTrue(manager.beginCarry(secondPlayer, 11));
+
+        assertEquals(secondPlayer, manager.carrierIdFor(11).orElseThrow());
+        assertTrue(manager.carrierIdFor(12).isEmpty());
+    }
+
+    @Test
+    void activeCarriesSnapshotDoesNotMutateManager() {
+        CarryManager manager = new CarryManager();
+        UUID player = UUID.randomUUID();
+
+        assertTrue(manager.beginCarry(player, 10));
+
+        assertThrows(UnsupportedOperationException.class, () -> manager.activeCarries().clear());
+
+        assertEquals(10, manager.carriedEntityId(player).orElseThrow());
     }
 }

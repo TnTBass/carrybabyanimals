@@ -24,6 +24,17 @@ public final class CarryManager {
         return Optional.ofNullable(carriedByPlayer.get(playerId)).map(CarryState::carriedEntityId);
     }
 
+    public Optional<UUID> carrierIdFor(int carriedEntityId) {
+        return carriedByPlayer.values().stream()
+                .filter(state -> state.carriedEntityId() == carriedEntityId)
+                .map(CarryState::carrierId)
+                .findFirst();
+    }
+
+    public Map<UUID, CarryState> activeCarries() {
+        return Map.copyOf(carriedByPlayer);
+    }
+
     public boolean isCarrying(UUID playerId) {
         return carriedByPlayer.containsKey(playerId);
     }

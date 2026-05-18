@@ -1,6 +1,7 @@
 package dev.jasmine.carrybabyanimals.carry;
 
 import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
+import dev.jasmine.carrybabyanimals.network.CarryNetworking;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -59,6 +60,7 @@ public final class CarryInteractionHandler {
         if (target instanceof Mob mob) {
             aiController.suppress(mob);
         }
+        CarryNetworking.sendSetCarried(player, target);
         return InteractionResult.SUCCESS;
     }
 
@@ -77,6 +79,7 @@ public final class CarryInteractionHandler {
                 if (baby == null) {
                     carryManager.endCarry(playerId);
                     clearPetCooldown(playerId);
+                    CarryNetworking.sendClearCarriedToCarrier(player, entityId);
                     return;
                 }
 
@@ -112,6 +115,7 @@ public final class CarryInteractionHandler {
                 // The carried id is stale, so clearing manager state is the cleanup itself.
                 carryManager.endCarry(player.getUUID());
                 clearPetCooldown(player.getUUID());
+                CarryNetworking.sendClearCarriedToCarrier(player, carriedEntityId);
                 return;
             }
 
@@ -121,6 +125,7 @@ public final class CarryInteractionHandler {
             attachment.dropInFront(player, baby, loadDestinationChunk);
             carryManager.endCarry(player.getUUID());
             clearPetCooldown(player.getUUID());
+            CarryNetworking.sendClearCarried(player, baby);
         });
     }
 
