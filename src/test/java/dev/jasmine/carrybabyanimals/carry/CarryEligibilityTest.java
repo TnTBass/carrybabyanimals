@@ -55,6 +55,13 @@ final class CarryEligibilityTest {
     }
 
     @Test
+    void emptyEffectiveAllowListStillDeniesWhenAllowListWasConfigured() {
+        CarryConfig config = new CarryConfig(List.of(), List.of(), true, 20, true);
+
+        assertFalse(eligibility.canPickUpResolved(wild(COW), config, ALL_TAMED_PERMISSIONS));
+    }
+
+    @Test
     void ownedTamedRequiresCarryTamedPermission() {
         CarryConfig config = config(List.of("dog"), List.of(), true);
 

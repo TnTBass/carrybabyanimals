@@ -18,10 +18,14 @@ import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 public final class CarryBabyAnimals implements ModInitializer {
     public static final String MOD_ID = "carrybabyanimals";
@@ -40,6 +44,7 @@ public final class CarryBabyAnimals implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        loadConfig();
         LOGGER.info("Carry Baby Animals initialized");
         CarryNetworking.registerS2CPayloads();
         CarryTicker ticker = new CarryTicker(CARRY_MANAGER, INTERACTIONS);
@@ -89,5 +94,17 @@ public final class CarryBabyAnimals implements ModInitializer {
                         INTERACTIONS.dropCurrent(player, false)
                 )
         );
+    }
+
+    private static void loadConfig() {
+        Path configPath = FabricLoader.getInstance()
+                .getConfigDir()
+                .resolve(MOD_ID + ".json");
+        try {
+            CONFIG.load(configPath);
+            CONFIG.logUnknownAnimalNames(AnimalAliasRegistry.createDefault(), LOGGER);
+        } catch (IOException exception) {
+            LOGGER.error("Failed to load Carry Baby Animals config from {}", configPath, exception);
+        }
     }
 }

@@ -41,7 +41,7 @@ public final class CarryEligibility {
         if (matchesAny(config.blockedAnimals(), candidate)) {
             return false;
         }
-        if (!config.allowedAnimals().isEmpty() && !matchesAny(config.allowedAnimals(), candidate)) {
+        if (config.restrictToAllowedAnimals() && !matchesAny(config.allowedAnimals(), candidate)) {
             return false;
         }
         return passesTamedRules(candidate, config, permissions);
