@@ -1,8 +1,8 @@
-package com.explosive.carrybabyanimals.carry;
+package dev.jasmine.carrybabyanimals.carry;
 
-import com.explosive.carrybabyanimals.config.AnimalAliasRegistry;
-import com.explosive.carrybabyanimals.config.CarryConfig;
-import com.explosive.carrybabyanimals.permissions.CarryPermissions;
+import dev.jasmine.carrybabyanimals.config.AnimalAliasRegistry;
+import dev.jasmine.carrybabyanimals.config.CarryConfig;
+import dev.jasmine.carrybabyanimals.permissions.CarryPermissions;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;

@@ -35,3 +35,8 @@ Record the final hook used to suppress vanilla rendering for carried baby passen
 - `EntityType.getKey(entity.getType())` returns `Identifier` in this repo's Minecraft 26.1.2 generated sources.
 - Use `TamableAnimal#isOwnedBy(LivingEntity)` instead of the older `getOwnerUUID()` owner check.
 - Use `ServerPlayer#permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)` instead of the older `hasPermissions(2)` command-level check.
+
+## Task 5 Passenger Attachment Substitutions
+
+- Use `Entity#startRiding(Entity, boolean force, boolean sendEventAndTriggers)` instead of the plan's two-argument `startRiding(Entity, boolean)` overload.
+- Use `Entity#snapTo(double, double, double, float, float)` instead of the older `moveTo(double, double, double, float, float)` repositioning call.

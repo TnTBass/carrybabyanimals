@@ -1,4 +1,4 @@
-package com.explosive.carrybabyanimals.carry;
+package dev.jasmine.carrybabyanimals.carry;
 
 import java.util.UUID;
 

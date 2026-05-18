@@ -1,4 +1,4 @@
-package com.explosive.carrybabyanimals.config;
+package dev.jasmine.carrybabyanimals.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

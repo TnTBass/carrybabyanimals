@@ -1,4 +1,4 @@
-package com.explosive.carrybabyanimals.config;
+package dev.jasmine.carrybabyanimals.config;
 
 import org.junit.jupiter.api.Test;
 

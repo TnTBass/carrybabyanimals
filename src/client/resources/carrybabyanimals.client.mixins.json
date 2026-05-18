@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "com.explosive.carrybabyanimals.client.mixin",
+  "package": "dev.jasmine.carrybabyanimals.client.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [],
   "injectors": {

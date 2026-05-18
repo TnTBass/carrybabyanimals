@@ -1,4 +1,4 @@
-package com.explosive.carrybabyanimals.client;
+package dev.jasmine.carrybabyanimals.client;
 
 import net.fabricmc.api.ClientModInitializer;
 

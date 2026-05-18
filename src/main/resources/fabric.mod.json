@@ -10,10 +10,10 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.explosive.carrybabyanimals.CarryBabyAnimals"
+      "dev.jasmine.carrybabyanimals.CarryBabyAnimals"
     ],
     "client": [
-      "com.explosive.carrybabyanimals.client.CarryBabyAnimalsClient"
+      "dev.jasmine.carrybabyanimals.client.CarryBabyAnimalsClient"
     ]
   },
   "mixins": [

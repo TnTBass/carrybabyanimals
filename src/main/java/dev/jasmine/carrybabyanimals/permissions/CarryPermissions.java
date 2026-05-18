@@ -1,4 +1,4 @@
-package com.explosive.carrybabyanimals.permissions;
+package dev.jasmine.carrybabyanimals.permissions;
 
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.level.ServerPlayer;

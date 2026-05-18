@@ -1,7 +1,7 @@
-package com.explosive.carrybabyanimals.carry;
+package dev.jasmine.carrybabyanimals.carry;
 
-import com.explosive.carrybabyanimals.config.AnimalAliasRegistry;
-import com.explosive.carrybabyanimals.config.CarryConfig;
+import dev.jasmine.carrybabyanimals.config.AnimalAliasRegistry;
+import dev.jasmine.carrybabyanimals.config.CarryConfig;
 import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
