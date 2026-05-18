@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $false)]
-    [string] $Slug = "carry-baby-animals",
+    [string] $Slug = "carrybabyanimals",
 
     [Parameter(Mandatory = $true)]
     [string] $Version,

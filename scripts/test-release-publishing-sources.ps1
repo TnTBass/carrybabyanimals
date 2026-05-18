@@ -50,7 +50,10 @@ function Test-ReleaseWorkflowPublishesPublicNotesOnly {
 
 function Test-ModrinthUploadEnforcesRequiredServerOptionalClient {
     $script = Get-Text 'scripts/upload-modrinth.ps1'
+    $workflow = Get-Text '.github/workflows/release.yml'
 
+    Assert-Contains $workflow '-Slug "carrybabyanimals"' 'Release workflow must publish to the real Modrinth slug.'
+    Assert-Contains $script '[string] $Slug = "carrybabyanimals"' 'Modrinth upload default slug must match the real project slug.'
     Assert-Contains $script 'server_only_client_optional' 'Modrinth upload must document the new environment mapping.'
     Assert-Contains $script 'client_side = "optional"' 'Modrinth upload must set client_side optional.'
     Assert-Contains $script 'server_side = "required"' 'Modrinth upload must set server_side required.'

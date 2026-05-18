@@ -94,7 +94,7 @@ jobs:
         run: |
           $version = "${{ steps.version.outputs.version }}"
           ./scripts/upload-modrinth.ps1 `
-            -Slug "carry-baby-animals" `
+            -Slug "carrybabyanimals" `
             -Version $version `
             -JarPath "build/libs/carry-baby-animals-$version.jar" `
             -SourcesJarPath "build/libs/carry-baby-animals-$version-sources.jar" `
