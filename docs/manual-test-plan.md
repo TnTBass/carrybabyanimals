@@ -19,7 +19,7 @@ Use this matrix before release candidates and after changes that touch carry sta
 | Non-empty hands do not pick up | Hold any item in either hand and sneak-right-click an eligible baby. | Pickup does not start. Normal interaction behavior is not replaced by carrying. |
 | Adult animals are ignored | Sneak-right-click an adult animal with empty hands. | Pickup does not start. |
 | One carried baby at a time | While already carrying one baby, sneak-right-click another baby. | The second pickup is ignored and the current carried baby remains attached. |
-| Manual drop readiness | While carrying, try the intended release-control flow for this version. | A release candidate must provide a deliberate, player-triggered safe drop path. If no manual drop control works, mark the build blocked. |
+| Manual drop | While carrying, empty both hands and sneak-right-click air or a block. | The carried baby drops safely in front of the player and carry state clears. |
 | Movement | Carry a baby while walking, sprinting, jumping, swimming, and climbing short terrain. | Movement remains usable and the baby remains attached unless an invalid-state cleanup is expected. |
 | Petting | Left-click while carrying and repeat before and after the configured cooldown. | The attack is blocked, heart particles spawn around the carried baby when the cooldown allows, and no damage is dealt. |
 | Hand blocking | While carrying, try placing blocks, using blocks, eating, drawing a bow, and using normal items. | Use-item and use-block actions are blocked while carrying. |

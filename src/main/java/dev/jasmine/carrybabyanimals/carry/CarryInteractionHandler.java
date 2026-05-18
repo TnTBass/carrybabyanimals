@@ -36,15 +36,14 @@ public final class CarryInteractionHandler {
     }
 
     public InteractionResult onEntityInteract(ServerPlayer player, Entity target) {
-        if (!player.isShiftKeyDown()) {
-            return InteractionResult.PASS;
-        }
-        if (carryManager.isCarrying(player.getUUID())) {
-            // Carrying intentionally occupies the interaction: ignore other babies until dropped.
-            return InteractionResult.SUCCESS;
-        }
-        if (!player.getMainHandItem().isEmpty() || !player.getOffhandItem().isEmpty()) {
-            return InteractionResult.PASS;
+        InteractionResult decision = entityInteractDecision(
+                carryManager.isCarrying(player.getUUID()),
+                player.isShiftKeyDown(),
+                player.getMainHandItem().isEmpty(),
+                player.getOffhandItem().isEmpty()
+        );
+        if (decision != InteractionResult.SUCCESS || carryManager.isCarrying(player.getUUID())) {
+            return decision;
         }
         if (!eligibility.canPickUp(player, target, configManager.config())) {
             return InteractionResult.PASS;
@@ -101,7 +100,16 @@ public final class CarryInteractionHandler {
     }
 
     public InteractionResult onUseWhileCarrying(ServerPlayer player) {
-        return carryManager.isCarrying(player.getUUID()) ? InteractionResult.FAIL : InteractionResult.PASS;
+        InteractionResult result = useWhileCarryingDecision(
+                carryManager.isCarrying(player.getUUID()),
+                player.isShiftKeyDown(),
+                player.getMainHandItem().isEmpty(),
+                player.getOffhandItem().isEmpty()
+        );
+        if (result == InteractionResult.SUCCESS) {
+            dropCurrent(player);
+        }
+        return result;
     }
 
     public void dropCurrent(ServerPlayer player) {
@@ -140,5 +148,32 @@ public final class CarryInteractionHandler {
 
     void clearPetCooldown(UUID playerId) {
         lastPetTick.remove(playerId);
+    }
+
+    static InteractionResult useWhileCarryingDecision(
+            boolean isCarrying,
+            boolean isSneaking,
+            boolean mainHandEmpty,
+            boolean offHandEmpty
+    ) {
+        if (!isCarrying) {
+            return InteractionResult.PASS;
+        }
+        if (isSneaking && mainHandEmpty && offHandEmpty) {
+            return InteractionResult.SUCCESS;
+        }
+        return InteractionResult.FAIL;
+    }
+
+    static InteractionResult entityInteractDecision(
+            boolean isCarrying,
+            boolean isSneaking,
+            boolean mainHandEmpty,
+            boolean offHandEmpty
+    ) {
+        if (isCarrying) {
+            return InteractionResult.SUCCESS;
+        }
+        return isSneaking && mainHandEmpty && offHandEmpty ? InteractionResult.SUCCESS : InteractionResult.PASS;
     }
 }

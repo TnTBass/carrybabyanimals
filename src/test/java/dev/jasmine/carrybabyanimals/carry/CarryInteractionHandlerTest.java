@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
+import net.minecraft.world.InteractionResult;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,6 +38,52 @@ final class CarryInteractionHandlerTest {
         handler.clearPetCooldown(playerId);
 
         assertTrue(handler.canPet(playerId, 101L, 200));
+    }
+
+    @Test
+    void sneakingWithEmptyHandsWhileCarryingTriggersDeliberateDropUse() {
+        assertEquals(
+                InteractionResult.SUCCESS,
+                CarryInteractionHandler.useWhileCarryingDecision(true, true, true, true)
+        );
+    }
+
+    @Test
+    void carryingStillBlocksUseWhenNotDeliberatelyDropping() {
+        assertEquals(
+                InteractionResult.FAIL,
+                CarryInteractionHandler.useWhileCarryingDecision(true, false, true, true)
+        );
+        assertEquals(
+                InteractionResult.FAIL,
+                CarryInteractionHandler.useWhileCarryingDecision(true, true, false, true)
+        );
+        assertEquals(
+                InteractionResult.FAIL,
+                CarryInteractionHandler.useWhileCarryingDecision(true, true, true, false)
+        );
+    }
+
+    @Test
+    void notCarryingDoesNotConsumeUse() {
+        assertEquals(
+                InteractionResult.PASS,
+                CarryInteractionHandler.useWhileCarryingDecision(false, true, true, true)
+        );
+    }
+
+    @Test
+    void entityUseWhileCarryingIsConsumedEvenWithoutSneaking() {
+        assertEquals(InteractionResult.SUCCESS, CarryInteractionHandler.entityInteractDecision(true, false, true, true));
+        assertEquals(InteractionResult.SUCCESS, CarryInteractionHandler.entityInteractDecision(true, true, true, true));
+    }
+
+    @Test
+    void entityUsePickupRequiresSneakingAndEmptyHandsWhenNotCarrying() {
+        assertEquals(InteractionResult.PASS, CarryInteractionHandler.entityInteractDecision(false, false, true, true));
+        assertEquals(InteractionResult.PASS, CarryInteractionHandler.entityInteractDecision(false, true, false, true));
+        assertEquals(InteractionResult.PASS, CarryInteractionHandler.entityInteractDecision(false, true, true, false));
+        assertEquals(InteractionResult.SUCCESS, CarryInteractionHandler.entityInteractDecision(false, true, true, true));
     }
 
     private CarryInteractionHandler newHandler() {
