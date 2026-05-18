@@ -1,3 +1,6 @@
 .superpowers/
+.claude/
 .gradle/
 build/
+build_out.txt
+logs/

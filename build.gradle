@@ -53,6 +53,27 @@ test {
     useJUnitPlatform()
 }
 
+tasks.register("checkChangelog", Exec) {
+    group = "verification"
+    description = "Ensures releasable changes update either the public or internal changelog."
+    commandLine "pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${rootDir}/scripts/check-changelogs.ps1", "-RepoRoot", rootDir
+}
+
+tasks.named("check") {
+    dependsOn tasks.named("checkChangelog")
+}
+
+tasks.register("showPublicReleaseNotes", Exec) {
+    group = "release"
+    description = "Prints the exact public CHANGELOG.md section to review before pushing or tagging a release."
+    doFirst {
+        if (!project.hasProperty("releaseVersion") || project.property("releaseVersion").toString().trim().isEmpty()) {
+            throw new GradleException("Run with -PreleaseVersion=<version> to print public release notes from CHANGELOG.md.")
+        }
+    }
+    commandLine "pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${rootDir}/scripts/check-changelogs.ps1", "-RepoRoot", rootDir, "-ReleasePrep", "-Version", project.findProperty("releaseVersion") ?: ""
+}
+
 processResources {
     inputs.property "version", project.version
     filesMatching("fabric.mod.json") {
