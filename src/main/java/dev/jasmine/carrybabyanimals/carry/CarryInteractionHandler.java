@@ -2,13 +2,24 @@ package dev.jasmine.carrybabyanimals.carry;
 
 import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
 import dev.jasmine.carrybabyanimals.network.CarryNetworking;
+import dev.jasmine.carrybabyanimals.permissions.CarryPermissions;
+import net.minecraft.resources.Identifier;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,35 +51,61 @@ public final class CarryInteractionHandler {
         this.aiController = aiController;
     }
 
-    public InteractionResult onEntityInteract(ServerPlayer player, Entity target) {
+    public InteractionResult onEntityInteract(ServerPlayer player, Entity target, InteractionHand hand) {
+        boolean isCarrying = carryManager.isCarrying(player.getUUID());
+        boolean isSneaking = player.isShiftKeyDown();
+        boolean mainHandEmpty = player.getMainHandItem().isEmpty();
+        boolean offHandEmpty = player.getOffhandItem().isEmpty();
+        boolean isMainHand = hand == InteractionHand.MAIN_HAND;
         InteractionResult decision = entityInteractDecision(
-                carryManager.isCarrying(player.getUUID()),
-                player.isShiftKeyDown(),
-                player.getMainHandItem().isEmpty(),
-                player.getOffhandItem().isEmpty()
+            isCarrying,
+            isMainHand,
+            isSneaking,
+            mainHandEmpty,
+            offHandEmpty
         );
+        if (shouldDropFromEntityInteract(isCarrying, isMainHand, isSneaking, mainHandEmpty, offHandEmpty)) {
+            dropCurrent(player);
+            showActionBar(player, dropFeedbackText());
+            return InteractionResult.SUCCESS;
+        }
         if (decision != InteractionResult.SUCCESS || carryManager.isCarrying(player.getUUID())) {
+            logSkippedBabyAnimalPickup(player, target, "interaction_gate", isCarrying, isSneaking, mainHandEmpty, offHandEmpty);
             return decision;
         }
         if (!eligibility.canPickUp(player, target, configManager.config())) {
+            logSkippedBabyAnimalPickup(player, target, eligibilityReason(player, target), isCarrying, isSneaking, mainHandEmpty, offHandEmpty);
             return InteractionResult.PASS;
         }
         if (!carryManager.beginCarry(player.getUUID(), target.getId())) {
+            logSkippedBabyAnimalPickup(player, target, "already_carried_or_busy", isCarrying, isSneaking, mainHandEmpty, offHandEmpty);
             return InteractionResult.PASS;
         }
         if (!attachment.attach(player, target)) {
             carryManager.endCarry(player.getUUID());
             clearPetCooldown(player.getUUID());
+            logSkippedBabyAnimalPickup(player, target, "attachment_failed", isCarrying, isSneaking, mainHandEmpty, offHandEmpty);
             return InteractionResult.PASS;
         }
         if (target instanceof Mob mob) {
             aiController.suppress(mob);
         }
         CarryNetworking.sendSetCarried(player, target);
+        showActionBar(player, pickupFeedbackText(target.getDisplayName().getString()));
+        LOGGER.info(
+                "Carry Baby Animals pickup started: player={} target={} entityId={}",
+                player.getName().getString(),
+                entityTypeName(target),
+                target.getId()
+        );
         return InteractionResult.SUCCESS;
     }
 
     public InteractionResult onAttack(ServerPlayer player) {
+        return onPetRequest(player);
+    }
+
+    public InteractionResult onPetRequest(ServerPlayer player) {
         if (!carryManager.isCarrying(player.getUUID())) {
             return InteractionResult.PASS;
         }
@@ -97,7 +134,26 @@ public final class CarryInteractionHandler {
                     0.25D,
                     0.0D
             );
+            Vec3 firstPersonFeedbackPosition = firstPersonPetFeedbackPosition(
+                    player.getEyePosition(),
+                    player.getViewVector(1.0F)
+            );
+            serverLevel.sendParticles(
+                    player,
+                    ParticleTypes.HEART,
+                    false,
+                    false,
+                    firstPersonFeedbackPosition.x,
+                    firstPersonFeedbackPosition.y,
+                    firstPersonFeedbackPosition.z,
+                    3,
+                    0.18D,
+                    0.12D,
+                    0.18D,
+                    0.0D
+            );
             rememberPet(playerId, gameTime);
+            CarryNetworking.sendPetFeedbackToCarrier(player, baby.getId());
         }
         return InteractionResult.SUCCESS;
     }
@@ -111,6 +167,22 @@ public final class CarryInteractionHandler {
         );
         if (result == InteractionResult.SUCCESS) {
             dropCurrent(player);
+            showActionBar(player, dropFeedbackText());
+        }
+        return result;
+    }
+
+    public InteractionResult onUseBlockWhileCarrying(ServerPlayer player, BlockState state) {
+        InteractionResult result = useBlockWhileCarryingDecision(
+                carryManager.isCarrying(player.getUUID()),
+                player.isShiftKeyDown(),
+                player.getMainHandItem().isEmpty(),
+                player.getOffhandItem().isEmpty(),
+                isNavigationUseBlock(state)
+        );
+        if (result == InteractionResult.SUCCESS) {
+            dropCurrent(player);
+            showActionBar(player, dropFeedbackText());
         }
         return result;
     }
@@ -191,6 +263,64 @@ public final class CarryInteractionHandler {
         return null;
     }
 
+    private void logSkippedBabyAnimalPickup(
+            ServerPlayer player,
+            Entity target,
+            String reason,
+            boolean isCarrying,
+            boolean isSneaking,
+            boolean mainHandEmpty,
+            boolean offHandEmpty
+    ) {
+        if (!(target instanceof Animal animal) || !animal.isBaby()) {
+            return;
+        }
+        LOGGER.info(
+                "Carry Baby Animals pickup skipped: reason={} player={} target={} entityId={} sneaking={} mainHandEmpty={} offHandEmpty={} carrying={}",
+                reason,
+                player.getName().getString(),
+                entityTypeName(target),
+                target.getId(),
+                isSneaking,
+                mainHandEmpty,
+                offHandEmpty,
+                isCarrying
+        );
+    }
+
+    private String eligibilityReason(ServerPlayer player, Entity target) {
+        if (!CarryPermissions.canCarry(player)) {
+            return "carry_permission_denied";
+        }
+        if (!(target instanceof Animal animal)) {
+            return "not_an_animal";
+        }
+        if (!animal.isBaby()) {
+            return "not_a_baby";
+        }
+        Identifier entityId = EntityType.getKey(target.getType());
+        boolean tamed = animal instanceof TamableAnimal tamable && tamable.isTame();
+        boolean ownedByPlayer = animal instanceof TamableAnimal tamable && tamable.isOwnedBy(player);
+        CarryEligibility.PermissionSnapshot permissions = new CarryEligibility.PermissionSnapshot(
+                CarryPermissions.canCarryTamed(player),
+                CarryPermissions.canCarryOthersTamed(player)
+        );
+        CarryEligibility.PickupDecision decision = eligibility.pickupDecision(
+                new CarryEligibility.CarryCandidate(entityId, tamed, ownedByPlayer),
+                configManager.config(),
+                permissions
+        );
+        return decision.name().toLowerCase();
+    }
+
+    private String entityTypeName(Entity entity) {
+        return EntityType.getKey(entity.getType()).toString();
+    }
+
+    private void showActionBar(ServerPlayer player, String message) {
+        player.sendSystemMessage(Component.literal(message), true);
+    }
+
     boolean canPet(UUID playerId, long gameTime, int cooldownTicks) {
         Long last = lastPetTick.get(playerId);
         return last == null || gameTime - last >= cooldownTicks;
@@ -202,6 +332,10 @@ public final class CarryInteractionHandler {
 
     void clearPetCooldown(UUID playerId) {
         lastPetTick.remove(playerId);
+    }
+
+    static Vec3 firstPersonPetFeedbackPosition(Vec3 eyePosition, Vec3 viewVector) {
+        return eyePosition.add(viewVector.normalize().scale(0.75D)).add(0.0D, -0.15D, 0.0D);
     }
 
     static InteractionResult useWhileCarryingDecision(
@@ -219,8 +353,28 @@ public final class CarryInteractionHandler {
         return InteractionResult.FAIL;
     }
 
+    static InteractionResult useBlockWhileCarryingDecision(
+            boolean isCarrying,
+            boolean isSneaking,
+            boolean mainHandEmpty,
+            boolean offHandEmpty,
+            boolean navigationUseBlock
+    ) {
+        InteractionResult carriedUseDecision = useWhileCarryingDecision(
+                isCarrying,
+                isSneaking,
+                mainHandEmpty,
+                offHandEmpty
+        );
+        if (carriedUseDecision == InteractionResult.FAIL && navigationUseBlock) {
+            return InteractionResult.PASS;
+        }
+        return carriedUseDecision;
+    }
+
     static InteractionResult entityInteractDecision(
             boolean isCarrying,
+            boolean isMainHand,
             boolean isSneaking,
             boolean mainHandEmpty,
             boolean offHandEmpty
@@ -228,6 +382,28 @@ public final class CarryInteractionHandler {
         if (isCarrying) {
             return InteractionResult.SUCCESS;
         }
-        return isSneaking && mainHandEmpty && offHandEmpty ? InteractionResult.SUCCESS : InteractionResult.PASS;
+        return isMainHand && isSneaking && mainHandEmpty && offHandEmpty ? InteractionResult.SUCCESS : InteractionResult.PASS;
+    }
+
+    static boolean shouldDropFromEntityInteract(
+            boolean isCarrying,
+            boolean isMainHand,
+            boolean isSneaking,
+            boolean mainHandEmpty,
+            boolean offHandEmpty
+    ) {
+        return isCarrying && isMainHand && isSneaking && mainHandEmpty && offHandEmpty;
+    }
+
+    static String pickupFeedbackText(String targetName) {
+        return "Carrying " + targetName;
+    }
+
+    static String dropFeedbackText() {
+        return "Set down baby animal";
+    }
+
+    private static boolean isNavigationUseBlock(BlockState state) {
+        return state.getBlock() instanceof DoorBlock || state.getBlock() instanceof TrapDoorBlock;
     }
 }

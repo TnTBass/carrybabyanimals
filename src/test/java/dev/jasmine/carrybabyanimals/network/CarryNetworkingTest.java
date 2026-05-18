@@ -1,21 +1,17 @@
 package dev.jasmine.carrybabyanimals.network;
 
-import dev.jasmine.carrybabyanimals.CarryBabyAnimals;
-import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class CarryNetworkingTest {
     @Test
-    void payloadIdsUseCarryBabyAnimalsNamespace() {
+    void passengerSyncRecipientsIncludeCarrierAndBothTrackingSetsOnce() {
         assertEquals(
-                Identifier.fromNamespaceAndPath(CarryBabyAnimals.MOD_ID, "set_carried"),
-                CarryNetworking.SetCarriedPayload.TYPE.id()
-        );
-        assertEquals(
-                Identifier.fromNamespaceAndPath(CarryBabyAnimals.MOD_ID, "clear_carried"),
-                CarryNetworking.ClearCarriedPayload.TYPE.id()
+                List.of(1, 2, 3, 4),
+                List.copyOf(CarryNetworking.passengerSyncRecipientIds(1, List.of(2, 3), List.of(3, 4)))
         );
     }
 }

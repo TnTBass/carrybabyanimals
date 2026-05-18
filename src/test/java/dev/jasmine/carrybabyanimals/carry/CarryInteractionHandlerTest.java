@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.phys.Vec3;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -41,6 +42,40 @@ final class CarryInteractionHandlerTest {
     }
 
     @Test
+    void vanillaFirstPersonPetFeedbackSpawnsInFrontOfCarrierEyes() {
+        Vec3 position = CarryInteractionHandler.firstPersonPetFeedbackPosition(
+                new Vec3(10.0D, 65.6D, 10.0D),
+                new Vec3(0.0D, 0.0D, 1.0D)
+        );
+
+        assertEquals(10.0D, position.x, 1.0E-6D);
+        assertEquals(65.45D, position.y, 1.0E-6D);
+        assertEquals(10.75D, position.z, 1.0E-6D);
+    }
+
+    @Test
+    void playerPassengerAttachmentScopeIsTemporary() {
+        assertFalse(CarryAttachment.isPlayerPassengerAttachmentAllowed());
+
+        assertTrue(CarryAttachment.withPlayerPassengerAttachmentAllowed(10, CarryAttachment::isPlayerPassengerAttachmentAllowed));
+
+        assertFalse(CarryAttachment.isPlayerPassengerAttachmentAllowed());
+    }
+
+    @Test
+    void playerPassengerAttachmentScopeOnlyAllowsExpectedEntityId() {
+        assertFalse(CarryAttachment.isExpectedPlayerPassengerAttachment(10));
+
+        CarryAttachment.withPlayerPassengerAttachmentAllowed(10, () -> {
+            assertTrue(CarryAttachment.isExpectedPlayerPassengerAttachment(10));
+            assertFalse(CarryAttachment.isExpectedPlayerPassengerAttachment(11));
+            return true;
+        });
+
+        assertFalse(CarryAttachment.isExpectedPlayerPassengerAttachment(10));
+    }
+
+    @Test
     void sneakingWithEmptyHandsWhileCarryingTriggersDeliberateDropUse() {
         assertEquals(
                 InteractionResult.SUCCESS,
@@ -65,6 +100,30 @@ final class CarryInteractionHandlerTest {
     }
 
     @Test
+    void useBlockWhileCarryingAllowsNavigationBlocksWithoutDropping() {
+        assertEquals(
+                InteractionResult.PASS,
+                CarryInteractionHandler.useBlockWhileCarryingDecision(true, false, true, true, true)
+        );
+    }
+
+    @Test
+    void useBlockWhileCarryingStillBlocksOtherBlocks() {
+        assertEquals(
+                InteractionResult.FAIL,
+                CarryInteractionHandler.useBlockWhileCarryingDecision(true, false, true, true, false)
+        );
+    }
+
+    @Test
+    void deliberateDropTakesPrecedenceOverNavigationBlockUse() {
+        assertEquals(
+                InteractionResult.SUCCESS,
+                CarryInteractionHandler.useBlockWhileCarryingDecision(true, true, true, true, true)
+        );
+    }
+
+    @Test
     void notCarryingDoesNotConsumeUse() {
         assertEquals(
                 InteractionResult.PASS,
@@ -74,16 +133,33 @@ final class CarryInteractionHandlerTest {
 
     @Test
     void entityUseWhileCarryingIsConsumedEvenWithoutSneaking() {
-        assertEquals(InteractionResult.SUCCESS, CarryInteractionHandler.entityInteractDecision(true, false, true, true));
-        assertEquals(InteractionResult.SUCCESS, CarryInteractionHandler.entityInteractDecision(true, true, true, true));
+        assertEquals(InteractionResult.SUCCESS, CarryInteractionHandler.entityInteractDecision(true, true, false, true, true));
+        assertEquals(InteractionResult.SUCCESS, CarryInteractionHandler.entityInteractDecision(true, true, true, true, true));
     }
 
     @Test
     void entityUsePickupRequiresSneakingAndEmptyHandsWhenNotCarrying() {
-        assertEquals(InteractionResult.PASS, CarryInteractionHandler.entityInteractDecision(false, false, true, true));
-        assertEquals(InteractionResult.PASS, CarryInteractionHandler.entityInteractDecision(false, true, false, true));
-        assertEquals(InteractionResult.PASS, CarryInteractionHandler.entityInteractDecision(false, true, true, false));
-        assertEquals(InteractionResult.SUCCESS, CarryInteractionHandler.entityInteractDecision(false, true, true, true));
+        assertEquals(InteractionResult.PASS, CarryInteractionHandler.entityInteractDecision(false, true, false, true, true));
+        assertEquals(InteractionResult.PASS, CarryInteractionHandler.entityInteractDecision(false, true, true, false, true));
+        assertEquals(InteractionResult.PASS, CarryInteractionHandler.entityInteractDecision(false, true, true, true, false));
+        assertEquals(InteractionResult.PASS, CarryInteractionHandler.entityInteractDecision(false, false, true, true, true));
+        assertEquals(InteractionResult.SUCCESS, CarryInteractionHandler.entityInteractDecision(false, true, true, true, true));
+    }
+
+    @Test
+    void entityUseDropRequiresCarryingMainHandSneakingAndEmptyHands() {
+        assertTrue(CarryInteractionHandler.shouldDropFromEntityInteract(true, true, true, true, true));
+        assertFalse(CarryInteractionHandler.shouldDropFromEntityInteract(true, false, true, true, true));
+        assertFalse(CarryInteractionHandler.shouldDropFromEntityInteract(true, true, false, true, true));
+        assertFalse(CarryInteractionHandler.shouldDropFromEntityInteract(true, true, true, false, true));
+        assertFalse(CarryInteractionHandler.shouldDropFromEntityInteract(true, true, true, true, false));
+        assertFalse(CarryInteractionHandler.shouldDropFromEntityInteract(false, true, true, true, true));
+    }
+
+    @Test
+    void carryFeedbackTextNamesTheVisibleAction() {
+        assertEquals("Carrying Baby Panda", CarryInteractionHandler.pickupFeedbackText("Baby Panda"));
+        assertEquals("Set down baby animal", CarryInteractionHandler.dropFeedbackText());
     }
 
     private CarryInteractionHandler newHandler() {

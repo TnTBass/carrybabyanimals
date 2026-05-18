@@ -18,14 +18,35 @@ final class CarriedBabyRenderStateTest {
         CarriedBabyRenderState.set(10, 20);
 
         assertTrue(CarriedBabyRenderState.isCarriedBaby(10));
+        assertTrue(CarriedBabyRenderState.isCarrier(20));
+        assertFalse(CarriedBabyRenderState.isCarrier(21));
         assertEquals(20, CarriedBabyRenderState.carrierFor(10).orElseThrow());
+        assertEquals(10, CarriedBabyRenderState.carriedBabyFor(20).orElseThrow());
 
         CarriedBabyRenderState.clear(10);
         assertFalse(CarriedBabyRenderState.isCarriedBaby(10));
+        assertFalse(CarriedBabyRenderState.isCarrier(20));
+        assertTrue(CarriedBabyRenderState.carriedBabyFor(20).isEmpty());
 
         CarriedBabyRenderState.set(11, 21);
         CarriedBabyRenderState.clearAll();
         assertFalse(CarriedBabyRenderState.isCarriedBaby(11));
+    }
+
+    @Test
+    void replacingBabyOrCarrierKeepsLookupIndexesConsistent() {
+        CarriedBabyRenderState.set(10, 20);
+        CarriedBabyRenderState.set(11, 20);
+
+        assertFalse(CarriedBabyRenderState.isCarriedBaby(10));
+        assertTrue(CarriedBabyRenderState.isCarrier(20));
+        assertEquals(11, CarriedBabyRenderState.carriedBabyFor(20).orElseThrow());
+
+        CarriedBabyRenderState.set(11, 21);
+
+        assertFalse(CarriedBabyRenderState.isCarrier(20));
+        assertTrue(CarriedBabyRenderState.isCarrier(21));
+        assertEquals(21, CarriedBabyRenderState.carrierFor(11).orElseThrow());
     }
 
     @Test
@@ -37,5 +58,7 @@ final class CarriedBabyRenderStateTest {
 
         assertTrue(CarriedBabyRenderState.isCarriedBaby(10));
         assertFalse(CarriedBabyRenderState.isCarriedBaby(11));
+        assertTrue(CarriedBabyRenderState.isCarrier(20));
+        assertFalse(CarriedBabyRenderState.isCarrier(21));
     }
 }

@@ -25,6 +25,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,7 @@ public final class CarryBabyAnimals implements ModInitializer {
         loadConfig();
         LOGGER.info("Carry Baby Animals initialized");
         CarryNetworking.registerS2CPayloads();
+        CarryNetworking.registerC2SPayloads(INTERACTIONS);
         CarryTicker ticker = new CarryTicker(CARRY_MANAGER, INTERACTIONS);
 
         ServerTickEvents.END_SERVER_TICK.register(ticker::tick);
@@ -58,7 +60,7 @@ public final class CarryBabyAnimals implements ModInitializer {
             if (world.isClientSide() || !(player instanceof ServerPlayer serverPlayer)) {
                 return InteractionResult.PASS;
             }
-            return INTERACTIONS.onEntityInteract(serverPlayer, entity);
+            return INTERACTIONS.onEntityInteract(serverPlayer, entity, hand);
         });
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (world.isClientSide() || !(player instanceof ServerPlayer serverPlayer)) {
@@ -85,7 +87,8 @@ public final class CarryBabyAnimals implements ModInitializer {
             if (world.isClientSide() || !(player instanceof ServerPlayer serverPlayer)) {
                 return InteractionResult.PASS;
             }
-            return INTERACTIONS.onUseWhileCarrying(serverPlayer);
+            BlockState state = world.getBlockState(hitResult.getBlockPos());
+            return INTERACTIONS.onUseBlockWhileCarrying(serverPlayer, state);
         });
         EntityTrackingEvents.START_TRACKING.register((entity, player) ->
                 CarryNetworking.replayTrackedCarry(CARRY_MANAGER, entity, player)

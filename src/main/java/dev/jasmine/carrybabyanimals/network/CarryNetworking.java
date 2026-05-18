@@ -1,6 +1,7 @@
 package dev.jasmine.carrybabyanimals.network;
 
 import dev.jasmine.carrybabyanimals.CarryBabyAnimals;
+import dev.jasmine.carrybabyanimals.carry.CarryInteractionHandler;
 import dev.jasmine.carrybabyanimals.carry.CarryManager;
 import dev.jasmine.carrybabyanimals.carry.CarryState;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -9,19 +10,23 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public final class CarryNetworking {
     private static boolean clientboundPlayPayloadsRegistered;
+    private static boolean serverboundPlayPayloadsRegistered;
 
     private CarryNetworking() {
     }
@@ -33,14 +38,29 @@ public final class CarryNetworking {
 
         PayloadTypeRegistry.clientboundPlay().register(SetCarriedPayload.TYPE, SetCarriedPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ClearCarriedPayload.TYPE, ClearCarriedPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(PetFeedbackPayload.TYPE, PetFeedbackPayload.CODEC);
         clientboundPlayPayloadsRegistered = true;
     }
 
+    public static synchronized void registerC2SPayloads(CarryInteractionHandler interactions) {
+        if (serverboundPlayPayloadsRegistered) {
+            return;
+        }
+
+        PayloadTypeRegistry.serverboundPlay().register(PetCarriedPayload.TYPE, PetCarriedPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(PetCarriedPayload.TYPE, (payload, context) ->
+                context.server().execute(() -> interactions.onPetRequest(context.player()))
+        );
+        serverboundPlayPayloadsRegistered = true;
+    }
+
     public static void sendSetCarried(ServerPlayer carrier, Entity baby) {
+        sendPassengerSync(carrier, baby);
         sendToCarrierAndTracking(carrier, baby, new SetCarriedPayload(baby.getId(), carrier.getId()));
     }
 
     public static void sendClearCarried(ServerPlayer carrier, Entity baby) {
+        sendPassengerSync(carrier, baby);
         sendToCarrierAndTracking(carrier, baby, new ClearCarriedPayload(baby.getId()));
     }
 
@@ -50,6 +70,44 @@ public final class CarryNetworking {
 
     public static void sendClearCarriedToPlayer(ServerPlayer player, int babyEntityId) {
         sendIfSupported(player, new ClearCarriedPayload(babyEntityId));
+    }
+
+    public static void sendPetFeedbackToCarrier(ServerPlayer carrier, int babyEntityId) {
+        sendIfSupported(carrier, new PetFeedbackPayload(babyEntityId));
+    }
+
+    public static void sendPassengerSync(ServerPlayer carrier, Entity baby) {
+        ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(carrier);
+        Collection<ServerPlayer> carrierTrackers = PlayerLookup.tracking(carrier);
+        Collection<ServerPlayer> babyTrackers = PlayerLookup.tracking(baby);
+        Set<Integer> recipientIds = passengerSyncRecipientIds(
+                carrier.getId(),
+                carrierTrackers.stream().map(ServerPlayer::getId).collect(Collectors.toSet()),
+                babyTrackers.stream().map(ServerPlayer::getId).collect(Collectors.toSet())
+        );
+        Set<ServerPlayer> recipients = new LinkedHashSet<>();
+        if (recipientIds.contains(carrier.getId())) {
+            recipients.add(carrier);
+        }
+        carrierTrackers.stream()
+                .filter(player -> recipientIds.contains(player.getId()))
+                .forEach(recipients::add);
+        babyTrackers.stream()
+                .filter(player -> recipientIds.contains(player.getId()))
+                .forEach(recipients::add);
+        recipients.forEach(player -> player.connection.send(packet));
+    }
+
+    static Set<Integer> passengerSyncRecipientIds(
+            int carrierId,
+            Iterable<Integer> carrierTrackerIds,
+            Iterable<Integer> babyTrackerIds
+    ) {
+        Set<Integer> recipientIds = new LinkedHashSet<>();
+        recipientIds.add(carrierId);
+        carrierTrackerIds.forEach(recipientIds::add);
+        babyTrackerIds.forEach(recipientIds::add);
+        return recipientIds;
     }
 
     public static void replayTrackedCarry(CarryManager carryManager, Entity trackedEntity, ServerPlayer trackingPlayer) {
@@ -124,6 +182,31 @@ public final class CarryNetworking {
                 ByteBufCodecs.VAR_INT,
                 ClearCarriedPayload::babyEntityId,
                 ClearCarriedPayload::new
+        );
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record PetCarriedPayload() implements CustomPacketPayload {
+        public static final PetCarriedPayload INSTANCE = new PetCarriedPayload();
+        public static final CustomPacketPayload.Type<PetCarriedPayload> TYPE = new CustomPacketPayload.Type<>(id("pet_carried"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, PetCarriedPayload> CODEC = StreamCodec.unit(INSTANCE);
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record PetFeedbackPayload(int babyEntityId) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<PetFeedbackPayload> TYPE = new CustomPacketPayload.Type<>(id("pet_feedback"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, PetFeedbackPayload> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT,
+                PetFeedbackPayload::babyEntityId,
+                PetFeedbackPayload::new
         );
 
         @Override

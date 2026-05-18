@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class CarryEligibilityTest {
@@ -56,6 +57,16 @@ final class CarryEligibilityTest {
     }
 
     @Test
+    void diagnosticReasonNamesConfigBlock() {
+        CarryConfig config = config(List.of("cow"), List.of("cow"), true);
+
+        assertEquals(
+                CarryEligibility.PickupDecision.BLOCKED_BY_CONFIG,
+                eligibility.pickupDecision(wild(COW), config, ALL_TAMED_PERMISSIONS)
+        );
+    }
+
+    @Test
     void unknownOnlyAllowListDenies() {
         CarryConfig config = config(List.of("mystery"), List.of(), true);
 
@@ -83,6 +94,14 @@ final class CarryEligibilityTest {
                 config,
                 new CarryEligibility.PermissionSnapshot(true, false)
         ));
+        assertEquals(
+                CarryEligibility.PickupDecision.TAMED_PERMISSION_DENIED,
+                eligibility.pickupDecision(
+                        ownedTamed(WOLF),
+                        config,
+                        new CarryEligibility.PermissionSnapshot(false, true)
+                )
+        );
     }
 
     @Test

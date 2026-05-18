@@ -31,13 +31,8 @@ public final class CarriedBabyRenderer {
             return;
         }
 
-        Map<Integer, Integer> carriedBabies = CarriedBabyRenderState.carriedBabies();
-        if (carriedBabies.isEmpty()) {
-            return;
-        }
-
         CarriedBabyRenderState.pruneMissingEntities(entityId -> client.level.getEntity(entityId) != null);
-        carriedBabies = CarriedBabyRenderState.carriedBabies();
+        Map<Integer, Integer> carriedBabies = CarriedBabyRenderState.carriedBabies();
         if (carriedBabies.isEmpty()) {
             return;
         }
@@ -85,14 +80,13 @@ public final class CarriedBabyRenderer {
         }
         horizontalForward = horizontalForward.normalize();
 
-        Vec3 right = new Vec3(horizontalForward.z, 0.0D, -horizontalForward.x).normalize();
-        double armSide = carrier instanceof LivingEntity living && living.getMainArm() == HumanoidArm.LEFT ? -1.0D : 1.0D;
-        double carriedHeight = Math.min(1.25D, carrier.getBbHeight() * 0.65D);
-        double babyLowering = Math.min(0.25D, baby.getBbHeight() * 0.25D);
-
-        return base
-                .add(horizontalForward.scale(0.32D))
-                .add(right.scale(0.35D * armSide))
-                .add(0.0D, carriedHeight - babyLowering, 0.0D);
+        boolean leftMainArm = carrier instanceof LivingEntity living && living.getMainArm() == HumanoidArm.LEFT;
+        return CarriedBabyPlacement.heldPosition(
+                base,
+                horizontalForward,
+                carrier.getBbHeight(),
+                baby.getBbHeight(),
+                leftMainArm
+        );
     }
 }

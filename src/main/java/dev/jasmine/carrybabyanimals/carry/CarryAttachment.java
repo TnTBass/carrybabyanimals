@@ -9,14 +9,18 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public final class CarryAttachment {
     private static final double[] FRONT_DISTANCES = {1.25D, 1.75D, 0.75D, 2.25D};
     private static final double[] SIDE_OFFSETS = {0.0D, 0.5D, -0.5D, 1.0D, -1.0D};
     private static final int[] Y_OFFSETS = {0, 1, -1, 2, -2};
+    private static final ThreadLocal<Boolean> ALLOW_PLAYER_PASSENGER_ATTACHMENT =
+            ThreadLocal.withInitial(() -> Boolean.FALSE);
+    private static final ThreadLocal<Integer> EXPECTED_PLAYER_PASSENGER_ENTITY_ID = new ThreadLocal<>();
 
     public boolean attach(ServerPlayer carrier, Entity baby) {
-        return baby.startRiding(carrier, true, true);
+        return withPlayerPassengerAttachmentAllowed(baby.getId(), () -> baby.startRiding(carrier, true, true));
     }
 
     public void dropInFront(ServerPlayer carrier, Entity baby) {
@@ -109,5 +113,28 @@ public final class CarryAttachment {
             return new Vec3(0.0D, 0.0D, 1.0D);
         }
         return horizontal.normalize();
+    }
+
+    public static boolean isPlayerPassengerAttachmentAllowed() {
+        return ALLOW_PLAYER_PASSENGER_ATTACHMENT.get();
+    }
+
+    public static boolean isExpectedPlayerPassengerAttachment(int entityId) {
+        Integer expectedEntityId = EXPECTED_PLAYER_PASSENGER_ENTITY_ID.get();
+        return isPlayerPassengerAttachmentAllowed()
+                && expectedEntityId != null
+                // intValue() keeps this value equality explicit if callers ever pass boxed ids.
+                && expectedEntityId.intValue() == entityId;
+    }
+
+    static boolean withPlayerPassengerAttachmentAllowed(int expectedPassengerEntityId, Supplier<Boolean> action) {
+        ALLOW_PLAYER_PASSENGER_ATTACHMENT.set(Boolean.TRUE);
+        EXPECTED_PLAYER_PASSENGER_ENTITY_ID.set(expectedPassengerEntityId);
+        try {
+            return action.get();
+        } finally {
+            ALLOW_PLAYER_PASSENGER_ATTACHMENT.remove();
+            EXPECTED_PLAYER_PASSENGER_ENTITY_ID.remove();
+        }
     }
 }

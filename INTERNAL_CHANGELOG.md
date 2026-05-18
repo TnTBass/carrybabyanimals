@@ -4,4 +4,6 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Added server-side pickup diagnostic logging for baby-animal interaction troubleshooting.
+- Hardened the scoped player-passenger attachment mixin and client carry-render state after code review.
 - Added a mechanical public/internal changelog split with a Gradle changelog gate and release-prep public-notes check.

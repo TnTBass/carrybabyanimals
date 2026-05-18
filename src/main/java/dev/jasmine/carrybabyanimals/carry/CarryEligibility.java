@@ -38,16 +38,20 @@ public final class CarryEligibility {
     }
 
     boolean canPickUpResolved(CarryCandidate candidate, CarryConfig config, PermissionSnapshot permissions) {
+        return pickupDecision(candidate, config, permissions) == PickupDecision.ALLOWED;
+    }
+
+    PickupDecision pickupDecision(CarryCandidate candidate, CarryConfig config, PermissionSnapshot permissions) {
         if (matchesAny(config.blockedAnimals(), candidate)) {
-            return false;
+            return PickupDecision.BLOCKED_BY_CONFIG;
         }
         if (config.restrictToAllowedAnimals() && !matchesAny(config.allowedAnimals(), candidate)) {
-            return false;
+            return PickupDecision.NOT_IN_ALLOWED_CONFIG;
         }
         if (!config.restrictToAllowedAnimals() && !isDefaultSupported(candidate)) {
-            return false;
+            return PickupDecision.UNSUPPORTED_ANIMAL;
         }
-        return passesTamedRules(candidate, config, permissions);
+        return tamedRulesDecision(candidate, config, permissions);
     }
 
     private boolean matchesAny(Iterable<String> names, CarryCandidate candidate) {
@@ -68,18 +72,35 @@ public final class CarryEligibility {
     }
 
     private boolean passesTamedRules(CarryCandidate candidate, CarryConfig config, PermissionSnapshot permissions) {
+        return tamedRulesDecision(candidate, config, permissions) == PickupDecision.ALLOWED;
+    }
+
+    private PickupDecision tamedRulesDecision(CarryCandidate candidate, CarryConfig config, PermissionSnapshot permissions) {
         if (!candidate.tamed()) {
-            return true;
+            return PickupDecision.ALLOWED;
         }
         if (candidate.ownedByPlayer()) {
-            return permissions.canCarryTamed();
+            return permissions.canCarryTamed() ? PickupDecision.ALLOWED : PickupDecision.TAMED_PERMISSION_DENIED;
         }
-        return config.allowCarryingOtherPlayersTamedAnimals() && permissions.canCarryOthersTamed();
+        if (!config.allowCarryingOtherPlayersTamedAnimals()) {
+            return PickupDecision.OTHER_TAMED_DISABLED;
+        }
+        return permissions.canCarryOthersTamed() ? PickupDecision.ALLOWED : PickupDecision.OTHER_TAMED_PERMISSION_DENIED;
     }
 
     record CarryCandidate(Identifier entityId, boolean tamed, boolean ownedByPlayer) {
     }
 
     record PermissionSnapshot(boolean canCarryTamed, boolean canCarryOthersTamed) {
+    }
+
+    enum PickupDecision {
+        ALLOWED,
+        BLOCKED_BY_CONFIG,
+        NOT_IN_ALLOWED_CONFIG,
+        UNSUPPORTED_ANIMAL,
+        TAMED_PERMISSION_DENIED,
+        OTHER_TAMED_DISABLED,
+        OTHER_TAMED_PERMISSION_DENIED
     }
 }
