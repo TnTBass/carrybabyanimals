@@ -20,10 +20,14 @@ public final class CarryAttachment {
     }
 
     public void dropInFront(ServerPlayer carrier, Entity baby) {
+        dropInFront(carrier, baby, true);
+    }
+
+    public void dropInFront(ServerPlayer carrier, Entity baby, boolean loadDestinationChunk) {
         Vec3 target = chooseDropPosition(carrier, baby);
         baby.stopRiding();
         baby.snapTo(target.x, target.y, target.z, baby.getYRot(), baby.getXRot());
-        if (carrier.level() instanceof ServerLevel serverLevel) {
+        if (loadDestinationChunk && carrier.level() instanceof ServerLevel serverLevel) {
             serverLevel.getChunk(baby.blockPosition());
         }
     }

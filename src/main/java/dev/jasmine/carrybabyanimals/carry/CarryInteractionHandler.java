@@ -32,6 +32,7 @@ public final class CarryInteractionHandler {
             return InteractionResult.PASS;
         }
         if (carryManager.isCarrying(player.getUUID())) {
+            // Carrying intentionally occupies the interaction: ignore other babies until dropped.
             return InteractionResult.SUCCESS;
         }
         if (!player.getMainHandItem().isEmpty() || !player.getOffhandItem().isEmpty()) {
@@ -54,6 +55,10 @@ public final class CarryInteractionHandler {
     }
 
     public void dropCurrent(ServerPlayer player) {
+        dropCurrent(player, true);
+    }
+
+    public void dropCurrent(ServerPlayer player, boolean loadDestinationChunk) {
         carryManager.carriedEntityId(player.getUUID()).ifPresent(carriedEntityId -> {
             Entity baby = player.level().getEntity(carriedEntityId);
             if (baby == null) {
@@ -65,7 +70,7 @@ public final class CarryInteractionHandler {
             if (baby instanceof Mob mob) {
                 aiController.restore(mob);
             }
-            attachment.dropInFront(player, baby);
+            attachment.dropInFront(player, baby, loadDestinationChunk);
             carryManager.endCarry(player.getUUID());
         });
     }

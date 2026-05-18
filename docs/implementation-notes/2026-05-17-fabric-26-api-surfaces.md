@@ -20,10 +20,15 @@ Record whether Fabric 26.x exposes a baby-to-adult growth event here during impl
 
 Record the final hook names used for:
 
-- Sneak-right-click entity interaction.
+- Sneak-right-click entity interaction: `net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT`, signature `(Player player, Level world, InteractionHand hand, Entity entity, EntityHitResult hitResult) -> InteractionResult`.
+  - If the player is already carrying, the handler returns `InteractionResult.SUCCESS` for sneaking entity interactions. This is intentional: carrying occupies the interaction and clicking another baby while carrying is ignored until the current baby is dropped.
+- Carry cleanup ticker / growth fallback: `net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_SERVER_TICK`, signature `(MinecraftServer server) -> void`.
 - Left-click attack interception while carrying.
 - Use-item/block interaction blocking while carrying.
-- Logout, death, dimension change, and server stop cleanup.
+- Logout cleanup: `net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT`, signature `(ServerGamePacketListenerImpl handler, MinecraftServer server) -> void`.
+- Server stop cleanup: `net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING`, signature `(MinecraftServer server) -> void`.
+  - Shutdown cleanup intentionally drops carried babies through the normal safe placement/collision path before world save completes. It skips only the final destination chunk force-load during `SERVER_STOPPING` to avoid extra late chunk work.
+- Death and dimension change cleanup are not registered in Task 6.
 
 ## Renderer Hooks
 
