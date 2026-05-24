@@ -1,12 +1,11 @@
 name: Retry CurseForge Upload
 
-on:
+"on":
   workflow_dispatch:
     inputs:
       version:
         description: "Release version to upload to CurseForge, for example 0.1.2"
         required: true
-        type: string
 
 jobs:
   retry-curseforge:
