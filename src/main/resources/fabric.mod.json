@@ -5,8 +5,13 @@
   "name": "Carry Baby Animals",
   "description": "Carry and pet baby animals without putting them in your inventory.",
   "authors": ["Tyler", "Jasmine"],
-  "contact": {},
+  "contact": {
+    "homepage": "https://modrinth.com/mod/carrybabyanimals",
+    "sources": "https://github.com/TnTBass/carrybabyanimals",
+    "issues": "https://github.com/TnTBass/carrybabyanimals/issues"
+  },
   "license": "MIT",
+  "icon": "assets/carrybabyanimals/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [

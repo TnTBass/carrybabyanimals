@@ -4,6 +4,10 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
+## 0.1.2
+
+- Mod listings now show the Carry Baby Animals icon and link to the Modrinth page, source code, and issue tracker.
+
 ## 0.1.1
 
 - Changing Fabric Permissions API to be optional, not required. Servers without it use the mod's vanilla permission defaults.
