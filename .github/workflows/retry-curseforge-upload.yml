@@ -1,0 +1,77 @@
+name: Retry CurseForge Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version to upload to CurseForge, for example 0.1.2"
+        required: true
+        type: string
+
+jobs:
+  retry-curseforge:
+    name: Retry CurseForge upload
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a
+
+      - name: Set up Java
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Validate requested version
+        shell: bash
+        run: |
+          expected="mod_version=${{ inputs.version }}"
+          if ! grep -Fx "$expected" gradle.properties; then
+            echo "This workflow builds the checked-out branch. Expected ${expected} in gradle.properties." >&2
+            exit 1
+          fi
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Extract public release notes
+        shell: bash
+        run: |
+          version="${{ inputs.version }}"
+          awk -v version="$version" '
+            $0 == "## " version { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md | sed '/./,$!d' > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "No public CHANGELOG.md notes found for ${version}" >&2
+            exit 1
+          fi
+
+      - name: Publish to CurseForge
+        id: curseforge
+        shell: pwsh
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+        run: |
+          $version = "${{ inputs.version }}"
+          ./scripts/upload-curseforge.ps1 `
+            -Slug "carry-baby-animals" `
+            -Version $version `
+            -JarPath "build/libs/carry-baby-animals-$version.jar" `
+            -ChangelogPath "release-notes.md" `
+            -DescriptionPath "docs/marketplace-description.md"
+
+      - name: Report CurseForge file ID
+        run: echo "CurseForge file ID: ${{ steps.curseforge.outputs.curseforge_file_id }}"

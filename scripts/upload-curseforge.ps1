@@ -171,4 +171,16 @@ if (
     throw "CurseForge file upload failed: $uploadResponse"
 }
 
-Write-Host "Published CurseForge $Slug $Version. Verify project listing side metadata remains server required / client optional. Copy $DescriptionPath into the CurseForge project description manually."
+if (
+    ($curseForgeFile.PSObject.Properties.Name -notcontains "id") -or
+    [string]::IsNullOrWhiteSpace([string] $curseForgeFile.id)
+) {
+    throw "CurseForge file upload did not return a file ID: $uploadResponse"
+}
+
+$curseForgeFileId = [string] $curseForgeFile.id
+if (-not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable("GITHUB_OUTPUT"))) {
+    Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "curseforge_file_id=$curseForgeFileId"
+}
+
+Write-Host "Published CurseForge $Slug $Version. CurseForgeFileId=$curseForgeFileId. Verify project listing side metadata remains server required / client optional. Copy $DescriptionPath into the CurseForge project description manually."

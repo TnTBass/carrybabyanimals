@@ -97,6 +97,19 @@ function Test-CurseForgeUploadDocumentsSideLimitAndDependencies {
     Assert-Contains $script 'metadata=<' 'CurseForge upload must send metadata as a multipart JSON file part.'
     Assert-Contains $script 'slug = "fabric-api"' 'CurseForge upload must include Fabric API as a required relation.'
     Assert-Contains $script 'type = "requiredDependency"' 'CurseForge upload must mark supported dependencies required.'
+    Assert-Contains $script 'CurseForgeFileId' 'CurseForge upload must print the returned CurseForge file ID for verification.'
+    Assert-Contains $script '$curseForgeFile.id' 'CurseForge upload must require the returned CurseForge file ID before reporting success.'
+}
+
+function Test-CurseForgeOnlyRetryWorkflow {
+    $workflow = Get-Text '.github/workflows/retry-curseforge-upload.yml'
+
+    Assert-Contains $workflow 'workflow_dispatch' 'CurseForge retry workflow must be manually runnable.'
+    Assert-Contains $workflow 'mod_version=${{ inputs.version }}' 'CurseForge retry workflow must verify the checked-out branch matches the requested version.'
+    Assert-Contains $workflow './scripts/upload-curseforge.ps1' 'CurseForge retry workflow must use the shared CurseForge upload script.'
+    Assert-Contains $workflow '-JarPath "build/libs/carry-baby-animals-$version.jar"' 'CurseForge retry workflow must upload the release jar.'
+    Assert-NotContains $workflow 'upload-modrinth.ps1' 'CurseForge retry workflow must not republish Modrinth.'
+    Assert-NotContains $workflow 'gh release create' 'CurseForge retry workflow must not create another GitHub release.'
 }
 
 function Test-GradleRunsReleasePublishingSourceGate {
@@ -159,6 +172,7 @@ Test-ReleaseWorkflowPublishesPublicNotesOnly
 Test-MarketplaceMetadataSyncWorkflow
 Test-ModrinthUploadEnforcesRequiredServerOptionalClient
 Test-CurseForgeUploadDocumentsSideLimitAndDependencies
+Test-CurseForgeOnlyRetryWorkflow
 Test-GradleRunsReleasePublishingSourceGate
 Test-FabricPermissionsApiIsOptional
 Test-MarketplaceDescriptionExists
