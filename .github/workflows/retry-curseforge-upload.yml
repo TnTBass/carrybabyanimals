@@ -73,4 +73,5 @@ jobs:
             -DescriptionPath "docs/marketplace-description.md"
 
       - name: Report CurseForge file ID
-        run: echo "CurseForge file ID: ${{ steps.curseforge.outputs.curseforge_file_id }}"
+        run: |
+          echo "CurseForge file ID: ${{ steps.curseforge.outputs.curseforge_file_id }}"
