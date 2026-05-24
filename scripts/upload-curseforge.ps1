@@ -128,6 +128,8 @@ $gameVersions = Invoke-RestMethod -Uri "https://minecraft.curseforge.com/api/gam
 # Keep the CurseForge project listing set to server required / client optional in the site UI.
 # CurseForge upload API does not expose project-page description updates.
 # Copy docs/marketplace-description.md into the CurseForge description field manually.
+# Fabric Permissions API remains optional in fabric.mod.json and Modrinth metadata,
+# but CurseForge does not accept it as a project relation for this root category.
 $metadata = @{
     changelog = Read-PublicChangelog $ChangelogPath
     changelogType = "markdown"
@@ -142,10 +144,6 @@ $metadata = @{
             @{
                 slug = "fabric-api"
                 type = "requiredDependency"
-            },
-            @{
-                slug = "fabric-permissions-api"
-                type = "optionalDependency"
             }
         )
     }
@@ -166,7 +164,9 @@ if ($LASTEXITCODE -ne 0) {
 $curseForgeFile = $uploadResponse | ConvertFrom-Json
 if (
     ($curseForgeFile.PSObject.Properties.Name -contains "error") -or
-    ($curseForgeFile.PSObject.Properties.Name -contains "errors")
+    ($curseForgeFile.PSObject.Properties.Name -contains "errors") -or
+    ($curseForgeFile.PSObject.Properties.Name -contains "errorCode") -or
+    ($curseForgeFile.PSObject.Properties.Name -contains "errorMessage")
 ) {
     throw "CurseForge file upload failed: $uploadResponse"
 }

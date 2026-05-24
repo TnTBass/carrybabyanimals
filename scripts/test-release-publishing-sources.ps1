@@ -97,6 +97,8 @@ function Test-CurseForgeUploadDocumentsSideLimitAndDependencies {
     Assert-Contains $script 'metadata=<' 'CurseForge upload must send metadata as a multipart JSON file part.'
     Assert-Contains $script 'slug = "fabric-api"' 'CurseForge upload must include Fabric API as a required relation.'
     Assert-Contains $script 'type = "requiredDependency"' 'CurseForge upload must mark supported dependencies required.'
+    Assert-NotContains $script 'slug = "fabric-permissions-api"' 'CurseForge upload must not reference a non-existent Fabric Permissions API project relation.'
+    Assert-Contains $script 'errorCode' 'CurseForge upload must detect CurseForge API errorCode payloads.'
     Assert-Contains $script 'CurseForgeFileId' 'CurseForge upload must print the returned CurseForge file ID for verification.'
     Assert-Contains $script '$curseForgeFile.id' 'CurseForge upload must require the returned CurseForge file ID before reporting success.'
 }
