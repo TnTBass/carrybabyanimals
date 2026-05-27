@@ -11,7 +11,8 @@ The server must remain authoritative. Carried babies stay real world entities, n
 - The server owns pickup, carry state, petting, set-down validation, cleanup, permissions, and config.
 - Vanilla clients see normal Minecraft entities and vanilla-compatible packets.
 - Modded clients may hide the passenger render and draw a nicer carried pose.
-- Custom payloads must remain optional and only be sent to clients that advertise support.
+- Custom payloads must remain optional and only be sent after a Fabric networking capability check such as `ServerPlayNetworking.canSend(...)`.
+- Any later phase that adds new custom payload types must define the registration or capability contract before sending them.
 - New gameplay must not depend on a client-only render state, keybind, local animation, or custom client entity.
 - Expanded modded animal support must not create new client requirements by itself. If a custom animal entity comes from another mod, that other mod still controls whether vanilla clients can join that server.
 
@@ -42,9 +43,11 @@ Config:
 - `carriedIdleSoundMinTicks` and `carriedIdleSoundMaxTicks`: randomized idle sound interval.
 - `pettingMessagesEnabled`: enables variant petting action-bar messages.
 - `nameAwareMessagesEnabled`: enables custom-name-aware message variants.
+- `cozyParticlesEnabled`: enables gentle carried-baby feedback particles.
 - `sleepyBabiesEnabled`: enables sleepy carried-baby moments.
 - `sleepyAfterTicks`: minimum carried duration before sleepy moments can start.
 - `sleepyMessageCooldownTicks`: minimum spacing between sleepy messages for one carried baby.
+- `sleepyParticleCooldownTicks`: minimum spacing between sleepy particle effects for one carried baby.
 
 Permissions:
 
@@ -76,13 +79,13 @@ Config:
 - `nurseryBlockCactusAndDamage`: refuses cactus and other obvious damaging blocks.
 - `nurseryBlockSuffocation`: refuses solid or cramped set-down spaces.
 - `nurseryBlockDangerousFalls`: refuses set-downs with unsafe fall distance below.
-- `nurseryDangerousFallBlocks`: fall-distance threshold.
+- `nurseryDangerousFallDistanceBlocks`: integer fall-distance threshold measured in blocks.
 - `nurseryMessagesEnabled`: enables refusal action-bar messages.
 
 Permissions:
 
 - Add `carrybabyanimals.nursery.bypass`.
-- Default fallback without Fabric Permissions API should be vanilla game-master command permission.
+- Default fallback without Fabric Permissions API should match the existing reload fallback: `ServerPlayer#permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)`.
 - Bypass should be useful for admins, testing, and unusual server setups, not normal play.
 
 ### Phase 3: Parent Reunion
@@ -155,6 +158,7 @@ Features:
 - Improve carried-baby placement and pose tuning.
 - Add gentle first-person polish for petting and sleepy feedback.
 - Add client-side cosmetic reactions such as small wiggles, flaps, curls, or sleepy offsets when they can reuse vanilla entity rendering.
+- Keep client-side carried-render state pruned when the baby or carrier entity disappears, changes level, or otherwise becomes unavailable to the client.
 - Keep GeckoLib or custom model dependencies out unless a later design intentionally moves beyond vanilla entity reuse.
 
 Default behavior:
@@ -209,7 +213,7 @@ While carried:
 1. The server tracks elapsed carried time.
 2. Cozy feedback may emit sounds, particles, or messages on cooldown.
 3. Petting uses the existing left-click flow, then selects a message variant.
-4. Optional client packets are sent only to supported modded clients for first-person polish.
+4. Optional client packets are sent only after the same supported-client capability check used by the existing carry payloads.
 
 Set-down:
 
@@ -242,7 +246,7 @@ Phase-specific tests:
 - Nursery Mode: each hazard class, safe destination pass-through, refusal keeps the baby carried, bypass permission fallback, disabled mode.
 - Parent Reunion: matching adult detection, no adult case, radius limit, cooldown, cosmetic-only behavior.
 - Expanded Modded Animal Support: full entity ID parsing, aliases, blocked ID precedence, unknown IDs, unknown-only allow lists.
-- Client Polish: carried render fallback remains intact, optional visual payload handling, missing entity pruning.
+- Client Polish: carried render fallback remains intact, optional visual payload handling, and carried-render state cleanup when the baby or carrier entity is missing.
 
 ## Documentation And Release Notes
 
@@ -265,7 +269,8 @@ Each implemented phase must update public or internal changelogs deliberately:
 
 - Which vanilla sounds best fit idle carried babies without becoming noisy?
 - Should sleepy babies have per-animal message pools or start with generic variants?
-- Which exact block and fluid APIs should Nursery Mode use for each hazard class in Minecraft 26.1.2?
+- Which exact block and fluid APIs should Nursery Mode use for each hazard class in this repo's Minecraft 26.1.2 target?
+- Which phase owns any new custom payload capability contract: reuse Fabric channel registration plus `canSend`, or introduce a versioned capability payload?
 - Should Parent Reunion require exact entity type matches, or should closely related animals have explicit family mappings?
 - Should modded entity aliases be a simple object map or a list with future metadata?
 - Should client polish include per-animal placement tuning in the first pass, or only global pose improvements?
