@@ -23,6 +23,26 @@ final class CarryManagerTest {
     }
 
     @Test
+    void beginCarryRecordsStartedAtTick() {
+        CarryManager manager = new CarryManager();
+        UUID playerId = UUID.randomUUID();
+
+        assertTrue(manager.beginCarry(playerId, 42, 1234L));
+
+        assertEquals(1234L, manager.activeCarries().get(playerId).startedAtTick());
+    }
+
+    @Test
+    void legacyBeginCarryDefaultsStartedAtTickToZero() {
+        CarryManager manager = new CarryManager();
+        UUID playerId = UUID.randomUUID();
+
+        assertTrue(manager.beginCarry(playerId, 42));
+
+        assertEquals(0L, manager.activeCarries().get(playerId).startedAtTick());
+    }
+
+    @Test
     void dropClearsCarriedAnimal() {
         CarryManager manager = new CarryManager();
         UUID player = UUID.randomUUID();

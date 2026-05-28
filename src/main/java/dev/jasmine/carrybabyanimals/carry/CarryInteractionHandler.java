@@ -70,7 +70,8 @@ public final class CarryInteractionHandler {
         if (!eligibility.canPickUp(player, target, configManager.config())) {
             return InteractionResult.PASS;
         }
-        if (!carryManager.beginCarry(player.getUUID(), target.getId())) {
+        long startedAtTick = player.level() instanceof ServerLevel serverLevel ? serverLevel.getGameTime() : 0L;
+        if (!carryManager.beginCarry(player.getUUID(), target.getId(), startedAtTick)) {
             return InteractionResult.PASS;
         }
         if (!attachment.attach(player, target)) {
