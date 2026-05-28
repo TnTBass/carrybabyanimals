@@ -5,12 +5,20 @@ import java.util.List;
 public final class ParentReunionMessageCatalog {
     private static final List<String> MESSAGES = List.of(
             "%s found family nearby.",
-            "%s is back with a grown-up friend.",
-            "%s has company again."
+            "%s settled near family.",
+            "%s is back near family.",
+            "%s is close to family again."
     );
 
     public String message(String babyName, int variantIndex) {
         String template = MESSAGES.get(Math.floorMod(variantIndex, MESSAGES.size()));
-        return template.formatted(babyName);
+        return template.formatted(capitalizeStartingBaby(babyName));
+    }
+
+    private static String capitalizeStartingBaby(String babyName) {
+        if (babyName.startsWith("baby ")) {
+            return "Baby " + babyName.substring("baby ".length());
+        }
+        return babyName;
     }
 }

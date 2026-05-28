@@ -59,7 +59,7 @@ final class CarryConfigManagerTest {
 
         assertTrue(config.parentReunionEnabled());
         assertEquals(8, config.parentReunionRadiusBlocks());
-        assertEquals(200, config.parentReunionCooldownTicks());
+        assertEquals(100, config.parentReunionCooldownTicks());
         assertTrue(config.parentReunionMessagesEnabled());
         assertTrue(config.parentReunionParticlesEnabled());
     }
@@ -95,7 +95,7 @@ final class CarryConfigManagerTest {
             """);
 
         assertEquals(8, config.parentReunionRadiusBlocks());
-        assertEquals(200, config.parentReunionCooldownTicks());
+        assertEquals(100, config.parentReunionCooldownTicks());
     }
 
     @Test

@@ -107,7 +107,7 @@ Default config:
   "nurseryMessagesEnabled": true,
   "parentReunionEnabled": true,
   "parentReunionRadiusBlocks": 8,
-  "parentReunionCooldownTicks": 200,
+  "parentReunionCooldownTicks": 100,
   "parentReunionMessagesEnabled": true,
   "parentReunionParticlesEnabled": true
 }
@@ -140,7 +140,7 @@ Options:
 - `nurseryMessagesEnabled`: Enables playful Nursery Mode refusal action-bar messages. Default: `true`.
 - `parentReunionEnabled`: Master switch for cosmetic Parent Reunion feedback after safe player set-downs. Default: `true`.
 - `parentReunionRadiusBlocks`: Search radius for a compatible adult near the set-down baby. Default: `8`.
-- `parentReunionCooldownTicks`: Minimum spacing between reunion feedback for the same baby or carrier. Default: `200`, which is about ten seconds.
+- `parentReunionCooldownTicks`: Minimum spacing between reunion feedback for the same baby or carrier. Default: `100`, which is about five seconds.
 - `parentReunionMessagesEnabled`: Enables warm Parent Reunion action-bar messages. Default: `true`.
 - `parentReunionParticlesEnabled`: Enables heart particles around the baby and adult. Default: `true`.
 
@@ -193,7 +193,7 @@ Example: allow only common farm animals:
   "nurseryMessagesEnabled": true,
   "parentReunionEnabled": true,
   "parentReunionRadiusBlocks": 8,
-  "parentReunionCooldownTicks": 200,
+  "parentReunionCooldownTicks": 100,
   "parentReunionMessagesEnabled": true,
   "parentReunionParticlesEnabled": true
 }
@@ -229,7 +229,7 @@ Example: allow the default set except turtles and pandas:
   "nurseryMessagesEnabled": true,
   "parentReunionEnabled": true,
   "parentReunionRadiusBlocks": 8,
-  "parentReunionCooldownTicks": 200,
+  "parentReunionCooldownTicks": 100,
   "parentReunionMessagesEnabled": true,
   "parentReunionParticlesEnabled": true
 }
@@ -265,7 +265,7 @@ Example: allow trusted servers to carry other players' tamed babies and slow pet
   "nurseryMessagesEnabled": true,
   "parentReunionEnabled": true,
   "parentReunionRadiusBlocks": 8,
-  "parentReunionCooldownTicks": 200,
+  "parentReunionCooldownTicks": 100,
   "parentReunionMessagesEnabled": true,
   "parentReunionParticlesEnabled": true
 }

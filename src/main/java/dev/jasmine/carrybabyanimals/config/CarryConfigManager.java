@@ -84,7 +84,7 @@ public final class CarryConfigManager {
                 enabledByDefault(raw.nurseryMessagesEnabled),
                 enabledByDefault(raw.parentReunionEnabled),
                 positiveOrDefault(raw.parentReunionRadiusBlocks, 8),
-                positiveOrDefault(raw.parentReunionCooldownTicks, 200),
+                positiveOrDefault(raw.parentReunionCooldownTicks, 100),
                 enabledByDefault(raw.parentReunionMessagesEnabled),
                 enabledByDefault(raw.parentReunionParticlesEnabled)
         );

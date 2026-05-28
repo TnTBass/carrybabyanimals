@@ -2,22 +2,30 @@ package dev.jasmine.carrybabyanimals.reunion;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class ParentReunionMessageCatalogTest {
     @Test
     void messageIncludesBabyName() {
         ParentReunionMessageCatalog catalog = new ParentReunionMessageCatalog();
 
-        assertTrue(catalog.message("baby Pig", 0).contains("baby Pig"));
+        assertEquals("Baby Pig found family nearby.", catalog.message("baby Pig", 0));
     }
 
     @Test
-    void messagesVaryByIndex() {
+    void messagesUseFamilyWording() {
         ParentReunionMessageCatalog catalog = new ParentReunionMessageCatalog();
 
-        assertNotEquals(catalog.message("baby Pig", 0), catalog.message("baby Pig", 1));
-        assertNotEquals(catalog.message("baby Pig", 1), catalog.message("baby Pig", 2));
+        assertEquals("Baby Pig found family nearby.", catalog.message("baby Pig", 0));
+        assertEquals("Baby Pig settled near family.", catalog.message("baby Pig", 1));
+        assertEquals("Baby Pig is back near family.", catalog.message("baby Pig", 2));
+        assertEquals("Baby Pig is close to family again.", catalog.message("baby Pig", 3));
+    }
+
+    @Test
+    void customNamesKeepTheirCapitalization() {
+        ParentReunionMessageCatalog catalog = new ParentReunionMessageCatalog();
+
+        assertEquals("pumpkin found family nearby.", catalog.message("pumpkin", 0));
     }
 }

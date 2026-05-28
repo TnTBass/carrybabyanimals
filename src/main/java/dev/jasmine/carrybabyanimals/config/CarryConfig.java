@@ -66,7 +66,7 @@ public record CarryConfig(
                 true, // nurseryMessagesEnabled
                 true, // parentReunionEnabled
                 8, // parentReunionRadiusBlocks
-                200, // parentReunionCooldownTicks
+                100, // parentReunionCooldownTicks
                 true, // parentReunionMessagesEnabled
                 true // parentReunionParticlesEnabled
         );
@@ -106,7 +106,7 @@ public record CarryConfig(
                 true, // nurseryMessagesEnabled
                 true, // parentReunionEnabled
                 8, // parentReunionRadiusBlocks
-                200, // parentReunionCooldownTicks
+                100, // parentReunionCooldownTicks
                 true, // parentReunionMessagesEnabled
                 true // parentReunionParticlesEnabled
         );
@@ -157,7 +157,7 @@ public record CarryConfig(
                 true, // nurseryMessagesEnabled
                 true, // parentReunionEnabled
                 8, // parentReunionRadiusBlocks
-                200, // parentReunionCooldownTicks
+                100, // parentReunionCooldownTicks
                 true, // parentReunionMessagesEnabled
                 true // parentReunionParticlesEnabled
         );
@@ -216,7 +216,7 @@ public record CarryConfig(
                 nurseryMessagesEnabled,
                 true, // parentReunionEnabled
                 8, // parentReunionRadiusBlocks
-                200, // parentReunionCooldownTicks
+                100, // parentReunionCooldownTicks
                 true, // parentReunionMessagesEnabled
                 true // parentReunionParticlesEnabled
         );
@@ -255,7 +255,7 @@ public record CarryConfig(
                 true, // nurseryMessagesEnabled
                 true, // parentReunionEnabled
                 8, // parentReunionRadiusBlocks
-                200, // parentReunionCooldownTicks
+                100, // parentReunionCooldownTicks
                 true, // parentReunionMessagesEnabled
                 true // parentReunionParticlesEnabled
         );
