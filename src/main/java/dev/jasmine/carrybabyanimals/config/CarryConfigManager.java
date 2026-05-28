@@ -73,7 +73,15 @@ public final class CarryConfigManager {
                 enabledByDefault(raw.sleepyBabiesEnabled),
                 positiveOrDefault(raw.sleepyAfterTicks, 1200),
                 positiveOrDefault(raw.sleepyMessageCooldownTicks, 600),
-                positiveOrDefault(raw.sleepyParticleCooldownTicks, 200)
+                positiveOrDefault(raw.sleepyParticleCooldownTicks, 200),
+                enabledByDefault(raw.nurseryModeEnabled),
+                enabledByDefault(raw.nurseryBlockLava),
+                enabledByDefault(raw.nurseryBlockFire),
+                enabledByDefault(raw.nurseryBlockCactusAndDamage),
+                enabledByDefault(raw.nurseryBlockSuffocation),
+                enabledByDefault(raw.nurseryBlockDangerousFalls),
+                positiveOrDefault(raw.nurseryDangerousFallDistanceBlocks, 4),
+                enabledByDefault(raw.nurseryMessagesEnabled)
         );
     }
 
@@ -101,7 +109,15 @@ public final class CarryConfigManager {
                 config.sleepyBabiesEnabled(),
                 config.sleepyAfterTicks(),
                 config.sleepyMessageCooldownTicks(),
-                config.sleepyParticleCooldownTicks()
+                config.sleepyParticleCooldownTicks(),
+                config.nurseryModeEnabled(),
+                config.nurseryBlockLava(),
+                config.nurseryBlockFire(),
+                config.nurseryBlockCactusAndDamage(),
+                config.nurseryBlockSuffocation(),
+                config.nurseryBlockDangerousFalls(),
+                config.nurseryDangerousFallDistanceBlocks(),
+                config.nurseryMessagesEnabled()
         );
     }
 
@@ -179,6 +195,14 @@ public final class CarryConfigManager {
         Integer sleepyAfterTicks;
         Integer sleepyMessageCooldownTicks;
         Integer sleepyParticleCooldownTicks;
+        Boolean nurseryModeEnabled;
+        Boolean nurseryBlockLava;
+        Boolean nurseryBlockFire;
+        Boolean nurseryBlockCactusAndDamage;
+        Boolean nurseryBlockSuffocation;
+        Boolean nurseryBlockDangerousFalls;
+        Integer nurseryDangerousFallDistanceBlocks;
+        Boolean nurseryMessagesEnabled;
 
         static RawConfig from(CarryConfig config) {
             RawConfig raw = new RawConfig();
@@ -197,6 +221,14 @@ public final class CarryConfigManager {
             raw.sleepyAfterTicks = config.sleepyAfterTicks();
             raw.sleepyMessageCooldownTicks = config.sleepyMessageCooldownTicks();
             raw.sleepyParticleCooldownTicks = config.sleepyParticleCooldownTicks();
+            raw.nurseryModeEnabled = config.nurseryModeEnabled();
+            raw.nurseryBlockLava = config.nurseryBlockLava();
+            raw.nurseryBlockFire = config.nurseryBlockFire();
+            raw.nurseryBlockCactusAndDamage = config.nurseryBlockCactusAndDamage();
+            raw.nurseryBlockSuffocation = config.nurseryBlockSuffocation();
+            raw.nurseryBlockDangerousFalls = config.nurseryBlockDangerousFalls();
+            raw.nurseryDangerousFallDistanceBlocks = config.nurseryDangerousFallDistanceBlocks();
+            raw.nurseryMessagesEnabled = config.nurseryMessagesEnabled();
             return raw;
         }
     }

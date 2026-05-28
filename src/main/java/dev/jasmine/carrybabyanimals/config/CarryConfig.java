@@ -18,7 +18,15 @@ public record CarryConfig(
         boolean sleepyBabiesEnabled,
         int sleepyAfterTicks,
         int sleepyMessageCooldownTicks,
-        int sleepyParticleCooldownTicks
+        int sleepyParticleCooldownTicks,
+        boolean nurseryModeEnabled,
+        boolean nurseryBlockLava,
+        boolean nurseryBlockFire,
+        boolean nurseryBlockCactusAndDamage,
+        boolean nurseryBlockSuffocation,
+        boolean nurseryBlockDangerousFalls,
+        int nurseryDangerousFallDistanceBlocks,
+        boolean nurseryMessagesEnabled
 ) {
     public CarryConfig(
             List<String> allowedAnimals,
@@ -42,7 +50,15 @@ public record CarryConfig(
                 true,
                 1200,
                 600,
-                200
+                200,
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                4,
+                true
         );
     }
 
@@ -69,7 +85,61 @@ public record CarryConfig(
                 true,
                 1200,
                 600,
-                200
+                200,
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                4,
+                true
+        );
+    }
+
+    public CarryConfig(
+            List<String> allowedAnimals,
+            List<String> blockedAnimals,
+            boolean allowCarryingOtherPlayersTamedAnimals,
+            int pettingCooldownTicks,
+            boolean restrictToAllowedAnimals,
+            boolean cozyFeedbackEnabled,
+            boolean carriedIdleSoundsEnabled,
+            int carriedIdleSoundMinTicks,
+            int carriedIdleSoundMaxTicks,
+            boolean pettingMessagesEnabled,
+            boolean nameAwareMessagesEnabled,
+            boolean cozyParticlesEnabled,
+            boolean sleepyBabiesEnabled,
+            int sleepyAfterTicks,
+            int sleepyMessageCooldownTicks,
+            int sleepyParticleCooldownTicks
+    ) {
+        this(
+                allowedAnimals,
+                blockedAnimals,
+                allowCarryingOtherPlayersTamedAnimals,
+                pettingCooldownTicks,
+                restrictToAllowedAnimals,
+                cozyFeedbackEnabled,
+                carriedIdleSoundsEnabled,
+                carriedIdleSoundMinTicks,
+                carriedIdleSoundMaxTicks,
+                pettingMessagesEnabled,
+                nameAwareMessagesEnabled,
+                cozyParticlesEnabled,
+                sleepyBabiesEnabled,
+                sleepyAfterTicks,
+                sleepyMessageCooldownTicks,
+                sleepyParticleCooldownTicks,
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                4,
+                true
         );
     }
 
@@ -95,7 +165,15 @@ public record CarryConfig(
                 true,
                 1200,
                 600,
-                200
+                200,
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                4,
+                true
         );
     }
 }

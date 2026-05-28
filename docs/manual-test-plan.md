@@ -25,6 +25,11 @@ Use this matrix before release candidates and after changes that touch carry sta
 | Hand blocking | While carrying, try placing blocks, using blocks, eating, drawing a bow, and using normal items. | Use-item and use-block actions are blocked while carrying. |
 | Growth cleanup | Carry a baby close to adulthood or speed up age progression in a controlled test. | When the animal is no longer a baby, it is safely dropped and the carry state clears. |
 | Safe drop placement | Trigger a drop near flat ground, walls, short ledges, shallow hazards, and tight spaces. | The baby is placed in a nearby collision-free position with a safe floor when one is available. It is not lost or duplicated. |
+| Nursery lava refusal | Try to set down a carried baby in or directly beside lava. | The set-down is refused, the baby remains carried, and an action-bar refusal appears when Nursery Mode messages are enabled. |
+| Nursery fire refusal | Try to set down a carried baby on fire, campfire, soul campfire, or magma block. | The set-down is refused and the baby remains carried. |
+| Nursery damage refusal | Try to set down a carried baby on cactus, sweet berry bush, pointed dripstone, wither rose, or powder snow. | The set-down is refused and the baby remains carried. |
+| Nursery cramped refusal | Try to set down a carried baby into a cramped or colliding space. | The set-down is refused and the baby remains carried. |
+| Nursery fall refusal | Try to set down a carried baby over a drop at or above `nurseryDangerousFallDistanceBlocks`. | The set-down is refused and the baby remains carried. |
 | Logout and shutdown cleanup | Carry a baby, leave the world, then reload. Repeat with server/world shutdown. | The baby is dropped safely rather than being persisted in a fragile carried state. |
 
 ## Multiplayer With Modded Clients
@@ -64,6 +69,7 @@ The config file is `config/carrybabyanimals.json`.
 | Typo-only allowlist safety | Set `"allowedAnimals": ["not_real"]`. | The configured allow-list restriction remains active after the unknown name is ignored, so pickup is denied rather than accidentally allowing everything. |
 | Petting cooldown | Set `"pettingCooldownTicks": 1`, then `40`, then `0` or a negative value. | Positive values change heart-particle cadence. Non-positive values fall back to the default cooldown. |
 | Other players' tamed animals | Toggle `"allowCarryingOtherPlayersTamedAnimals"`. | Another player's tamed baby can only be carried when both config and permission allow it. |
+| Nursery Mode toggles | Toggle each `nurseryBlock*` option and `nurseryMessagesEnabled`. | Disabled hazard toggles allow only their matching hazard class, and disabled messages still refuse unsafe set-downs silently. |
 
 ## Permissions
 
@@ -74,6 +80,7 @@ Permissions are checked through Fabric Permissions API. With no permission provi
 | `carrybabyanimals.carry` | `true` | Set to false for a player and verify all pickup attempts are denied. |
 | `carrybabyanimals.carry.tamed` | `true` | Set to false and verify the player cannot carry their own tamed baby animals. |
 | `carrybabyanimals.carry.others_tamed` | `false` | Set true, enable `allowCarryingOtherPlayersTamedAnimals`, and verify carrying another player's tamed baby becomes possible. |
+| `carrybabyanimals.nursery.bypass` | Game-master command permission | Deny for normal players. Grant it to allow admin or test set-downs that Nursery Mode would otherwise refuse. |
 | `carrybabyanimals.reload` | Game-master command permission | If a reload command exists in the build under test, verify only authorized players can use it. If no reload command exists, record this node as reserved/not exposed for that release. |
 
 ## Release Readiness

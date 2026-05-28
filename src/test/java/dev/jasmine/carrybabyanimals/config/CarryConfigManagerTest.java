@@ -40,6 +40,71 @@ final class CarryConfigManagerTest {
     }
 
     @Test
+    void defaultConfigEnablesNurseryModeConservatively() {
+        CarryConfig config = CarryConfig.defaultConfig();
+
+        assertTrue(config.nurseryModeEnabled());
+        assertTrue(config.nurseryBlockLava());
+        assertTrue(config.nurseryBlockFire());
+        assertTrue(config.nurseryBlockCactusAndDamage());
+        assertTrue(config.nurseryBlockSuffocation());
+        assertTrue(config.nurseryBlockDangerousFalls());
+        assertEquals(4, config.nurseryDangerousFallDistanceBlocks());
+        assertTrue(config.nurseryMessagesEnabled());
+    }
+
+    @Test
+    void parsedNurseryConfigUsesExplicitValues() {
+        String json = """
+            {
+              "nurseryModeEnabled": false,
+              "nurseryBlockLava": false,
+              "nurseryBlockFire": false,
+              "nurseryBlockCactusAndDamage": false,
+              "nurseryBlockSuffocation": false,
+              "nurseryBlockDangerousFalls": false,
+              "nurseryDangerousFallDistanceBlocks": 8,
+              "nurseryMessagesEnabled": false
+            }
+            """;
+
+        CarryConfig config = CarryConfigManager.parse(json);
+
+        assertFalse(config.nurseryModeEnabled());
+        assertFalse(config.nurseryBlockLava());
+        assertFalse(config.nurseryBlockFire());
+        assertFalse(config.nurseryBlockCactusAndDamage());
+        assertFalse(config.nurseryBlockSuffocation());
+        assertFalse(config.nurseryBlockDangerousFalls());
+        assertEquals(8, config.nurseryDangerousFallDistanceBlocks());
+        assertFalse(config.nurseryMessagesEnabled());
+    }
+
+    @Test
+    void parsedNurseryConfigNormalizesInvalidFallDistance() {
+        CarryConfig config = CarryConfigManager.parse("""
+            {
+              "nurseryDangerousFallDistanceBlocks": 0
+            }
+            """);
+
+        assertEquals(4, config.nurseryDangerousFallDistanceBlocks());
+    }
+
+    @Test
+    void parsedOlderConfigDefaultsMissingNurseryBooleansToEnabled() {
+        CarryConfig config = CarryConfigManager.parse("{}");
+
+        assertTrue(config.nurseryModeEnabled());
+        assertTrue(config.nurseryBlockLava());
+        assertTrue(config.nurseryBlockFire());
+        assertTrue(config.nurseryBlockCactusAndDamage());
+        assertTrue(config.nurseryBlockSuffocation());
+        assertTrue(config.nurseryBlockDangerousFalls());
+        assertTrue(config.nurseryMessagesEnabled());
+    }
+
+    @Test
     void parsedCozyConfigUsesExplicitValues() {
         String json = """
             {

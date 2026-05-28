@@ -12,6 +12,7 @@ public final class CarryPermissions {
     public static final String CARRY_TAMED = "carrybabyanimals.carry.tamed";
     public static final String CARRY_OTHERS_TAMED = "carrybabyanimals.carry.others_tamed";
     public static final String RELOAD = "carrybabyanimals.reload";
+    public static final String NURSERY_BYPASS = "carrybabyanimals.nursery.bypass";
 
     private CarryPermissions() {
     }
@@ -36,6 +37,14 @@ public final class CarryPermissions {
         );
     }
 
+    public static boolean canBypassNursery(ServerPlayer player) {
+        return check(
+                player,
+                NURSERY_BYPASS,
+                player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)
+        );
+    }
+
     private static boolean check(ServerPlayer player, String permission, boolean fallback) {
         return resolvedPermission(
                 FabricLoader.getInstance().isModLoaded(FABRIC_PERMISSIONS_API),
@@ -46,5 +55,9 @@ public final class CarryPermissions {
 
     static boolean resolvedPermission(boolean permissionsApiPresent, BooleanSupplier permissionCheck, boolean fallback) {
         return permissionsApiPresent ? permissionCheck.getAsBoolean() : fallback;
+    }
+
+    static boolean nurseryBypassPermission(boolean permissionsApiPresent, BooleanSupplier permissionCheck, boolean gameMasterFallback) {
+        return resolvedPermission(permissionsApiPresent, permissionCheck, gameMasterFallback);
     }
 }

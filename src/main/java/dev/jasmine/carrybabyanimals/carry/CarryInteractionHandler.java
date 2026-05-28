@@ -4,6 +4,10 @@ import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
 import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackMessageCatalog;
 import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackScheduler;
 import dev.jasmine.carrybabyanimals.network.CarryNetworking;
+import dev.jasmine.carrybabyanimals.nursery.NurseryMessageCatalog;
+import dev.jasmine.carrybabyanimals.nursery.NurserySafetyChecker;
+import dev.jasmine.carrybabyanimals.nursery.NurserySafetyDecision;
+import dev.jasmine.carrybabyanimals.permissions.CarryPermissions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -36,6 +40,8 @@ public final class CarryInteractionHandler {
     private final CarryAiController aiController;
     private final CozyFeedbackMessageCatalog messageCatalog;
     private final CozyFeedbackScheduler cozyFeedbackScheduler;
+    private final NurserySafetyChecker nurserySafetyChecker;
+    private final NurseryMessageCatalog nurseryMessageCatalog;
     private final Map<UUID, Long> lastPetTick = new HashMap<>();
 
     public CarryInteractionHandler(
@@ -52,7 +58,9 @@ public final class CarryInteractionHandler {
                 attachment,
                 aiController,
                 new CozyFeedbackMessageCatalog(),
-                new CozyFeedbackScheduler()
+                new CozyFeedbackScheduler(),
+                new NurserySafetyChecker(),
+                new NurseryMessageCatalog()
         );
     }
 
@@ -71,7 +79,9 @@ public final class CarryInteractionHandler {
                 attachment,
                 aiController,
                 new CozyFeedbackMessageCatalog(),
-                cozyFeedbackScheduler
+                cozyFeedbackScheduler,
+                new NurserySafetyChecker(),
+                new NurseryMessageCatalog()
         );
     }
 
@@ -82,7 +92,9 @@ public final class CarryInteractionHandler {
             CarryAttachment attachment,
             CarryAiController aiController,
             CozyFeedbackMessageCatalog messageCatalog,
-            CozyFeedbackScheduler cozyFeedbackScheduler
+            CozyFeedbackScheduler cozyFeedbackScheduler,
+            NurserySafetyChecker nurserySafetyChecker,
+            NurseryMessageCatalog nurseryMessageCatalog
     ) {
         this.carryManager = carryManager;
         this.eligibility = eligibility;
@@ -91,6 +103,8 @@ public final class CarryInteractionHandler {
         this.aiController = aiController;
         this.messageCatalog = messageCatalog;
         this.cozyFeedbackScheduler = cozyFeedbackScheduler;
+        this.nurserySafetyChecker = nurserySafetyChecker;
+        this.nurseryMessageCatalog = nurseryMessageCatalog;
     }
 
     public InteractionResult onEntityInteract(ServerPlayer player, Entity target, InteractionHand hand) {
@@ -237,8 +251,41 @@ public final class CarryInteractionHandler {
 
     private void dropCurrentWithFeedback(ServerPlayer player) {
         Optional<String> feedbackName = carriedBabyFeedbackName(player);
+        if (refuseUnsafeNurseryDrop(player, feedbackName.orElse("baby animal"))) {
+            return;
+        }
         dropCurrent(player);
         showActionBar(player, feedbackName.map(CarryInteractionHandler::dropFeedbackText).orElse(dropFeedbackText()));
+    }
+
+    private boolean refuseUnsafeNurseryDrop(ServerPlayer player, String feedbackName) {
+        Optional<Integer> carriedEntityId = carryManager.carriedEntityId(player.getUUID());
+        if (carriedEntityId.isEmpty()) {
+            return false;
+        }
+        Entity baby = findCarriedEntity(player, carriedEntityId.get());
+        if (baby == null) {
+            return false;
+        }
+        Vec3 dropPosition = attachment.previewDropPosition(player, baby);
+        NurserySafetyDecision safetyDecision = nurserySafetyChecker.evaluate(
+                player.level(),
+                baby,
+                dropPosition,
+                configManager.config(),
+                CarryPermissions.canBypassNursery(player)
+        );
+        DropAttemptDecision decision = dropAttemptDecision(true, safetyDecision, configManager.config().nurseryMessagesEnabled());
+        if (decision.shouldShowRefusalMessage()) {
+            var hazard = safetyDecision.hazard()
+                    .orElseThrow(() -> new IllegalStateException("Nursery refusal missing hazard"));
+            showActionBar(player, nurseryMessageCatalog.message(
+                    hazard,
+                    feedbackName,
+                    (int) player.level().getGameTime()
+            ));
+        }
+        return !decision.shouldDrop();
     }
 
     public void dropCurrent(ServerPlayer player, boolean loadDestinationChunk) {
@@ -252,6 +299,7 @@ public final class CarryInteractionHandler {
                 return;
             }
 
+            // Cleanup drops intentionally bypass Nursery Mode so invalid carry state can always be cleared.
             if (baby instanceof Mob mob) {
                 aiController.restore(mob);
             }
@@ -403,6 +451,20 @@ public final class CarryInteractionHandler {
             boolean offHandEmpty
     ) {
         return isCarrying && isMainHand && isSneaking && mainHandEmpty && offHandEmpty;
+    }
+
+    static DropAttemptDecision dropAttemptDecision(
+            boolean currentlyCarrying,
+            NurserySafetyDecision safetyDecision,
+            boolean messagesEnabled
+    ) {
+        if (!currentlyCarrying || safetyDecision.allowed()) {
+            return new DropAttemptDecision(true, false, false);
+        }
+        return new DropAttemptDecision(false, true, messagesEnabled);
+    }
+
+    record DropAttemptDecision(boolean shouldDrop, boolean keepCarrying, boolean shouldShowRefusalMessage) {
     }
 
     private static String feedbackName(Entity baby) {

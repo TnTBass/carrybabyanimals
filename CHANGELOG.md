@@ -4,6 +4,8 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
+- Added Nursery Mode safety checks that refuse dangerous player set-downs near lava, fire, damaging blocks, cramped spaces, and unsafe drops while keeping the baby carried.
+
 ## 0.1.3
 
 - Added optional Cozy Feedback for carried babies, including softer carried idle sounds, varied petting messages, sleepy moments, and gentle cosmetic particles.

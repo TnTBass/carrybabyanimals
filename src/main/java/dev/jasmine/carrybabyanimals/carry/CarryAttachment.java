@@ -28,7 +28,7 @@ public final class CarryAttachment {
     }
 
     public void dropInFront(ServerPlayer carrier, Entity baby, boolean loadDestinationChunk) {
-        Vec3 target = chooseDropPosition(carrier, baby);
+        Vec3 target = previewDropPosition(carrier, baby);
         baby.stopRiding();
         baby.snapTo(target.x, target.y, target.z, baby.getYRot(), baby.getXRot());
         if (loadDestinationChunk && carrier.level() instanceof ServerLevel serverLevel) {
@@ -43,7 +43,7 @@ public final class CarryAttachment {
         }
     }
 
-    private Vec3 chooseDropPosition(ServerPlayer carrier, Entity baby) {
+    public Vec3 previewDropPosition(ServerPlayer carrier, Entity baby) {
         Vec3 forward = horizontalDirection(carrier.getLookAngle());
         Vec3 side = new Vec3(-forward.z, 0.0D, forward.x);
         for (double distance : FRONT_DISTANCES) {

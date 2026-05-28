@@ -2,6 +2,10 @@ package dev.jasmine.carrybabyanimals.carry;
 
 import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackMessageCatalog;
 import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackScheduler;
+import dev.jasmine.carrybabyanimals.nursery.NurseryHazard;
+import dev.jasmine.carrybabyanimals.nursery.NurseryMessageCatalog;
+import dev.jasmine.carrybabyanimals.nursery.NurserySafetyChecker;
+import dev.jasmine.carrybabyanimals.nursery.NurserySafetyDecision;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -177,6 +181,58 @@ final class CarryInteractionHandlerTest {
     }
 
     @Test
+    void unsafeNurseryDropIsRefusedAndKeepsCarryState() {
+        CarryInteractionHandler.DropAttemptDecision decision = CarryInteractionHandler.dropAttemptDecision(
+                true,
+                NurserySafetyDecision.refuse(NurseryHazard.LAVA),
+                true
+        );
+
+        assertFalse(decision.shouldDrop());
+        assertTrue(decision.keepCarrying());
+        assertTrue(decision.shouldShowRefusalMessage());
+    }
+
+    @Test
+    void safeNurseryDropProceeds() {
+        CarryInteractionHandler.DropAttemptDecision decision = CarryInteractionHandler.dropAttemptDecision(
+                true,
+                NurserySafetyDecision.allow(),
+                true
+        );
+
+        assertTrue(decision.shouldDrop());
+        assertFalse(decision.keepCarrying());
+        assertFalse(decision.shouldShowRefusalMessage());
+    }
+
+    @Test
+    void unsafeNurseryDropCanRefuseSilently() {
+        CarryInteractionHandler.DropAttemptDecision decision = CarryInteractionHandler.dropAttemptDecision(
+                true,
+                NurserySafetyDecision.refuse(NurseryHazard.FIRE),
+                false
+        );
+
+        assertFalse(decision.shouldDrop());
+        assertTrue(decision.keepCarrying());
+        assertFalse(decision.shouldShowRefusalMessage());
+    }
+
+    @Test
+    void nonCarryingNurseryDecisionDoesNotShowRefusal() {
+        CarryInteractionHandler.DropAttemptDecision decision = CarryInteractionHandler.dropAttemptDecision(
+                false,
+                NurserySafetyDecision.refuse(NurseryHazard.LAVA),
+                true
+        );
+
+        assertTrue(decision.shouldDrop());
+        assertFalse(decision.keepCarrying());
+        assertFalse(decision.shouldShowRefusalMessage());
+    }
+
+    @Test
     void carryFeedbackTextUsesBabyTypeForUnnamedAnimals() {
         assertEquals("Carrying baby Pig", CarryInteractionHandler.pickupFeedbackText("Pig", false));
         assertEquals("Set down baby Pig", CarryInteractionHandler.dropFeedbackText("Pig", false));
@@ -203,7 +259,17 @@ final class CarryInteractionHandlerTest {
     }
 
     private static CarryInteractionHandler handlerWithScheduler(CozyFeedbackScheduler scheduler) {
-        return new CarryInteractionHandler(null, null, null, null, null, new CozyFeedbackMessageCatalog(), scheduler);
+        return new CarryInteractionHandler(
+                null,
+                null,
+                null,
+                null,
+                null,
+                new CozyFeedbackMessageCatalog(),
+                scheduler,
+                new NurserySafetyChecker(),
+                new NurseryMessageCatalog()
+        );
     }
 
     private static final class RecordingCozyFeedbackScheduler extends CozyFeedbackScheduler {

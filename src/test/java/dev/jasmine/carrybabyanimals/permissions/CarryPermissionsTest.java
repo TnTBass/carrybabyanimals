@@ -33,4 +33,30 @@ final class CarryPermissionsTest {
         assertFalse(allowed);
         assertTrue(called.get());
     }
+
+    @Test
+    void absentPermissionsApiUsesGameMasterFallbackForNurseryBypass() {
+        AtomicBoolean called = new AtomicBoolean(false);
+
+        boolean allowed = CarryPermissions.nurseryBypassPermission(false, () -> {
+            called.set(true);
+            return false;
+        }, true);
+
+        assertTrue(allowed);
+        assertFalse(called.get());
+    }
+
+    @Test
+    void presentPermissionsApiUsesProviderForNurseryBypass() {
+        AtomicBoolean called = new AtomicBoolean(false);
+
+        boolean allowed = CarryPermissions.nurseryBypassPermission(true, () -> {
+            called.set(true);
+            return false;
+        }, true);
+
+        assertFalse(allowed);
+        assertTrue(called.get());
+    }
 }

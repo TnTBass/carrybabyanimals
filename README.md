@@ -32,6 +32,7 @@ Players can also install the mod on their clients for the nicer held-in-arms ren
 - Pick up one baby animal at a time by sneak-right-clicking it with empty hands.
 - Carry the baby while walking, sprinting, jumping, and swimming.
 - Put the baby down again by sneak-right-clicking while carrying with empty hands.
+- Nursery Mode refuses dangerous set-downs near lava, fire, damaging blocks, cramped spaces, and unsafe drops.
 - Pet the carried baby with left-click for heart particles.
 - Block normal hand actions while carrying, so carrying feels like it occupies both hands.
 - Drop the baby safely if the carry state becomes invalid, including logout, death, dimension changes, growth, or server shutdown.
@@ -46,6 +47,8 @@ Players can also install the mod on their clients for the nicer held-in-arms ren
 4. Sneak-right-click again with empty hands to set the baby down.
 
 Pickup and set-down messages use the animal's custom name when it has one, such as `Carrying KittyKat` and `Set down KittyKat`. Unnamed animals use the baby animal type, such as `Carrying baby Pig` and `Set down baby Pig`.
+
+If Nursery Mode refuses a set-down, the baby stays carried and the player sees a playful action-bar message when Nursery Mode messages are enabled.
 
 Doors and trapdoors can still be used while carrying a baby animal.
 
@@ -90,7 +93,15 @@ Default config:
   "sleepyBabiesEnabled": true,
   "sleepyAfterTicks": 1200,
   "sleepyMessageCooldownTicks": 600,
-  "sleepyParticleCooldownTicks": 200
+  "sleepyParticleCooldownTicks": 200,
+  "nurseryModeEnabled": true,
+  "nurseryBlockLava": true,
+  "nurseryBlockFire": true,
+  "nurseryBlockCactusAndDamage": true,
+  "nurseryBlockSuffocation": true,
+  "nurseryBlockDangerousFalls": true,
+  "nurseryDangerousFallDistanceBlocks": 4,
+  "nurseryMessagesEnabled": true
 }
 ```
 
@@ -111,8 +122,18 @@ Options:
 - `sleepyAfterTicks`: Minimum carried duration before sleepy moments can start. Default: `1200`, which is about one minute.
 - `sleepyMessageCooldownTicks`: Minimum spacing between sleepy action-bar messages for one carried baby. Default: `600`, which is about thirty seconds.
 - `sleepyParticleCooldownTicks`: Minimum spacing between sleepy particle effects for one carried baby. Default: `200`, which is about ten seconds.
+- `nurseryModeEnabled`: Master switch for refusing unsafe player set-downs. Default: `true`.
+- `nurseryBlockLava`: Refuses set-downs in or next to lava. Default: `true`.
+- `nurseryBlockFire`: Refuses set-downs on fire, campfires, soul campfires, magma blocks, and similar burning hazards. Default: `true`.
+- `nurseryBlockCactusAndDamage`: Refuses set-downs on cactus and other obvious damaging blocks. Default: `true`.
+- `nurseryBlockSuffocation`: Refuses cramped set-downs where the baby would collide or suffocate. Default: `true`.
+- `nurseryBlockDangerousFalls`: Refuses set-downs over unsafe drops. Default: `true`.
+- `nurseryDangerousFallDistanceBlocks`: Drop distance that counts as unsafe for Nursery Mode. Default: `4`.
+- `nurseryMessagesEnabled`: Enables playful Nursery Mode refusal action-bar messages. Default: `true`.
 
 Cozy Feedback is cosmetic and server-owned. It uses ordinary Minecraft sounds, particles, and action-bar messages, so vanilla clients can see or hear the feedback without installing the mod.
+
+Nursery Mode is also server-owned and vanilla-client compatible. It validates the server's planned set-down position before the baby is detached. If the spot is unsafe, the carry state remains active and no client-side mod is required for the refusal to work.
 
 Supported animal names:
 
@@ -146,7 +167,15 @@ Example: allow only common farm animals:
   "sleepyBabiesEnabled": true,
   "sleepyAfterTicks": 1200,
   "sleepyMessageCooldownTicks": 600,
-  "sleepyParticleCooldownTicks": 200
+  "sleepyParticleCooldownTicks": 200,
+  "nurseryModeEnabled": true,
+  "nurseryBlockLava": true,
+  "nurseryBlockFire": true,
+  "nurseryBlockCactusAndDamage": true,
+  "nurseryBlockSuffocation": true,
+  "nurseryBlockDangerousFalls": true,
+  "nurseryDangerousFallDistanceBlocks": 4,
+  "nurseryMessagesEnabled": true
 }
 ```
 
@@ -169,7 +198,15 @@ Example: allow the default set except turtles and pandas:
   "sleepyBabiesEnabled": true,
   "sleepyAfterTicks": 1200,
   "sleepyMessageCooldownTicks": 600,
-  "sleepyParticleCooldownTicks": 200
+  "sleepyParticleCooldownTicks": 200,
+  "nurseryModeEnabled": true,
+  "nurseryBlockLava": true,
+  "nurseryBlockFire": true,
+  "nurseryBlockCactusAndDamage": true,
+  "nurseryBlockSuffocation": true,
+  "nurseryBlockDangerousFalls": true,
+  "nurseryDangerousFallDistanceBlocks": 4,
+  "nurseryMessagesEnabled": true
 }
 ```
 
@@ -192,7 +229,15 @@ Example: allow trusted servers to carry other players' tamed babies and slow pet
   "sleepyBabiesEnabled": true,
   "sleepyAfterTicks": 1200,
   "sleepyMessageCooldownTicks": 600,
-  "sleepyParticleCooldownTicks": 200
+  "sleepyParticleCooldownTicks": 200,
+  "nurseryModeEnabled": true,
+  "nurseryBlockLava": true,
+  "nurseryBlockFire": true,
+  "nurseryBlockCactusAndDamage": true,
+  "nurseryBlockSuffocation": true,
+  "nurseryBlockDangerousFalls": true,
+  "nurseryDangerousFallDistanceBlocks": 4,
+  "nurseryMessagesEnabled": true
 }
 ```
 
@@ -206,6 +251,7 @@ If Fabric Permissions API is not installed:
 - Players can carry their own tamed baby animals.
 - Players cannot carry another player's tamed baby animals.
 - The reserved reload permission falls back to vanilla game-master command permission when exposed.
+- The Nursery Mode bypass permission falls back to vanilla game-master command permission.
 
 Permission nodes:
 
@@ -213,6 +259,7 @@ Permission nodes:
 carrybabyanimals.carry
 carrybabyanimals.carry.tamed
 carrybabyanimals.carry.others_tamed
+carrybabyanimals.nursery.bypass
 carrybabyanimals.reload
 ```
 
@@ -221,4 +268,5 @@ Default behavior:
 - `carrybabyanimals.carry`: allowed by default.
 - `carrybabyanimals.carry.tamed`: allowed by default for the player's own tamed baby animals.
 - `carrybabyanimals.carry.others_tamed`: denied by default.
+- `carrybabyanimals.nursery.bypass`: defaults to vanilla game-master command permission without Fabric Permissions API.
 - `carrybabyanimals.reload`: reserved for reload support and defaults to vanilla game-master command permission when exposed.
