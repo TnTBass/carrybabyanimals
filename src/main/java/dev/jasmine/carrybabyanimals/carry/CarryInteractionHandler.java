@@ -1,6 +1,7 @@
 package dev.jasmine.carrybabyanimals.carry;
 
 import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
+import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackMessageCatalog;
 import dev.jasmine.carrybabyanimals.network.CarryNetworking;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -31,6 +32,7 @@ public final class CarryInteractionHandler {
     private final CarryConfigManager configManager;
     private final CarryAttachment attachment;
     private final CarryAiController aiController;
+    private final CozyFeedbackMessageCatalog messageCatalog;
     private final Map<UUID, Long> lastPetTick = new HashMap<>();
 
     public CarryInteractionHandler(
@@ -40,11 +42,23 @@ public final class CarryInteractionHandler {
             CarryAttachment attachment,
             CarryAiController aiController
     ) {
+        this(carryManager, eligibility, configManager, attachment, aiController, new CozyFeedbackMessageCatalog());
+    }
+
+    CarryInteractionHandler(
+            CarryManager carryManager,
+            CarryEligibility eligibility,
+            CarryConfigManager configManager,
+            CarryAttachment attachment,
+            CarryAiController aiController,
+            CozyFeedbackMessageCatalog messageCatalog
+    ) {
         this.carryManager = carryManager;
         this.eligibility = eligibility;
         this.configManager = configManager;
         this.attachment = attachment;
         this.aiController = aiController;
+        this.messageCatalog = messageCatalog;
     }
 
     public InteractionResult onEntityInteract(ServerPlayer player, Entity target, InteractionHand hand) {
@@ -140,7 +154,12 @@ public final class CarryInteractionHandler {
             );
             rememberPet(playerId, gameTime);
             CarryNetworking.sendPetFeedbackToCarrier(player, baby.getId());
-            showActionBar(player, petFeedbackText(baby.getDisplayName().getString(), baby.hasCustomName()));
+            showActionBar(player, messageCatalog.petMessage(
+                    baby.getDisplayName().getString(),
+                    baby.hasCustomName(),
+                    configManager.config(),
+                    (int) gameTime
+            ));
         }
         return InteractionResult.SUCCESS;
     }
