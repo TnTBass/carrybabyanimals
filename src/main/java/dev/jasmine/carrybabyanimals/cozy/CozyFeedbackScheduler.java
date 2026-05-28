@@ -89,7 +89,7 @@ public class CozyFeedbackScheduler {
                     snapshot.displayName(),
                     snapshot.hasCustomName(),
                     config,
-                    0
+                    (int) snapshot.gameTime()
             ));
             lastSleepyMessageTick = snapshot.gameTime();
         }

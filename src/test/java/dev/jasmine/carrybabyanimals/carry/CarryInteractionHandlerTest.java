@@ -57,6 +57,11 @@ final class CarryInteractionHandlerTest {
     }
 
     @Test
+    void missingServerLevelDoesNotCreateFallbackStartTick() {
+        assertTrue(CarryInteractionHandler.pickupStartedAtTick(null).isEmpty());
+    }
+
+    @Test
     void vanillaFirstPersonPetFeedbackSpawnsInFrontOfCarrierEyes() {
         Vec3 position = CarryInteractionHandler.firstPersonPetFeedbackPosition(
                 new Vec3(10.0D, 65.6D, 10.0D),

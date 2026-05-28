@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.UUID;
 
 public final class CarryInteractionHandler {
@@ -115,15 +116,19 @@ public final class CarryInteractionHandler {
         if (!eligibility.canPickUp(player, target, configManager.config())) {
             return InteractionResult.PASS;
         }
-        long startedAtTick = player.level() instanceof ServerLevel serverLevel ? serverLevel.getGameTime() : 0L;
-        if (!carryManager.beginCarry(player.getUUID(), target.getId(), startedAtTick)) {
+        OptionalLong startedAtTick = pickupStartedAtTick(player.level());
+        if (startedAtTick.isEmpty()) {
+            LOGGER.warn("Cannot start carrying baby {} for {} outside a server level", target.getId(), player.getName().getString());
             return InteractionResult.PASS;
         }
-            if (!attachment.attach(player, target)) {
-                carryManager.endCarry(player.getUUID());
-                clearCarryFeedbackState(player.getUUID());
-                return InteractionResult.PASS;
-            }
+        if (!carryManager.beginCarry(player.getUUID(), target.getId(), startedAtTick.getAsLong())) {
+            return InteractionResult.PASS;
+        }
+        if (!attachment.attach(player, target)) {
+            carryManager.endCarry(player.getUUID());
+            clearCarryFeedbackState(player.getUUID());
+            return InteractionResult.PASS;
+        }
         if (target instanceof Mob mob) {
             aiController.suppress(mob);
         }
@@ -330,6 +335,13 @@ public final class CarryInteractionHandler {
     void clearCarryFeedbackState(UUID playerId) {
         clearPetCooldown(playerId);
         cozyFeedbackScheduler.clear(playerId);
+    }
+
+    static OptionalLong pickupStartedAtTick(Level level) {
+        if (level instanceof ServerLevel serverLevel) {
+            return OptionalLong.of(serverLevel.getGameTime());
+        }
+        return OptionalLong.empty();
     }
 
     static Vec3 firstPersonPetFeedbackPosition(Vec3 eyePosition, Vec3 viewVector) {

@@ -4,6 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Hardened Phase 1 Cozy Feedback after implementation review by rejecting non-server pickup timing fallbacks, varying sleepy message selection, and expanding scheduler feature-flag tests.
 - Added a Phase 1 Cozy Feedback implementation plan for the lovable expansion roadmap.
 - Actioned Revue design-spec findings on the lovable expansion roadmap by tightening config names, permission fallback wording, optional payload capability wording, particle config coverage, client cleanup language, and version-context wording.
 - Added a maintainer roadmap design spec for future cozy feedback, nursery safety, parent reunion, modded animal support, and client polish phases.

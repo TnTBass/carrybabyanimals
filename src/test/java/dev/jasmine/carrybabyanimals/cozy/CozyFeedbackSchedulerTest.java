@@ -43,9 +43,9 @@ final class CozyFeedbackSchedulerTest {
     void sleepyFeedbackWaitsForCarryDurationAndCooldowns() {
         CozyFeedbackScheduler scheduler = new CozyFeedbackScheduler(new CozyFeedbackMessageCatalog(), fixedRandom(0));
 
-        CozyFeedbackDecision beforeDue = scheduler.tickSnapshot(snapshot(7, "Pig", false, 100L, 1299L), CarryConfig.defaultConfig());
-        CozyFeedbackDecision due = scheduler.tickSnapshot(snapshot(7, "Pig", false, 100L, 1300L), CarryConfig.defaultConfig());
-        CozyFeedbackDecision particleOnly = scheduler.tickSnapshot(snapshot(7, "Pig", false, 100L, 1500L), CarryConfig.defaultConfig());
+        CozyFeedbackDecision beforeDue = scheduler.tickSnapshot(snapshot(7, "Pig", false, 0L, 1199L), CarryConfig.defaultConfig());
+        CozyFeedbackDecision due = scheduler.tickSnapshot(snapshot(7, "Pig", false, 0L, 1200L), CarryConfig.defaultConfig());
+        CozyFeedbackDecision particleOnly = scheduler.tickSnapshot(snapshot(7, "Pig", false, 0L, 1400L), CarryConfig.defaultConfig());
 
         assertTrue(beforeDue.sleepyMessage().isEmpty());
         assertFalse(beforeDue.spawnSleepyParticles());
@@ -53,6 +53,41 @@ final class CozyFeedbackSchedulerTest {
         assertTrue(due.spawnSleepyParticles());
         assertTrue(particleOnly.sleepyMessage().isEmpty());
         assertTrue(particleOnly.spawnSleepyParticles());
+    }
+
+    @Test
+    void sleepyMessageVariantsCanVaryAfterCooldown() {
+        CozyFeedbackScheduler scheduler = new CozyFeedbackScheduler(new CozyFeedbackMessageCatalog(), fixedRandom(0));
+        CarryConfig config = new CarryConfig(List.of(), List.of(), false, 20, false, true, true, 160, 360, true, true, true, true, 1200, 1, 200);
+
+        scheduler.tickSnapshot(snapshot(7, "Pig", false, 0L, 1200L), config);
+        CozyFeedbackDecision nextMessage = scheduler.tickSnapshot(snapshot(7, "Pig", false, 0L, 1201L), config);
+
+        assertEquals(Optional.of("Baby Pig settles into your arms."), nextMessage.sleepyMessage());
+    }
+
+    @Test
+    void disablingIdleSoundsDoesNotDisableSleepyFeedback() {
+        CozyFeedbackScheduler scheduler = new CozyFeedbackScheduler(new CozyFeedbackMessageCatalog(), fixedRandom(0));
+        CarryConfig config = new CarryConfig(List.of(), List.of(), false, 20, false, true, false, 160, 360, true, true, true, true, 1200, 600, 200);
+
+        CozyFeedbackDecision decision = scheduler.tickSnapshot(snapshot(7, "Pig", false, 0L, 1200L), config);
+
+        assertFalse(decision.playIdleSound());
+        assertEquals(Optional.of("Baby Pig is getting sleepy."), decision.sleepyMessage());
+        assertTrue(decision.spawnSleepyParticles());
+    }
+
+    @Test
+    void disablingSleepyBabiesDoesNotDisableIdleSounds() {
+        CozyFeedbackScheduler scheduler = new CozyFeedbackScheduler(new CozyFeedbackMessageCatalog(), fixedRandom(0));
+        CarryConfig config = new CarryConfig(List.of(), List.of(), false, 20, false, true, true, 160, 360, true, true, true, false, 1200, 600, 200);
+
+        CozyFeedbackDecision decision = scheduler.tickSnapshot(snapshot(7, "Pig", false, 0L, 1200L), config);
+
+        assertTrue(decision.playIdleSound());
+        assertTrue(decision.sleepyMessage().isEmpty());
+        assertFalse(decision.spawnSleepyParticles());
     }
 
     @Test
