@@ -50,7 +50,22 @@ public final class AnimalAliasRegistry {
         if (normalized.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.ofNullable(aliases.get(normalized));
+        ResolvedAnimal alias = aliases.get(normalized);
+        if (alias != null) {
+            return Optional.of(alias);
+        }
+        if (!normalized.contains(":")) {
+            return Optional.empty();
+        }
+        int separator = normalized.indexOf(':');
+        if (separator == 0 || separator == normalized.length() - 1) {
+            return Optional.empty();
+        }
+        Identifier id = Identifier.tryParse(normalized);
+        if (id == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new ResolvedAnimal(id, false));
     }
 
     public Map<String, ResolvedAnimal> aliases() {

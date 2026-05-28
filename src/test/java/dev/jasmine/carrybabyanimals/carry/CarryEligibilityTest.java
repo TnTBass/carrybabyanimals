@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class CarryEligibilityTest {
     private static final Identifier WOLF = Identifier.withDefaultNamespace("wolf");
     private static final Identifier COW = Identifier.withDefaultNamespace("cow");
+    private static final Identifier MODDED_DUCK = Identifier.parse("examplemod:duck");
     private static final CarryEligibility.PermissionSnapshot ALL_TAMED_PERMISSIONS =
             new CarryEligibility.PermissionSnapshot(true, true);
     private static final CarryEligibility eligibility = new CarryEligibility(AnimalAliasRegistry.createDefault());
@@ -39,6 +40,47 @@ final class CarryEligibilityTest {
 
         assertTrue(eligibility.canPickUpResolved(wild(COW), config, ALL_TAMED_PERMISSIONS));
         assertFalse(eligibility.canPickUpResolved(wild(Identifier.withDefaultNamespace("zoglin")), config, ALL_TAMED_PERMISSIONS));
+    }
+
+    @Test
+    void allowedFullEntityIdAllowsModdedAnimalCandidate() {
+        CarryConfig config = config(List.of("examplemod:duck"), List.of(), true);
+
+        assertTrue(eligibility.canPickUpResolved(wild(MODDED_DUCK), config, ALL_TAMED_PERMISSIONS));
+    }
+
+    @Test
+    void moddedAnimalCandidateIsNotAllowedByDefault() {
+        CarryConfig config = CarryConfig.defaultConfig();
+
+        assertFalse(eligibility.canPickUpResolved(wild(MODDED_DUCK), config, ALL_TAMED_PERMISSIONS));
+    }
+
+    @Test
+    void blockedFullEntityIdWinsOverAllowedFullEntityId() {
+        CarryConfig config = config(List.of("examplemod:duck"), List.of("examplemod:duck"), true);
+
+        assertFalse(eligibility.canPickUpResolved(wild(MODDED_DUCK), config, ALL_TAMED_PERMISSIONS));
+        assertEquals(
+                CarryEligibility.PickupDecision.BLOCKED_BY_CONFIG,
+                eligibility.pickupDecision(wild(MODDED_DUCK), config, ALL_TAMED_PERMISSIONS)
+        );
+    }
+
+    @Test
+    void tamedPermissionRulesStillApplyToAllowedFullEntityIds() {
+        CarryConfig config = config(List.of("examplemod:duck"), List.of(), true);
+
+        assertFalse(eligibility.canPickUpResolved(
+                ownedTamed(MODDED_DUCK),
+                config,
+                new CarryEligibility.PermissionSnapshot(false, true)
+        ));
+        assertTrue(eligibility.canPickUpResolved(
+                ownedTamed(MODDED_DUCK),
+                config,
+                ALL_TAMED_PERMISSIONS
+        ));
     }
 
     @Test

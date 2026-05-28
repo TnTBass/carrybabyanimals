@@ -34,6 +34,7 @@ Players can also install the mod on their clients for the nicer held-in-arms ren
 - Put the baby down again by sneak-right-clicking while carrying with empty hands.
 - Nursery Mode refuses dangerous set-downs near lava, fire, damaging blocks, cramped spaces, and unsafe drops.
 - Parent Reunion adds cosmetic hearts and a warm action-bar message when a safely set-down baby is returned near a matching adult.
+- Server owners can opt into compatible baby animal entity types from other mods by listing full entity IDs in config.
 - Pet the carried baby with left-click for heart particles.
 - Block normal hand actions while carrying, so carrying feels like it occupies both hands.
 - Drop the baby safely if the carry state becomes invalid, including logout, death, dimension changes, growth, or server shutdown.
@@ -63,9 +64,13 @@ Players with the mod installed get the nicer client-side presentation: the norma
 
 Players without the mod can still connect to a modded server. They see the carried baby through Minecraft's normal passenger rendering, usually above the player. It is less polished, but the animal remains real, visible, and safe.
 
+Carry Baby Animals does not make another mod's custom entity compatible with vanilla clients by itself. If another animal mod requires matching client mods, that requirement still belongs to that mod and server setup.
+
 ## Supported Animals
 
 By default, Carry Baby Animals supports the normal passive baby animals that are reasonable to carry, including animals such as cows, pigs, sheep, chickens, goats, rabbits, cats, foxes, horses, donkeys, llamas, camels, pandas, turtles, and wolves.
+
+No modded animal entity is enabled by default. Server owners can opt into compatible baby animal entities from other mods with full entity IDs in `allowedAnimals`, such as `examplemod:duck`.
 
 Tamed animals follow ownership rules. Players can carry their own tamed baby animals by default. Carrying another player's tamed baby animals is disabled unless the server explicitly allows it.
 
@@ -115,8 +120,8 @@ Default config:
 
 Options:
 
-- `allowedAnimals`: List of animal names that are allowed to be carried. Leave this empty to allow the full default supported set.
-- `blockedAnimals`: List of animal names to block. This removes animals from either the default supported set or from `allowedAnimals`.
+- `allowedAnimals`: List of animal names or full entity IDs that are allowed to be carried. Leave this empty to allow the full default supported set. Add full IDs such as `examplemod:duck` to opt into compatible baby animal entities from other mods.
+- `blockedAnimals`: List of animal names or full entity IDs to block. This removes animals from either the default supported set or from `allowedAnimals`.
 - `allowCarryingOtherPlayersTamedAnimals`: Allows players to carry another player's tamed baby animal when the permission node also allows it. Default: `false`.
 - `pettingCooldownTicks`: Cooldown between successful petting effects, in server ticks. Default: `20`, which is about one second. Values of `0` or lower reset to the default.
 - `cozyFeedbackEnabled`: Master switch for cosmetic carried-baby feedback. Default: `true`.
@@ -160,7 +165,9 @@ Animal name notes:
 
 - `dog` means tamed wolves only.
 - `wolf` means wolves generally, with normal tamed ownership rules still applied.
-- Unknown names are logged and ignored. If an allow list contains only unknown names, carrying stays restricted instead of accidentally allowing everything.
+- Full entity IDs such as `examplemod:duck` are accepted in `allowedAnimals` and `blockedAnimals`.
+- Unknown names, malformed IDs, and IDs for entity types that are not present on the server are logged and ignored. If an allow list contains only unknown entries, carrying stays restricted instead of accidentally allowing everything.
+- Modded entities are never allowed by default. They must be explicitly listed in `allowedAnimals`, and existing carry permission nodes still apply.
 - Carrying occupying the player's hands is part of the mod design and is not configurable.
 
 Example: allow only common farm animals:
@@ -170,6 +177,42 @@ Example: allow only common farm animals:
 {
   "allowedAnimals": ["cow", "pig", "sheep", "chicken", "goat"],
   "blockedAnimals": [],
+  "allowCarryingOtherPlayersTamedAnimals": false,
+  "pettingCooldownTicks": 20,
+  "cozyFeedbackEnabled": true,
+  "carriedIdleSoundsEnabled": true,
+  "carriedIdleSoundMinTicks": 160,
+  "carriedIdleSoundMaxTicks": 360,
+  "pettingMessagesEnabled": true,
+  "nameAwareMessagesEnabled": true,
+  "cozyParticlesEnabled": true,
+  "sleepyBabiesEnabled": true,
+  "sleepyAfterTicks": 1200,
+  "sleepyMessageCooldownTicks": 600,
+  "sleepyParticleCooldownTicks": 200,
+  "nurseryModeEnabled": true,
+  "nurseryBlockLava": true,
+  "nurseryBlockFire": true,
+  "nurseryBlockCactusAndDamage": true,
+  "nurseryBlockSuffocation": true,
+  "nurseryBlockDangerousFalls": true,
+  "nurseryDangerousFallDistanceBlocks": 4,
+  "nurseryMessagesEnabled": true,
+  "parentReunionEnabled": true,
+  "parentReunionRadiusBlocks": 8,
+  "parentReunionCooldownTicks": 100,
+  "parentReunionMessagesEnabled": true,
+  "parentReunionParticlesEnabled": true
+}
+```
+
+Example: allow cows plus a compatible baby animal entity from another mod:
+
+```jsonc
+// Supported animal names: cow, pig, sheep, chicken, goat, rabbit, cat, fox, horse, donkey, mule, llama, trader_llama, camel, panda, turtle, wolf, dog
+{
+  "allowedAnimals": ["cow", "examplemod:duck"],
+  "blockedAnimals": ["turtle"],
   "allowCarryingOtherPlayersTamedAnimals": false,
   "pettingCooldownTicks": 20,
   "cozyFeedbackEnabled": true,

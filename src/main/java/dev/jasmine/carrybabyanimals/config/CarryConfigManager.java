@@ -3,6 +3,7 @@ package dev.jasmine.carrybabyanimals.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+import net.minecraft.world.entity.EntityType;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -93,10 +94,10 @@ public final class CarryConfigManager {
     public void filterAndLogUnknownAnimalNames(AnimalAliasRegistry registry, Logger logger) {
         UnknownAnimalNames unknownNames = unknownAnimalNames(config, registry);
         for (String name : unknownNames.allowedAnimals()) {
-            logger.warn("Unknown allowed animal name in Carry Baby Animals config: {}", name);
+            logger.warn("Unknown allowed animal name or entity ID in Carry Baby Animals config: {}", name);
         }
         for (String name : unknownNames.blockedAnimals()) {
-            logger.warn("Unknown blocked animal name in Carry Baby Animals config: {}", name);
+            logger.warn("Unknown blocked animal name or entity ID in Carry Baby Animals config: {}", name);
         }
         config = new CarryConfig(
                 knownNames(config.allowedAnimals(), registry),
@@ -140,7 +141,7 @@ public final class CarryConfigManager {
     private static List<String> unknownNames(List<String> names, AnimalAliasRegistry registry) {
         List<String> unknown = new ArrayList<>();
         for (String name : names) {
-            if (registry.resolve(name).isEmpty()) {
+            if (!isKnownConfigEntry(name, registry)) {
                 unknown.add(name);
             }
         }
@@ -150,11 +151,17 @@ public final class CarryConfigManager {
     private static List<String> knownNames(List<String> names, AnimalAliasRegistry registry) {
         List<String> known = new ArrayList<>();
         for (String name : names) {
-            if (registry.resolve(name).isPresent()) {
+            if (isKnownConfigEntry(name, registry)) {
                 known.add(name);
             }
         }
         return List.copyOf(known);
+    }
+
+    private static boolean isKnownConfigEntry(String name, AnimalAliasRegistry registry) {
+        return registry.resolve(name)
+                .filter(resolved -> !name.contains(":") || EntityType.byString(resolved.id().toString()).isPresent())
+                .isPresent();
     }
 
     private static List<String> sanitizeNames(List<String> names) {

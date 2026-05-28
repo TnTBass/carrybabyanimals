@@ -1,7 +1,13 @@
 package dev.jasmine.carrybabyanimals.config;
 
+import net.minecraft.server.Bootstrap;
+import net.minecraft.SharedConstants;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Marker;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
+import org.slf4j.helpers.AbstractLogger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,6 +18,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 final class CarryConfigManagerTest {
+    @BeforeAll
+    static void bootstrapMinecraft() {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
+
     @Test
     void defaultConfigAllowsDefaultSetAndBlocksNobody() {
         CarryConfig config = CarryConfig.defaultConfig();
@@ -326,6 +338,75 @@ final class CarryConfigManagerTest {
     }
 
     @Test
+    void loadedConfigKeepsFullEntityIdsWhenFilteringUnknownNames() throws IOException {
+        CarryConfigManager manager = loadConfig("""
+            {
+              "allowedAnimals": ["cow", "minecraft:pig"],
+              "blockedAnimals": ["minecraft:sheep"]
+            }
+            """);
+
+        manager.filterAndLogUnknownAnimalNames(AnimalAliasRegistry.createDefault(), LoggerFactory.getLogger(CarryConfigManagerTest.class));
+
+        assertEquals(List.of("cow", "minecraft:pig"), manager.config().allowedAnimals());
+        assertEquals(List.of("minecraft:sheep"), manager.config().blockedAnimals());
+        assertTrue(manager.config().restrictToAllowedAnimals());
+    }
+
+    @Test
+    void absentFullEntityIdsAreReportedAsUnknown() {
+        CarryConfig config = new CarryConfig(
+                List.of("examplemod:duck"),
+                List.of("examplemod:goose"),
+                false,
+                20
+        );
+
+        CarryConfigManager.UnknownAnimalNames unknownNames = CarryConfigManager.unknownAnimalNames(
+                config,
+                AnimalAliasRegistry.createDefault()
+        );
+
+        assertEquals(List.of("examplemod:duck"), unknownNames.allowedAnimals());
+        assertEquals(List.of("examplemod:goose"), unknownNames.blockedAnimals());
+    }
+
+    @Test
+    void absentFullEntityIdsAreRemovedWithoutClearingAllowListRestriction() throws IOException {
+        CarryConfigManager manager = loadConfig("""
+            {
+              "allowedAnimals": ["examplemod:duck"],
+              "blockedAnimals": ["examplemod:goose"]
+            }
+            """);
+
+        manager.filterAndLogUnknownAnimalNames(AnimalAliasRegistry.createDefault(), LoggerFactory.getLogger(CarryConfigManagerTest.class));
+
+        assertTrue(manager.config().allowedAnimals().isEmpty());
+        assertTrue(manager.config().blockedAnimals().isEmpty());
+        assertTrue(manager.config().restrictToAllowedAnimals());
+    }
+
+    @Test
+    void malformedIdsAreLoggedAndRemovedWithoutClearingAllowListRestriction() throws IOException {
+        CarryConfigManager manager = loadConfig("""
+            {
+              "allowedAnimals": ["examplemod:bad id"],
+              "blockedAnimals": ["bad:id value"]
+            }
+            """);
+        CapturingLogger logger = new CapturingLogger();
+
+        manager.filterAndLogUnknownAnimalNames(AnimalAliasRegistry.createDefault(), logger);
+
+        assertTrue(manager.config().allowedAnimals().isEmpty());
+        assertTrue(manager.config().blockedAnimals().isEmpty());
+        assertTrue(manager.config().restrictToAllowedAnimals());
+        assertTrue(logger.warnMessages().stream().anyMatch(message -> message.contains("Unknown allowed animal name or entity ID")));
+        assertTrue(logger.warnMessages().stream().anyMatch(message -> message.contains("Unknown blocked animal name or entity ID")));
+    }
+
+    @Test
     void malformedLoadedConfigKeepsDefaultConfigAndThrowsIOException() throws IOException {
         CarryConfigManager manager = new CarryConfigManager();
         Path path = Path.of("carrybabyanimals-malformed-load-test.json");
@@ -393,6 +474,80 @@ final class CarryConfigManagerTest {
             return manager;
         } finally {
             Files.deleteIfExists(path);
+        }
+    }
+
+    private static final class CapturingLogger extends AbstractLogger {
+        private final List<String> warnMessages = new ArrayList<>();
+
+        private CapturingLogger() {
+            name = "capturing";
+        }
+
+        List<String> warnMessages() {
+            return warnMessages;
+        }
+
+        @Override
+        public boolean isTraceEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean isDebugEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean isInfoEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean isWarnEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean isErrorEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean isTraceEnabled(Marker marker) {
+            return true;
+        }
+
+        @Override
+        public boolean isDebugEnabled(Marker marker) {
+            return true;
+        }
+
+        @Override
+        public boolean isInfoEnabled(Marker marker) {
+            return true;
+        }
+
+        @Override
+        public boolean isWarnEnabled(Marker marker) {
+            return true;
+        }
+
+        @Override
+        public boolean isErrorEnabled(Marker marker) {
+            return true;
+        }
+
+        @Override
+        protected String getFullyQualifiedCallerName() {
+            return CapturingLogger.class.getName();
+        }
+
+        @Override
+        protected void handleNormalizedLoggingCall(Level level, Marker marker, String messagePattern, Object[] arguments, Throwable throwable) {
+            if (level == Level.WARN) {
+                warnMessages.add(messagePattern);
+            }
         }
     }
 }

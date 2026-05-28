@@ -38,6 +38,26 @@ final class AnimalAliasRegistryTest {
     }
 
     @Test
+    void resolvesFullEntityIdsWithoutAddingThemToDefaultAliases() {
+        AnimalAliasRegistry aliases = AnimalAliasRegistry.createDefault();
+
+        AnimalAliasRegistry.ResolvedAnimal duck = aliases.resolve(" examplemod:duck ").orElseThrow();
+
+        assertEquals(Identifier.parse("examplemod:duck"), duck.id());
+        assertFalse(duck.requiresTamed());
+        assertFalse(aliases.aliases().containsKey("examplemod:duck"));
+    }
+
+    @Test
+    void malformedFullEntityIdsDoNotResolve() {
+        AnimalAliasRegistry aliases = AnimalAliasRegistry.createDefault();
+
+        assertTrue(aliases.resolve("examplemod:bad id").isEmpty());
+        assertTrue(aliases.resolve("examplemod:").isEmpty());
+        assertTrue(aliases.resolve(":duck").isEmpty());
+    }
+
+    @Test
     void nullAndBlankNamesDoNotResolve() {
         AnimalAliasRegistry aliases = AnimalAliasRegistry.createDefault();
 
