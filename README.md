@@ -245,6 +245,11 @@ Example: allow trusted servers to carry other players' tamed babies and slow pet
 
 Carry Baby Animals can integrate with Fabric Permissions API, but Fabric Permissions API is not required. If it is installed, permission providers such as LuckPerms can manage server rules.
 
+If Fabric Permissions API is installed:
+
+- `carrybabyanimals.nursery.bypass` defaults to disabled unless a permission provider explicitly grants it.
+- All other Carry Baby Animals permissions delegate to your permission provider and use the defaults listed below when the provider has no explicit rule.
+
 If Fabric Permissions API is not installed:
 
 - All players can carry untamed baby animals.
@@ -268,5 +273,5 @@ Default behavior:
 - `carrybabyanimals.carry`: allowed by default.
 - `carrybabyanimals.carry.tamed`: allowed by default for the player's own tamed baby animals.
 - `carrybabyanimals.carry.others_tamed`: denied by default.
-- `carrybabyanimals.nursery.bypass`: defaults to vanilla game-master command permission without Fabric Permissions API.
+- `carrybabyanimals.nursery.bypass`: defaults to disabled with Fabric Permissions API installed; without Fabric Permissions API it falls back to vanilla game-master command permission.
 - `carrybabyanimals.reload`: reserved for reload support and defaults to vanilla game-master command permission when exposed.

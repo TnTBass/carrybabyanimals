@@ -38,10 +38,11 @@ public final class CarryPermissions {
     }
 
     public static boolean canBypassNursery(ServerPlayer player) {
-        return check(
-                player,
-                NURSERY_BYPASS,
-                player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)
+        boolean permissionsApiPresent = FabricLoader.getInstance().isModLoaded(FABRIC_PERMISSIONS_API);
+        return nurseryBypassPermission(
+                permissionsApiPresent,
+                () -> Permissions.check(player, NURSERY_BYPASS, nurseryBypassFallback(permissionsApiPresent, () -> false)),
+                () -> player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)
         );
     }
 
@@ -57,7 +58,15 @@ public final class CarryPermissions {
         return permissionsApiPresent ? permissionCheck.getAsBoolean() : fallback;
     }
 
-    static boolean nurseryBypassPermission(boolean permissionsApiPresent, BooleanSupplier permissionCheck, boolean gameMasterFallback) {
-        return resolvedPermission(permissionsApiPresent, permissionCheck, gameMasterFallback);
+    static boolean nurseryBypassPermission(
+            boolean permissionsApiPresent,
+            BooleanSupplier permissionCheck,
+            BooleanSupplier gameMasterFallback
+    ) {
+        return resolvedPermission(permissionsApiPresent, permissionCheck, nurseryBypassFallback(permissionsApiPresent, gameMasterFallback));
+    }
+
+    static boolean nurseryBypassFallback(boolean permissionsApiPresent, BooleanSupplier gameMasterFallback) {
+        return permissionsApiPresent ? false : gameMasterFallback.getAsBoolean();
     }
 }

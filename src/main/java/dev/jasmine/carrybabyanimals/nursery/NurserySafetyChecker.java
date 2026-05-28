@@ -22,10 +22,10 @@ public final class NurserySafetyChecker {
         if (config.nurseryBlockLava() && hasLavaNearFeet(world, feet)) {
             return NurserySafetyDecision.refuse(NurseryHazard.LAVA);
         }
-        if (config.nurseryBlockFire() && world.hasFireHazard(feet)) {
+        if (config.nurseryBlockFire() && hasFireNearSetDown(world, feet)) {
             return NurserySafetyDecision.refuse(NurseryHazard.FIRE);
         }
-        if (config.nurseryBlockCactusAndDamage() && world.hasDamagingHazard(feet)) {
+        if (config.nurseryBlockCactusAndDamage() && hasDamagingHazardNearSetDown(world, feet)) {
             return NurserySafetyDecision.refuse(NurseryHazard.CACTUS_OR_DAMAGE);
         }
         if (config.nurseryBlockSuffocation() && !world.hasCollisionSpace(feet)) {
@@ -46,7 +46,33 @@ public final class NurserySafetyChecker {
                 || world.hasLava(feet.south())
                 || world.hasLava(feet.east())
                 || world.hasLava(feet.west())
-                || world.hasLava(feet.below());
+                || world.hasLava(feet.below())
+                || world.hasLava(feet.below().north())
+                || world.hasLava(feet.below().south())
+                || world.hasLava(feet.below().east())
+                || world.hasLava(feet.below().west());
+    }
+
+    private boolean hasFireNearSetDown(WorldAccess world, BlockPos feet) {
+        return world.hasFireHazard(feet)
+                || world.hasFireHazard(feet.north())
+                || world.hasFireHazard(feet.south())
+                || world.hasFireHazard(feet.east())
+                || world.hasFireHazard(feet.west())
+                || world.hasFireHazard(feet.below());
+    }
+
+    private boolean hasDamagingHazardNearSetDown(WorldAccess world, BlockPos feet) {
+        return world.hasDamagingHazard(feet)
+                || world.hasDamagingHazard(feet.north())
+                || world.hasDamagingHazard(feet.south())
+                || world.hasDamagingHazard(feet.east())
+                || world.hasDamagingHazard(feet.west())
+                || world.hasDamagingHazard(feet.below())
+                || world.hasDamagingHazard(feet.below().north())
+                || world.hasDamagingHazard(feet.below().south())
+                || world.hasDamagingHazard(feet.below().east())
+                || world.hasDamagingHazard(feet.below().west());
     }
 
     public interface WorldAccess {

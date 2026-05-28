@@ -49,6 +49,16 @@ final class NurserySafetyCheckerTest {
     }
 
     @Test
+    void lavaAdjacentToFloorRefusesWhenEnabled() {
+        FakeWorld world = new FakeWorld().lava(BlockPos.ZERO.below().east());
+
+        assertEquals(
+                NurseryHazard.LAVA,
+                checker.evaluate(world, BlockPos.ZERO, CarryConfig.defaultConfig(), false).hazard().orElseThrow()
+        );
+    }
+
+    @Test
     void fireRefusesWhenEnabled() {
         FakeWorld world = new FakeWorld().fire(BlockPos.ZERO);
 
@@ -59,8 +69,58 @@ final class NurserySafetyCheckerTest {
     }
 
     @Test
+    void fireFloorRefusesWhenEnabled() {
+        FakeWorld world = new FakeWorld().fire(BlockPos.ZERO.below());
+
+        assertEquals(
+                NurseryHazard.FIRE,
+                checker.evaluate(world, BlockPos.ZERO, CarryConfig.defaultConfig(), false).hazard().orElseThrow()
+        );
+    }
+
+    @Test
+    void adjacentFireRefusesWhenEnabled() {
+        FakeWorld world = new FakeWorld().fire(BlockPos.ZERO.east());
+
+        assertEquals(
+                NurseryHazard.FIRE,
+                checker.evaluate(world, BlockPos.ZERO, CarryConfig.defaultConfig(), false).hazard().orElseThrow()
+        );
+    }
+
+    @Test
     void damagingBlockRefusesWhenEnabled() {
         FakeWorld world = new FakeWorld().damaging(BlockPos.ZERO);
+
+        assertEquals(
+                NurseryHazard.CACTUS_OR_DAMAGE,
+                checker.evaluate(world, BlockPos.ZERO, CarryConfig.defaultConfig(), false).hazard().orElseThrow()
+        );
+    }
+
+    @Test
+    void adjacentDamagingBlockRefusesWhenEnabled() {
+        FakeWorld world = new FakeWorld().damaging(BlockPos.ZERO.east());
+
+        assertEquals(
+                NurseryHazard.CACTUS_OR_DAMAGE,
+                checker.evaluate(world, BlockPos.ZERO, CarryConfig.defaultConfig(), false).hazard().orElseThrow()
+        );
+    }
+
+    @Test
+    void damagingFloorRefusesWhenEnabled() {
+        FakeWorld world = new FakeWorld().damaging(BlockPos.ZERO.below());
+
+        assertEquals(
+                NurseryHazard.CACTUS_OR_DAMAGE,
+                checker.evaluate(world, BlockPos.ZERO, CarryConfig.defaultConfig(), false).hazard().orElseThrow()
+        );
+    }
+
+    @Test
+    void damagingFloorCardinalRefusesWhenEnabled() {
+        FakeWorld world = new FakeWorld().damaging(BlockPos.ZERO.below().east());
 
         assertEquals(
                 NurseryHazard.CACTUS_OR_DAMAGE,
