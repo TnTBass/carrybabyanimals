@@ -4,6 +4,8 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
+- Added optional Cozy Feedback for carried babies, including softer carried idle sounds, varied petting messages, sleepy moments, and gentle cosmetic particles controlled by server config.
+
 ## 0.1.2
 
 - Mod listings now show the Carry Baby Animals icon and link to the Modrinth page, source code, and issue tracker.
