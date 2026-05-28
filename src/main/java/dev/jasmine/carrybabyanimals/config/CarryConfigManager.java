@@ -81,7 +81,12 @@ public final class CarryConfigManager {
                 enabledByDefault(raw.nurseryBlockSuffocation),
                 enabledByDefault(raw.nurseryBlockDangerousFalls),
                 positiveOrDefault(raw.nurseryDangerousFallDistanceBlocks, 4),
-                enabledByDefault(raw.nurseryMessagesEnabled)
+                enabledByDefault(raw.nurseryMessagesEnabled),
+                enabledByDefault(raw.parentReunionEnabled),
+                positiveOrDefault(raw.parentReunionRadiusBlocks, 8),
+                positiveOrDefault(raw.parentReunionCooldownTicks, 200),
+                enabledByDefault(raw.parentReunionMessagesEnabled),
+                enabledByDefault(raw.parentReunionParticlesEnabled)
         );
     }
 
@@ -117,7 +122,12 @@ public final class CarryConfigManager {
                 config.nurseryBlockSuffocation(),
                 config.nurseryBlockDangerousFalls(),
                 config.nurseryDangerousFallDistanceBlocks(),
-                config.nurseryMessagesEnabled()
+                config.nurseryMessagesEnabled(),
+                config.parentReunionEnabled(),
+                config.parentReunionRadiusBlocks(),
+                config.parentReunionCooldownTicks(),
+                config.parentReunionMessagesEnabled(),
+                config.parentReunionParticlesEnabled()
         );
     }
 
@@ -203,6 +213,11 @@ public final class CarryConfigManager {
         Boolean nurseryBlockDangerousFalls;
         Integer nurseryDangerousFallDistanceBlocks;
         Boolean nurseryMessagesEnabled;
+        Boolean parentReunionEnabled;
+        Integer parentReunionRadiusBlocks;
+        Integer parentReunionCooldownTicks;
+        Boolean parentReunionMessagesEnabled;
+        Boolean parentReunionParticlesEnabled;
 
         static RawConfig from(CarryConfig config) {
             RawConfig raw = new RawConfig();
@@ -229,6 +244,11 @@ public final class CarryConfigManager {
             raw.nurseryBlockDangerousFalls = config.nurseryBlockDangerousFalls();
             raw.nurseryDangerousFallDistanceBlocks = config.nurseryDangerousFallDistanceBlocks();
             raw.nurseryMessagesEnabled = config.nurseryMessagesEnabled();
+            raw.parentReunionEnabled = config.parentReunionEnabled();
+            raw.parentReunionRadiusBlocks = config.parentReunionRadiusBlocks();
+            raw.parentReunionCooldownTicks = config.parentReunionCooldownTicks();
+            raw.parentReunionMessagesEnabled = config.parentReunionMessagesEnabled();
+            raw.parentReunionParticlesEnabled = config.parentReunionParticlesEnabled();
             return raw;
         }
     }

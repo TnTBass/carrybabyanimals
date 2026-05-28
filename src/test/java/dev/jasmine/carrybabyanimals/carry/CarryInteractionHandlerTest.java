@@ -6,6 +6,10 @@ import dev.jasmine.carrybabyanimals.nursery.NurseryHazard;
 import dev.jasmine.carrybabyanimals.nursery.NurseryMessageCatalog;
 import dev.jasmine.carrybabyanimals.nursery.NurserySafetyChecker;
 import dev.jasmine.carrybabyanimals.nursery.NurserySafetyDecision;
+import dev.jasmine.carrybabyanimals.reunion.ParentReunionCooldowns;
+import dev.jasmine.carrybabyanimals.reunion.ParentReunionFeedback;
+import dev.jasmine.carrybabyanimals.reunion.ParentReunionFinder;
+import dev.jasmine.carrybabyanimals.reunion.ParentReunionMessageCatalog;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -75,6 +79,13 @@ final class CarryInteractionHandlerTest {
         assertEquals(10.0D, position.x, 1.0E-6D);
         assertEquals(65.45D, position.y, 1.0E-6D);
         assertEquals(10.75D, position.z, 1.0E-6D);
+    }
+
+    @Test
+    void messageVariantIndexStaysNonNegativeAcrossLongGameTimes() {
+        assertEquals(0, CarryInteractionHandler.messageVariantIndex(0L));
+        assertEquals(1, CarryInteractionHandler.messageVariantIndex(1L));
+        assertEquals(0, CarryInteractionHandler.messageVariantIndex(0x80000000L));
     }
 
     @Test
@@ -233,6 +244,43 @@ final class CarryInteractionHandlerTest {
     }
 
     @Test
+    void reunionFeedbackRunsOnlyAfterAllowedDropWithMatchAndEnabledConfig() {
+        CarryInteractionHandler.ReunionAttemptDecision decision = CarryInteractionHandler.reunionAttemptDecision(
+                true,
+                true,
+                true,
+                true,
+                true
+        );
+
+        assertTrue(decision.shouldSendParticles());
+        assertTrue(decision.shouldShowMessage());
+        assertTrue(decision.shouldRememberCooldown());
+    }
+
+    @Test
+    void reunionFeedbackSkipsWhenDropWasRefusedNoMatchExistsOrCooldownIsActive() {
+        assertFalse(CarryInteractionHandler.reunionAttemptDecision(false, true, true, true, true).shouldRememberCooldown());
+        assertFalse(CarryInteractionHandler.reunionAttemptDecision(true, false, true, true, true).shouldRememberCooldown());
+        assertFalse(CarryInteractionHandler.reunionAttemptDecision(true, true, false, true, true).shouldRememberCooldown());
+    }
+
+    @Test
+    void reunionFeedbackHonorsMessageAndParticleSwitches() {
+        CarryInteractionHandler.ReunionAttemptDecision decision = CarryInteractionHandler.reunionAttemptDecision(
+                true,
+                true,
+                true,
+                false,
+                false
+        );
+
+        assertFalse(decision.shouldSendParticles());
+        assertFalse(decision.shouldShowMessage());
+        assertTrue(decision.shouldRememberCooldown());
+    }
+
+    @Test
     void carryFeedbackTextUsesBabyTypeForUnnamedAnimals() {
         assertEquals("Carrying baby Pig", CarryInteractionHandler.pickupFeedbackText("Pig", false));
         assertEquals("Set down baby Pig", CarryInteractionHandler.dropFeedbackText("Pig", false));
@@ -268,7 +316,11 @@ final class CarryInteractionHandlerTest {
                 new CozyFeedbackMessageCatalog(),
                 scheduler,
                 new NurserySafetyChecker(),
-                new NurseryMessageCatalog()
+                new NurseryMessageCatalog(),
+                new ParentReunionFinder(),
+                new ParentReunionCooldowns(),
+                new ParentReunionFeedback(),
+                new ParentReunionMessageCatalog()
         );
     }
 

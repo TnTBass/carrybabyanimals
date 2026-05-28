@@ -30,6 +30,11 @@ Use this matrix before release candidates and after changes that touch carry sta
 | Nursery damage refusal | Try to set down a carried baby on cactus, sweet berry bush, pointed dripstone, wither rose, or powder snow. | The set-down is refused and the baby remains carried. |
 | Nursery cramped refusal | Try to set down a carried baby into a cramped or colliding space. | The set-down is refused and the baby remains carried. |
 | Nursery fall refusal | Try to set down a carried baby over a drop at or above `nurseryDangerousFallDistanceBlocks`. | The set-down is refused and the baby remains carried. |
+| Parent reunion success | Set down a carried baby within `parentReunionRadiusBlocks` of a matching adult on safe ground. | The baby is set down, hearts appear around the baby and adult when particles are enabled, and a warm action-bar message appears when messages are enabled. |
+| Parent reunion radius limit | Set down a carried baby just outside `parentReunionRadiusBlocks` from the matching adult. | The baby is set down normally and no reunion feedback appears. |
+| Parent reunion type mismatch | Set down a baby near an adult of a different animal type. | The baby is set down normally and no reunion feedback appears. |
+| Parent reunion blocked by Nursery Mode | Try to set down a carried baby near a matching adult but in a spot Nursery Mode refuses. | The baby remains carried, the Nursery refusal appears as configured, and no reunion feedback appears. |
+| Parent reunion tamed ownership | Test a tamed baby near same-owner and different-owner adult tamed animals. | Reunion feedback appears only for the same owner identity. |
 | Logout and shutdown cleanup | Carry a baby, leave the world, then reload. Repeat with server/world shutdown. | The baby is dropped safely rather than being persisted in a fragile carried state. |
 
 ## Multiplayer With Modded Clients
@@ -51,6 +56,7 @@ Use this matrix before release candidates and after changes that touch carry sta
 | Modded carrier, unmodded observer | Player A with the mod picks up a baby while Player B is connected without this mod. | Player B remains connected and sees the real baby through the vanilla passenger fallback. |
 | No custom-payload requirement | Repeat pickup, movement, petting, and drop/cleanup while the unmodded observer is online. | The server does not require the observer to support Carry Baby Animals custom packets. |
 | Fallback is non-duplicating | Watch from the unmodded observer during carry and cleanup. | The baby appears as a single vanilla passenger, typically above the player, and clears when dropped. |
+| Parent reunion fallback | Trigger Parent Reunion while the unmodded observer is nearby. | The observer remains connected and sees ordinary server-side heart particles without installing the client mod. |
 | Modded renderer remains upgraded | Watch the same carry from a modded observer at the same time. | The modded observer sees the held render instead of the passenger-position fallback. |
 
 ## Config
@@ -70,6 +76,7 @@ The config file is `config/carrybabyanimals.json`.
 | Petting cooldown | Set `"pettingCooldownTicks": 1`, then `40`, then `0` or a negative value. | Positive values change heart-particle cadence. Non-positive values fall back to the default cooldown. |
 | Other players' tamed animals | Toggle `"allowCarryingOtherPlayersTamedAnimals"`. | Another player's tamed baby can only be carried when both config and permission allow it. |
 | Nursery Mode toggles | Toggle each `nurseryBlock*` option and `nurseryMessagesEnabled`. | Disabled hazard toggles allow only their matching hazard class, and disabled messages still refuse unsafe set-downs silently. |
+| Parent Reunion toggles | Toggle `parentReunionEnabled`, `parentReunionMessagesEnabled`, and `parentReunionParticlesEnabled`; test small and large `parentReunionRadiusBlocks` and `parentReunionCooldownTicks`. | Disabled master switch suppresses reunion feedback. Message and particle switches affect only their own cosmetic output. Radius and cooldown values change when feedback can trigger. |
 
 ## Permissions
 

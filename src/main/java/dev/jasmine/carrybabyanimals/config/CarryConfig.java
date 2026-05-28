@@ -26,7 +26,12 @@ public record CarryConfig(
         boolean nurseryBlockSuffocation,
         boolean nurseryBlockDangerousFalls,
         int nurseryDangerousFallDistanceBlocks,
-        boolean nurseryMessagesEnabled
+        boolean nurseryMessagesEnabled,
+        boolean parentReunionEnabled,
+        int parentReunionRadiusBlocks,
+        int parentReunionCooldownTicks,
+        boolean parentReunionMessagesEnabled,
+        boolean parentReunionParticlesEnabled
 ) {
     public CarryConfig(
             List<String> allowedAnimals,
@@ -58,7 +63,12 @@ public record CarryConfig(
                 true,
                 true,
                 4,
-                true
+                true, // nurseryMessagesEnabled
+                true, // parentReunionEnabled
+                8, // parentReunionRadiusBlocks
+                200, // parentReunionCooldownTicks
+                true, // parentReunionMessagesEnabled
+                true // parentReunionParticlesEnabled
         );
     }
 
@@ -93,7 +103,12 @@ public record CarryConfig(
                 true,
                 true,
                 4,
-                true
+                true, // nurseryMessagesEnabled
+                true, // parentReunionEnabled
+                8, // parentReunionRadiusBlocks
+                200, // parentReunionCooldownTicks
+                true, // parentReunionMessagesEnabled
+                true // parentReunionParticlesEnabled
         );
     }
 
@@ -139,7 +154,71 @@ public record CarryConfig(
                 true,
                 true,
                 4,
-                true
+                true, // nurseryMessagesEnabled
+                true, // parentReunionEnabled
+                8, // parentReunionRadiusBlocks
+                200, // parentReunionCooldownTicks
+                true, // parentReunionMessagesEnabled
+                true // parentReunionParticlesEnabled
+        );
+    }
+
+    public CarryConfig(
+            List<String> allowedAnimals,
+            List<String> blockedAnimals,
+            boolean allowCarryingOtherPlayersTamedAnimals,
+            int pettingCooldownTicks,
+            boolean restrictToAllowedAnimals,
+            boolean cozyFeedbackEnabled,
+            boolean carriedIdleSoundsEnabled,
+            int carriedIdleSoundMinTicks,
+            int carriedIdleSoundMaxTicks,
+            boolean pettingMessagesEnabled,
+            boolean nameAwareMessagesEnabled,
+            boolean cozyParticlesEnabled,
+            boolean sleepyBabiesEnabled,
+            int sleepyAfterTicks,
+            int sleepyMessageCooldownTicks,
+            int sleepyParticleCooldownTicks,
+            boolean nurseryModeEnabled,
+            boolean nurseryBlockLava,
+            boolean nurseryBlockFire,
+            boolean nurseryBlockCactusAndDamage,
+            boolean nurseryBlockSuffocation,
+            boolean nurseryBlockDangerousFalls,
+            int nurseryDangerousFallDistanceBlocks,
+            boolean nurseryMessagesEnabled
+    ) {
+        this(
+                allowedAnimals,
+                blockedAnimals,
+                allowCarryingOtherPlayersTamedAnimals,
+                pettingCooldownTicks,
+                restrictToAllowedAnimals,
+                cozyFeedbackEnabled,
+                carriedIdleSoundsEnabled,
+                carriedIdleSoundMinTicks,
+                carriedIdleSoundMaxTicks,
+                pettingMessagesEnabled,
+                nameAwareMessagesEnabled,
+                cozyParticlesEnabled,
+                sleepyBabiesEnabled,
+                sleepyAfterTicks,
+                sleepyMessageCooldownTicks,
+                sleepyParticleCooldownTicks,
+                nurseryModeEnabled,
+                nurseryBlockLava,
+                nurseryBlockFire,
+                nurseryBlockCactusAndDamage,
+                nurseryBlockSuffocation,
+                nurseryBlockDangerousFalls,
+                nurseryDangerousFallDistanceBlocks,
+                nurseryMessagesEnabled,
+                true, // parentReunionEnabled
+                8, // parentReunionRadiusBlocks
+                200, // parentReunionCooldownTicks
+                true, // parentReunionMessagesEnabled
+                true // parentReunionParticlesEnabled
         );
     }
 
@@ -173,7 +252,12 @@ public record CarryConfig(
                 true,
                 true,
                 4,
-                true
+                true, // nurseryMessagesEnabled
+                true, // parentReunionEnabled
+                8, // parentReunionRadiusBlocks
+                200, // parentReunionCooldownTicks
+                true, // parentReunionMessagesEnabled
+                true // parentReunionParticlesEnabled
         );
     }
 }

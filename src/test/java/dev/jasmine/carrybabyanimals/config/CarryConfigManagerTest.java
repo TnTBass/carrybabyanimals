@@ -54,6 +54,51 @@ final class CarryConfigManagerTest {
     }
 
     @Test
+    void defaultConfigEnablesParentReunionConservatively() {
+        CarryConfig config = CarryConfig.defaultConfig();
+
+        assertTrue(config.parentReunionEnabled());
+        assertEquals(8, config.parentReunionRadiusBlocks());
+        assertEquals(200, config.parentReunionCooldownTicks());
+        assertTrue(config.parentReunionMessagesEnabled());
+        assertTrue(config.parentReunionParticlesEnabled());
+    }
+
+    @Test
+    void parsedParentReunionConfigUsesExplicitValues() {
+        String json = """
+            {
+              "parentReunionEnabled": false,
+              "parentReunionRadiusBlocks": 5,
+              "parentReunionCooldownTicks": 400,
+              "parentReunionMessagesEnabled": false,
+              "parentReunionParticlesEnabled": false
+            }
+            """;
+
+        CarryConfig config = CarryConfigManager.parse(json);
+
+        assertFalse(config.parentReunionEnabled());
+        assertEquals(5, config.parentReunionRadiusBlocks());
+        assertEquals(400, config.parentReunionCooldownTicks());
+        assertFalse(config.parentReunionMessagesEnabled());
+        assertFalse(config.parentReunionParticlesEnabled());
+    }
+
+    @Test
+    void parsedParentReunionConfigNormalizesInvalidTimingAndRadius() {
+        CarryConfig config = CarryConfigManager.parse("""
+            {
+              "parentReunionRadiusBlocks": 0,
+              "parentReunionCooldownTicks": -1
+            }
+            """);
+
+        assertEquals(8, config.parentReunionRadiusBlocks());
+        assertEquals(200, config.parentReunionCooldownTicks());
+    }
+
+    @Test
     void parsedNurseryConfigUsesExplicitValues() {
         String json = """
             {

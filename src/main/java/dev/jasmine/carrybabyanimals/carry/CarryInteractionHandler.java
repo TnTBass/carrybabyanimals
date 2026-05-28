@@ -8,6 +8,11 @@ import dev.jasmine.carrybabyanimals.nursery.NurseryMessageCatalog;
 import dev.jasmine.carrybabyanimals.nursery.NurserySafetyChecker;
 import dev.jasmine.carrybabyanimals.nursery.NurserySafetyDecision;
 import dev.jasmine.carrybabyanimals.permissions.CarryPermissions;
+import dev.jasmine.carrybabyanimals.reunion.ParentReunionCooldowns;
+import dev.jasmine.carrybabyanimals.reunion.ParentReunionFeedback;
+import dev.jasmine.carrybabyanimals.reunion.ParentReunionFinder;
+import dev.jasmine.carrybabyanimals.reunion.ParentReunionMatch;
+import dev.jasmine.carrybabyanimals.reunion.ParentReunionMessageCatalog;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -16,6 +21,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
@@ -42,6 +48,10 @@ public final class CarryInteractionHandler {
     private final CozyFeedbackScheduler cozyFeedbackScheduler;
     private final NurserySafetyChecker nurserySafetyChecker;
     private final NurseryMessageCatalog nurseryMessageCatalog;
+    private final ParentReunionFinder parentReunionFinder;
+    private final ParentReunionCooldowns parentReunionCooldowns;
+    private final ParentReunionFeedback parentReunionFeedback;
+    private final ParentReunionMessageCatalog parentReunionMessageCatalog;
     private final Map<UUID, Long> lastPetTick = new HashMap<>();
 
     public CarryInteractionHandler(
@@ -60,7 +70,11 @@ public final class CarryInteractionHandler {
                 new CozyFeedbackMessageCatalog(),
                 new CozyFeedbackScheduler(),
                 new NurserySafetyChecker(),
-                new NurseryMessageCatalog()
+                new NurseryMessageCatalog(),
+                new ParentReunionFinder(),
+                new ParentReunionCooldowns(),
+                new ParentReunionFeedback(),
+                new ParentReunionMessageCatalog()
         );
     }
 
@@ -81,7 +95,11 @@ public final class CarryInteractionHandler {
                 new CozyFeedbackMessageCatalog(),
                 cozyFeedbackScheduler,
                 new NurserySafetyChecker(),
-                new NurseryMessageCatalog()
+                new NurseryMessageCatalog(),
+                new ParentReunionFinder(),
+                new ParentReunionCooldowns(),
+                new ParentReunionFeedback(),
+                new ParentReunionMessageCatalog()
         );
     }
 
@@ -94,7 +112,11 @@ public final class CarryInteractionHandler {
             CozyFeedbackMessageCatalog messageCatalog,
             CozyFeedbackScheduler cozyFeedbackScheduler,
             NurserySafetyChecker nurserySafetyChecker,
-            NurseryMessageCatalog nurseryMessageCatalog
+            NurseryMessageCatalog nurseryMessageCatalog,
+            ParentReunionFinder parentReunionFinder,
+            ParentReunionCooldowns parentReunionCooldowns,
+            ParentReunionFeedback parentReunionFeedback,
+            ParentReunionMessageCatalog parentReunionMessageCatalog
     ) {
         this.carryManager = carryManager;
         this.eligibility = eligibility;
@@ -105,6 +127,10 @@ public final class CarryInteractionHandler {
         this.cozyFeedbackScheduler = cozyFeedbackScheduler;
         this.nurserySafetyChecker = nurserySafetyChecker;
         this.nurseryMessageCatalog = nurseryMessageCatalog;
+        this.parentReunionFinder = parentReunionFinder;
+        this.parentReunionCooldowns = parentReunionCooldowns;
+        this.parentReunionFeedback = parentReunionFeedback;
+        this.parentReunionMessageCatalog = parentReunionMessageCatalog;
     }
 
     public InteractionResult onEntityInteract(ServerPlayer player, Entity target, InteractionHand hand) {
@@ -251,23 +277,22 @@ public final class CarryInteractionHandler {
 
     private void dropCurrentWithFeedback(ServerPlayer player) {
         Optional<String> feedbackName = carriedBabyFeedbackName(player);
-        if (refuseUnsafeNurseryDrop(player, feedbackName.orElse("baby animal"))) {
+        Optional<Integer> carriedEntityId = carryManager.carriedEntityId(player.getUUID());
+        Entity baby = carriedEntityId.map(id -> findCarriedEntity(player, id)).orElse(null);
+        if (baby != null && refuseUnsafeNurseryDrop(
+                player,
+                feedbackName.orElse("baby animal"),
+                baby,
+                attachment.previewDropPosition(player, baby)
+        )) {
             return;
         }
         dropCurrent(player);
         showActionBar(player, feedbackName.map(CarryInteractionHandler::dropFeedbackText).orElse(dropFeedbackText()));
+        tryParentReunion(player, baby);
     }
 
-    private boolean refuseUnsafeNurseryDrop(ServerPlayer player, String feedbackName) {
-        Optional<Integer> carriedEntityId = carryManager.carriedEntityId(player.getUUID());
-        if (carriedEntityId.isEmpty()) {
-            return false;
-        }
-        Entity baby = findCarriedEntity(player, carriedEntityId.get());
-        if (baby == null) {
-            return false;
-        }
-        Vec3 dropPosition = attachment.previewDropPosition(player, baby);
+    private boolean refuseUnsafeNurseryDrop(ServerPlayer player, String feedbackName, Entity baby, Vec3 dropPosition) {
         NurserySafetyDecision safetyDecision = nurserySafetyChecker.evaluate(
                 player.level(),
                 baby,
@@ -286,6 +311,47 @@ public final class CarryInteractionHandler {
             ));
         }
         return !decision.shouldDrop();
+    }
+
+    private void tryParentReunion(ServerPlayer player, Entity droppedBaby) {
+        if (!(droppedBaby instanceof Animal baby) || !(player.level() instanceof ServerLevel serverLevel) || !baby.isAlive()) {
+            return;
+        }
+        if (!configManager.config().parentReunionEnabled()) {
+            return;
+        }
+        Optional<ParentReunionMatch> match = parentReunionFinder.find(
+                serverLevel,
+                baby,
+                baby.position(),
+                configManager.config()
+        );
+        long gameTime = serverLevel.getGameTime();
+        boolean cooldownReady = parentReunionCooldowns.canReunite(
+                player.getUUID(),
+                baby.getUUID(),
+                gameTime,
+                configManager.config().parentReunionCooldownTicks()
+        );
+        ReunionAttemptDecision decision = reunionAttemptDecision(
+                true,
+                match.isPresent(),
+                cooldownReady,
+                configManager.config().parentReunionMessagesEnabled(),
+                configManager.config().parentReunionParticlesEnabled()
+        );
+        if (!decision.shouldRememberCooldown()) {
+            return;
+        }
+        ParentReunionMatch reunionMatch = match.orElseThrow();
+        parentReunionCooldowns.remember(player.getUUID(), baby.getUUID(), gameTime);
+        parentReunionFeedback.emit(serverLevel, reunionMatch, decision.shouldSendParticles());
+        if (decision.shouldShowMessage()) {
+            showActionBar(player, parentReunionMessageCatalog.message(
+                    reunionMatch.babyFeedbackName(),
+                    messageVariantIndex(gameTime)
+            ));
+        }
     }
 
     public void dropCurrent(ServerPlayer player, boolean loadDestinationChunk) {
@@ -396,6 +462,10 @@ public final class CarryInteractionHandler {
         return eyePosition.add(viewVector.normalize().scale(0.75D)).add(0.0D, -0.15D, 0.0D);
     }
 
+    static int messageVariantIndex(long gameTime) {
+        return (int) (gameTime & 0x7FFFFFFFL);
+    }
+
     static InteractionResult useWhileCarryingDecision(
             boolean isCarrying,
             boolean isSneaking,
@@ -465,6 +535,22 @@ public final class CarryInteractionHandler {
     }
 
     record DropAttemptDecision(boolean shouldDrop, boolean keepCarrying, boolean shouldShowRefusalMessage) {
+    }
+
+    static ReunionAttemptDecision reunionAttemptDecision(
+            boolean dropSucceeded,
+            boolean matchFound,
+            boolean cooldownReady,
+            boolean messagesEnabled,
+            boolean particlesEnabled
+    ) {
+        if (!dropSucceeded || !matchFound || !cooldownReady) {
+            return new ReunionAttemptDecision(false, false, false);
+        }
+        return new ReunionAttemptDecision(particlesEnabled, messagesEnabled, true);
+    }
+
+    record ReunionAttemptDecision(boolean shouldSendParticles, boolean shouldShowMessage, boolean shouldRememberCooldown) {
     }
 
     private static String feedbackName(Entity baby) {

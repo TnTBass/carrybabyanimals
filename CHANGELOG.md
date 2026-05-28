@@ -4,6 +4,7 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
+- Added Parent Reunion feedback so safely setting down a carried baby near a matching adult can show cosmetic hearts and a warm action-bar message.
 - Added Nursery Mode safety checks that refuse dangerous player set-downs near lava, fire, damaging blocks, cramped spaces, and unsafe drops while keeping the baby carried.
 - Fixed Nursery Mode hazard checks for magma floors, lava edges, cactus-adjacent spots, and other damaging floor/neighbor blocks.
 - Changed Nursery Mode bypass to default to disabled when Fabric Permissions API is installed, so permission providers must explicitly grant `carrybabyanimals.nursery.bypass`.

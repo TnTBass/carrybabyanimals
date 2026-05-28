@@ -33,6 +33,7 @@ Players can also install the mod on their clients for the nicer held-in-arms ren
 - Carry the baby while walking, sprinting, jumping, and swimming.
 - Put the baby down again by sneak-right-clicking while carrying with empty hands.
 - Nursery Mode refuses dangerous set-downs near lava, fire, damaging blocks, cramped spaces, and unsafe drops.
+- Parent Reunion adds cosmetic hearts and a warm action-bar message when a safely set-down baby is returned near a matching adult.
 - Pet the carried baby with left-click for heart particles.
 - Block normal hand actions while carrying, so carrying feels like it occupies both hands.
 - Drop the baby safely if the carry state becomes invalid, including logout, death, dimension changes, growth, or server shutdown.
@@ -49,6 +50,8 @@ Players can also install the mod on their clients for the nicer held-in-arms ren
 Pickup and set-down messages use the animal's custom name when it has one, such as `Carrying KittyKat` and `Set down KittyKat`. Unnamed animals use the baby animal type, such as `Carrying baby Pig` and `Set down baby Pig`.
 
 If Nursery Mode refuses a set-down, the baby stays carried and the player sees a playful action-bar message when Nursery Mode messages are enabled.
+
+If Parent Reunion finds a compatible adult after a safe set-down, the baby and adult get heart particles and the player sees a short reunion message when those options are enabled.
 
 Doors and trapdoors can still be used while carrying a baby animal.
 
@@ -101,7 +104,12 @@ Default config:
   "nurseryBlockSuffocation": true,
   "nurseryBlockDangerousFalls": true,
   "nurseryDangerousFallDistanceBlocks": 4,
-  "nurseryMessagesEnabled": true
+  "nurseryMessagesEnabled": true,
+  "parentReunionEnabled": true,
+  "parentReunionRadiusBlocks": 8,
+  "parentReunionCooldownTicks": 200,
+  "parentReunionMessagesEnabled": true,
+  "parentReunionParticlesEnabled": true
 }
 ```
 
@@ -130,10 +138,17 @@ Options:
 - `nurseryBlockDangerousFalls`: Refuses set-downs over unsafe drops. Default: `true`.
 - `nurseryDangerousFallDistanceBlocks`: Drop distance that counts as unsafe for Nursery Mode. Default: `4`.
 - `nurseryMessagesEnabled`: Enables playful Nursery Mode refusal action-bar messages. Default: `true`.
+- `parentReunionEnabled`: Master switch for cosmetic Parent Reunion feedback after safe player set-downs. Default: `true`.
+- `parentReunionRadiusBlocks`: Search radius for a compatible adult near the set-down baby. Default: `8`.
+- `parentReunionCooldownTicks`: Minimum spacing between reunion feedback for the same baby or carrier. Default: `200`, which is about ten seconds.
+- `parentReunionMessagesEnabled`: Enables warm Parent Reunion action-bar messages. Default: `true`.
+- `parentReunionParticlesEnabled`: Enables heart particles around the baby and adult. Default: `true`.
 
 Cozy Feedback is cosmetic and server-owned. It uses ordinary Minecraft sounds, particles, and action-bar messages, so vanilla clients can see or hear the feedback without installing the mod.
 
 Nursery Mode is also server-owned and vanilla-client compatible. It validates the server's planned set-down position before the baby is detached. If the spot is unsafe, the carry state remains active and no client-side mod is required for the refusal to work.
+
+Parent Reunion is server-owned, cosmetic, and vanilla-client compatible. It only runs after Nursery Mode allows a deliberate set-down and never moves the baby or adult. Compatible adults are the same animal type, adult, alive, nearby, and in the same loaded server level. Tamed animals only reunite with adults that have the same owner identity.
 
 Supported animal names:
 
@@ -175,7 +190,12 @@ Example: allow only common farm animals:
   "nurseryBlockSuffocation": true,
   "nurseryBlockDangerousFalls": true,
   "nurseryDangerousFallDistanceBlocks": 4,
-  "nurseryMessagesEnabled": true
+  "nurseryMessagesEnabled": true,
+  "parentReunionEnabled": true,
+  "parentReunionRadiusBlocks": 8,
+  "parentReunionCooldownTicks": 200,
+  "parentReunionMessagesEnabled": true,
+  "parentReunionParticlesEnabled": true
 }
 ```
 
@@ -206,7 +226,12 @@ Example: allow the default set except turtles and pandas:
   "nurseryBlockSuffocation": true,
   "nurseryBlockDangerousFalls": true,
   "nurseryDangerousFallDistanceBlocks": 4,
-  "nurseryMessagesEnabled": true
+  "nurseryMessagesEnabled": true,
+  "parentReunionEnabled": true,
+  "parentReunionRadiusBlocks": 8,
+  "parentReunionCooldownTicks": 200,
+  "parentReunionMessagesEnabled": true,
+  "parentReunionParticlesEnabled": true
 }
 ```
 
@@ -237,7 +262,12 @@ Example: allow trusted servers to carry other players' tamed babies and slow pet
   "nurseryBlockSuffocation": true,
   "nurseryBlockDangerousFalls": true,
   "nurseryDangerousFallDistanceBlocks": 4,
-  "nurseryMessagesEnabled": true
+  "nurseryMessagesEnabled": true,
+  "parentReunionEnabled": true,
+  "parentReunionRadiusBlocks": 8,
+  "parentReunionCooldownTicks": 200,
+  "parentReunionMessagesEnabled": true,
+  "parentReunionParticlesEnabled": true
 }
 ```
 
