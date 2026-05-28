@@ -110,7 +110,7 @@ New-Item -ItemType Directory -Force -Path $UploadDir | Out-Null
 Assert-PublicDescriptionExists $DescriptionPath
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
-    $JarPath = "build/libs/carry-baby-animals-$Version.jar"
+    $JarPath = "build/libs/carrybabyanimals-$Version.jar"
 }
 
 $jarFullPath = Resolve-RepoPath $JarPath

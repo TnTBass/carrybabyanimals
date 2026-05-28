@@ -4,7 +4,9 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
-- Added optional Cozy Feedback for carried babies, including softer carried idle sounds, varied petting messages, sleepy moments, and gentle cosmetic particles controlled by server config.
+## 0.1.3
+
+- Added optional Cozy Feedback for carried babies, including softer carried idle sounds, varied petting messages, sleepy moments, and gentle cosmetic particles.
 
 ## 0.1.2
 

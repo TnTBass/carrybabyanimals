@@ -9,7 +9,8 @@ This is a father-daughter project by Tyler and Jasmine, built around the kind of
 - Pick up one baby animal at a time by sneak-right-clicking it with empty hands.
 - Carry the baby while walking, sprinting, jumping, and swimming.
 - Put the baby down again by sneak-right-clicking while carrying with empty hands.
-- Pet the carried baby with left-click for heart particles and a little action-bar message.
+- Pet the carried baby with left-click for heart particles, varied action-bar messages, and cozy baby reactions.
+- Add optional Cozy Feedback while carrying, including softer idle sounds, sleepy moments, and gentle cosmetic particles.
 - Keep baby animals as real world entities instead of inventory items.
 - Let vanilla clients still use the server-side carry behavior through the passenger fallback.
 - Show a nicer held-in-arms render for players who install the mod on their client.
@@ -47,7 +48,18 @@ Default config:
   "allowedAnimals": [],
   "blockedAnimals": [],
   "allowCarryingOtherPlayersTamedAnimals": false,
-  "pettingCooldownTicks": 20
+  "pettingCooldownTicks": 20,
+  "cozyFeedbackEnabled": true,
+  "carriedIdleSoundsEnabled": true,
+  "carriedIdleSoundMinTicks": 160,
+  "carriedIdleSoundMaxTicks": 360,
+  "pettingMessagesEnabled": true,
+  "nameAwareMessagesEnabled": true,
+  "cozyParticlesEnabled": true,
+  "sleepyBabiesEnabled": true,
+  "sleepyAfterTicks": 1200,
+  "sleepyMessageCooldownTicks": 600,
+  "sleepyParticleCooldownTicks": 200
 }
 ```
 
@@ -57,6 +69,19 @@ Configuration options:
 - `blockedAnimals`: List of animal names to block. This removes animals from either the default supported set or from `allowedAnimals`.
 - `allowCarryingOtherPlayersTamedAnimals`: Allows players to carry another player's tamed baby animal when the permission node also allows it. Default: `false`.
 - `pettingCooldownTicks`: Cooldown between successful petting effects, in server ticks. Default: `20`, which is about one second. Values of `0` or lower reset to the default.
+- `cozyFeedbackEnabled`: Master switch for cosmetic carried-baby feedback. Default: `true`.
+- `carriedIdleSoundsEnabled`: Allows occasional carried-baby ambient sounds. Default: `true`.
+- `carriedIdleSoundMinTicks`: Minimum delay between carried idle sounds. Default: `160`, which is about eight seconds.
+- `carriedIdleSoundMaxTicks`: Maximum delay between carried idle sounds. Default: `360`, which is about eighteen seconds. Values below the minimum are raised to the minimum.
+- `pettingMessagesEnabled`: Enables varied petting and sleepy action-bar messages. Default: `true`.
+- `nameAwareMessagesEnabled`: Uses a baby's custom name in cozy feedback messages when it has one. Default: `true`.
+- `cozyParticlesEnabled`: Enables gentle cosmetic carried-baby feedback particles. Default: `true`.
+- `sleepyBabiesEnabled`: Enables sleepy carried-baby moments after a baby has been held for a while. Default: `true`.
+- `sleepyAfterTicks`: Minimum carried duration before sleepy moments can start. Default: `1200`, which is about one minute.
+- `sleepyMessageCooldownTicks`: Minimum spacing between sleepy action-bar messages for one carried baby. Default: `600`, which is about thirty seconds.
+- `sleepyParticleCooldownTicks`: Minimum spacing between sleepy particle effects for one carried baby. Default: `200`, which is about ten seconds.
+
+Cozy Feedback is cosmetic and server-owned. It uses ordinary Minecraft sounds, particles, and action-bar messages, so vanilla clients can see or hear the feedback without installing the mod.
 
 Supported animal names:
 

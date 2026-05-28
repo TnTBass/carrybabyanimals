@@ -50,8 +50,8 @@ jobs:
         shell: bash
         run: |
           version="${{ steps.version.outputs.version }}"
-          test -f "build/libs/carry-baby-animals-${version}.jar"
-          test -f "build/libs/carry-baby-animals-${version}-sources.jar"
+          test -f "build/libs/carrybabyanimals-${version}.jar"
+          test -f "build/libs/carrybabyanimals-${version}-sources.jar"
 
       - name: Extract public release notes
         shell: bash
@@ -77,14 +77,14 @@ jobs:
               --title "Carry Baby Animals ${version}" \
               --notes-file release-notes.md
             gh release upload "${GITHUB_REF_NAME}" --clobber \
-              "build/libs/carry-baby-animals-${version}.jar" \
-              "build/libs/carry-baby-animals-${version}-sources.jar"
+              "build/libs/carrybabyanimals-${version}.jar" \
+              "build/libs/carrybabyanimals-${version}-sources.jar"
           else
             gh release create "${GITHUB_REF_NAME}" \
               --title "Carry Baby Animals ${version}" \
               --notes-file release-notes.md \
-              "build/libs/carry-baby-animals-${version}.jar" \
-              "build/libs/carry-baby-animals-${version}-sources.jar"
+              "build/libs/carrybabyanimals-${version}.jar" \
+              "build/libs/carrybabyanimals-${version}-sources.jar"
           fi
 
       - name: Publish to Modrinth
@@ -96,8 +96,8 @@ jobs:
           ./scripts/upload-modrinth.ps1 `
             -Slug "carrybabyanimals" `
             -Version $version `
-            -JarPath "build/libs/carry-baby-animals-$version.jar" `
-            -SourcesJarPath "build/libs/carry-baby-animals-$version-sources.jar" `
+            -JarPath "build/libs/carrybabyanimals-$version.jar" `
+            -SourcesJarPath "build/libs/carrybabyanimals-$version-sources.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
 
@@ -111,7 +111,7 @@ jobs:
           ./scripts/upload-curseforge.ps1 `
             -Slug "carry-baby-animals" `
             -Version $version `
-            -JarPath "build/libs/carry-baby-animals-$version.jar" `
+            -JarPath "build/libs/carrybabyanimals-$version.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
 

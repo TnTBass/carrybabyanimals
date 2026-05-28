@@ -109,7 +109,7 @@ function Test-CurseForgeOnlyRetryWorkflow {
     Assert-Contains $workflow 'workflow_dispatch' 'CurseForge retry workflow must be manually runnable.'
     Assert-Contains $workflow 'mod_version=${{ inputs.version }}' 'CurseForge retry workflow must verify the checked-out branch matches the requested version.'
     Assert-Contains $workflow './scripts/upload-curseforge.ps1' 'CurseForge retry workflow must use the shared CurseForge upload script.'
-    Assert-Contains $workflow '-JarPath "build/libs/carry-baby-animals-$version.jar"' 'CurseForge retry workflow must upload the release jar.'
+    Assert-Contains $workflow '-JarPath "build/libs/carrybabyanimals-$version.jar"' 'CurseForge retry workflow must upload the release jar.'
     Assert-NotContains $workflow 'upload-modrinth.ps1' 'CurseForge retry workflow must not republish Modrinth.'
     Assert-NotContains $workflow 'gh release create' 'CurseForge retry workflow must not create another GitHub release.'
 }

@@ -140,10 +140,10 @@ if ($SyncDescriptionOnly) {
 }
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
-    $JarPath = "build/libs/carry-baby-animals-$Version.jar"
+    $JarPath = "build/libs/carrybabyanimals-$Version.jar"
 }
 if ([string]::IsNullOrWhiteSpace($SourcesJarPath)) {
-    $SourcesJarPath = "build/libs/carry-baby-animals-$Version-sources.jar"
+    $SourcesJarPath = "build/libs/carrybabyanimals-$Version-sources.jar"
 }
 
 $jarFullPath = Resolve-RepoPath $JarPath
