@@ -1,7 +1,11 @@
 package dev.jasmine.carrybabyanimals.carry;
 
+import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackMessageCatalog;
+import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackScheduler;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import net.minecraft.world.InteractionResult;
@@ -39,6 +43,17 @@ final class CarryInteractionHandlerTest {
         handler.clearPetCooldown(playerId);
 
         assertTrue(handler.canPet(playerId, 101L, 200));
+    }
+
+    @Test
+    void droppingCurrentCarryClearsCozySchedulerState() {
+        RecordingCozyFeedbackScheduler scheduler = new RecordingCozyFeedbackScheduler();
+        CarryInteractionHandler handler = handlerWithScheduler(scheduler);
+        UUID playerId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        handler.clearCarryFeedbackState(playerId);
+
+        assertEquals(List.of(playerId), scheduler.clearedCarrierIds());
     }
 
     @Test
@@ -180,5 +195,26 @@ final class CarryInteractionHandlerTest {
 
     private CarryInteractionHandler newHandler() {
         return new CarryInteractionHandler(null, null, null, null, null);
+    }
+
+    private static CarryInteractionHandler handlerWithScheduler(CozyFeedbackScheduler scheduler) {
+        return new CarryInteractionHandler(null, null, null, null, null, new CozyFeedbackMessageCatalog(), scheduler);
+    }
+
+    private static final class RecordingCozyFeedbackScheduler extends CozyFeedbackScheduler {
+        private final List<UUID> clearedCarrierIds = new ArrayList<>();
+
+        RecordingCozyFeedbackScheduler() {
+            super(new CozyFeedbackMessageCatalog(), (inclusiveMin, inclusiveMax) -> inclusiveMin);
+        }
+
+        @Override
+        public void clear(UUID carrierId) {
+            clearedCarrierIds.add(carrierId);
+        }
+
+        List<UUID> clearedCarrierIds() {
+            return List.copyOf(clearedCarrierIds);
+        }
     }
 }

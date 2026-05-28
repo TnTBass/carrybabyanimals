@@ -2,6 +2,7 @@ package dev.jasmine.carrybabyanimals.carry;
 
 import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
 import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackMessageCatalog;
+import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackScheduler;
 import dev.jasmine.carrybabyanimals.network.CarryNetworking;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -33,6 +34,7 @@ public final class CarryInteractionHandler {
     private final CarryAttachment attachment;
     private final CarryAiController aiController;
     private final CozyFeedbackMessageCatalog messageCatalog;
+    private final CozyFeedbackScheduler cozyFeedbackScheduler;
     private final Map<UUID, Long> lastPetTick = new HashMap<>();
 
     public CarryInteractionHandler(
@@ -42,7 +44,34 @@ public final class CarryInteractionHandler {
             CarryAttachment attachment,
             CarryAiController aiController
     ) {
-        this(carryManager, eligibility, configManager, attachment, aiController, new CozyFeedbackMessageCatalog());
+        this(
+                carryManager,
+                eligibility,
+                configManager,
+                attachment,
+                aiController,
+                new CozyFeedbackMessageCatalog(),
+                new CozyFeedbackScheduler()
+        );
+    }
+
+    public CarryInteractionHandler(
+            CarryManager carryManager,
+            CarryEligibility eligibility,
+            CarryConfigManager configManager,
+            CarryAttachment attachment,
+            CarryAiController aiController,
+            CozyFeedbackScheduler cozyFeedbackScheduler
+    ) {
+        this(
+                carryManager,
+                eligibility,
+                configManager,
+                attachment,
+                aiController,
+                new CozyFeedbackMessageCatalog(),
+                cozyFeedbackScheduler
+        );
     }
 
     CarryInteractionHandler(
@@ -51,7 +80,8 @@ public final class CarryInteractionHandler {
             CarryConfigManager configManager,
             CarryAttachment attachment,
             CarryAiController aiController,
-            CozyFeedbackMessageCatalog messageCatalog
+            CozyFeedbackMessageCatalog messageCatalog,
+            CozyFeedbackScheduler cozyFeedbackScheduler
     ) {
         this.carryManager = carryManager;
         this.eligibility = eligibility;
@@ -59,6 +89,7 @@ public final class CarryInteractionHandler {
         this.attachment = attachment;
         this.aiController = aiController;
         this.messageCatalog = messageCatalog;
+        this.cozyFeedbackScheduler = cozyFeedbackScheduler;
     }
 
     public InteractionResult onEntityInteract(ServerPlayer player, Entity target, InteractionHand hand) {
@@ -88,11 +119,11 @@ public final class CarryInteractionHandler {
         if (!carryManager.beginCarry(player.getUUID(), target.getId(), startedAtTick)) {
             return InteractionResult.PASS;
         }
-        if (!attachment.attach(player, target)) {
-            carryManager.endCarry(player.getUUID());
-            clearPetCooldown(player.getUUID());
-            return InteractionResult.PASS;
-        }
+            if (!attachment.attach(player, target)) {
+                carryManager.endCarry(player.getUUID());
+                clearCarryFeedbackState(player.getUUID());
+                return InteractionResult.PASS;
+            }
         if (target instanceof Mob mob) {
             aiController.suppress(mob);
         }
@@ -118,7 +149,7 @@ public final class CarryInteractionHandler {
         Entity baby = serverLevel.getEntity(entityId);
         if (baby == null) {
             carryManager.endCarry(playerId);
-            clearPetCooldown(playerId);
+            clearCarryFeedbackState(playerId);
             CarryNetworking.sendClearCarriedToCarrier(player, entityId);
             return InteractionResult.PASS;
         }
@@ -211,7 +242,7 @@ public final class CarryInteractionHandler {
             if (baby == null) {
                 // The carried id is stale, so clearing manager state is the cleanup itself.
                 carryManager.endCarry(player.getUUID());
-                clearPetCooldown(player.getUUID());
+                clearCarryFeedbackState(player.getUUID());
                 CarryNetworking.sendClearCarriedToCarrier(player, carriedEntityId);
                 return;
             }
@@ -221,7 +252,7 @@ public final class CarryInteractionHandler {
             }
             attachment.dropInFront(player, baby, loadDestinationChunk);
             carryManager.endCarry(player.getUUID());
-            clearPetCooldown(player.getUUID());
+            clearCarryFeedbackState(player.getUUID());
             CarryNetworking.sendClearCarried(player, baby);
         });
     }
@@ -244,7 +275,7 @@ public final class CarryInteractionHandler {
                     attachment.dropInPlace(carriedElsewhere, loadDestinationChunk);
                 }
                 carryManager.endCarry(player.getUUID());
-                clearPetCooldown(player.getUUID());
+                clearCarryFeedbackState(player.getUUID());
                 CarryNetworking.sendClearCarriedToCarrier(player, carriedEntityId);
                 return;
             }
@@ -254,7 +285,7 @@ public final class CarryInteractionHandler {
             }
             attachment.dropInPlace(baby, loadDestinationChunk);
             carryManager.endCarry(player.getUUID());
-            clearPetCooldown(player.getUUID());
+            clearCarryFeedbackState(player.getUUID());
             CarryNetworking.sendClearCarriedToCarrier(player, carriedEntityId);
         });
     }
@@ -294,6 +325,11 @@ public final class CarryInteractionHandler {
 
     void clearPetCooldown(UUID playerId) {
         lastPetTick.remove(playerId);
+    }
+
+    void clearCarryFeedbackState(UUID playerId) {
+        clearPetCooldown(playerId);
+        cozyFeedbackScheduler.clear(playerId);
     }
 
     static Vec3 firstPersonPetFeedbackPosition(Vec3 eyePosition, Vec3 viewVector) {

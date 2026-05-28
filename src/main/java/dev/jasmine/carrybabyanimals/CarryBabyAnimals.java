@@ -8,6 +8,7 @@ import dev.jasmine.carrybabyanimals.carry.CarryManager;
 import dev.jasmine.carrybabyanimals.carry.CarryTicker;
 import dev.jasmine.carrybabyanimals.config.AnimalAliasRegistry;
 import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
+import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackScheduler;
 import dev.jasmine.carrybabyanimals.network.CarryNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
@@ -39,12 +40,14 @@ public final class CarryBabyAnimals implements ModInitializer {
     public static final CarryConfigManager CONFIG = new CarryConfigManager();
     public static final CarryManager CARRY_MANAGER = new CarryManager();
     public static final CarryAiController AI_CONTROLLER = new CarryAiController();
+    public static final CozyFeedbackScheduler COZY_FEEDBACK_SCHEDULER = new CozyFeedbackScheduler();
     public static final CarryInteractionHandler INTERACTIONS = new CarryInteractionHandler(
             CARRY_MANAGER,
             new CarryEligibility(AnimalAliasRegistry.createDefault()),
             CONFIG,
             new CarryAttachment(),
-            AI_CONTROLLER
+            AI_CONTROLLER,
+            COZY_FEEDBACK_SCHEDULER
     );
 
     @Override
@@ -53,7 +56,7 @@ public final class CarryBabyAnimals implements ModInitializer {
         LOGGER.info("Carry Baby Animals initialized");
         CarryNetworking.registerS2CPayloads();
         CarryNetworking.registerC2SPayloads(INTERACTIONS);
-        CarryTicker ticker = new CarryTicker(CARRY_MANAGER, INTERACTIONS);
+        CarryTicker ticker = new CarryTicker(CARRY_MANAGER, INTERACTIONS, CONFIG, COZY_FEEDBACK_SCHEDULER);
 
         ServerTickEvents.END_SERVER_TICK.register(ticker::tick);
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
