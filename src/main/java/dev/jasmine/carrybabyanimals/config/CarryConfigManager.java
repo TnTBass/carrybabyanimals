@@ -52,12 +52,28 @@ public final class CarryConfigManager {
             return CarryConfig.defaultConfig();
         }
         List<String> allowedAnimals = sanitizeNames(raw.allowedAnimals);
+        int idleSoundMinTicks = positiveOrDefault(raw.carriedIdleSoundMinTicks, 160);
+        int idleSoundMaxTicks = positiveOrDefault(raw.carriedIdleSoundMaxTicks, 360);
+        if (idleSoundMaxTicks < idleSoundMinTicks) {
+            idleSoundMaxTicks = idleSoundMinTicks;
+        }
         return new CarryConfig(
                 allowedAnimals,
                 sanitizeNames(raw.blockedAnimals),
                 raw.allowCarryingOtherPlayersTamedAnimals,
                 raw.pettingCooldownTicks <= 0 ? 20 : raw.pettingCooldownTicks,
-                !allowedAnimals.isEmpty()
+                !allowedAnimals.isEmpty(),
+                enabledByDefault(raw.cozyFeedbackEnabled),
+                enabledByDefault(raw.carriedIdleSoundsEnabled),
+                idleSoundMinTicks,
+                idleSoundMaxTicks,
+                enabledByDefault(raw.pettingMessagesEnabled),
+                enabledByDefault(raw.nameAwareMessagesEnabled),
+                enabledByDefault(raw.cozyParticlesEnabled),
+                enabledByDefault(raw.sleepyBabiesEnabled),
+                positiveOrDefault(raw.sleepyAfterTicks, 1200),
+                positiveOrDefault(raw.sleepyMessageCooldownTicks, 600),
+                positiveOrDefault(raw.sleepyParticleCooldownTicks, 200)
         );
     }
 
@@ -74,7 +90,18 @@ public final class CarryConfigManager {
                 knownNames(config.blockedAnimals(), registry),
                 config.allowCarryingOtherPlayersTamedAnimals(),
                 config.pettingCooldownTicks(),
-                config.restrictToAllowedAnimals()
+                config.restrictToAllowedAnimals(),
+                config.cozyFeedbackEnabled(),
+                config.carriedIdleSoundsEnabled(),
+                config.carriedIdleSoundMinTicks(),
+                config.carriedIdleSoundMaxTicks(),
+                config.pettingMessagesEnabled(),
+                config.nameAwareMessagesEnabled(),
+                config.cozyParticlesEnabled(),
+                config.sleepyBabiesEnabled(),
+                config.sleepyAfterTicks(),
+                config.sleepyMessageCooldownTicks(),
+                config.sleepyParticleCooldownTicks()
         );
     }
 
@@ -121,6 +148,14 @@ public final class CarryConfigManager {
         return List.copyOf(sanitized);
     }
 
+    private static boolean enabledByDefault(Boolean value) {
+        return value == null || value;
+    }
+
+    private static int positiveOrDefault(Integer value, int defaultValue) {
+        return value == null || value <= 0 ? defaultValue : value;
+    }
+
     public record UnknownAnimalNames(List<String> allowedAnimals, List<String> blockedAnimals) {
         public UnknownAnimalNames {
             allowedAnimals = allowedAnimals == null ? List.of() : List.copyOf(allowedAnimals);
@@ -133,6 +168,17 @@ public final class CarryConfigManager {
         List<String> blockedAnimals;
         boolean allowCarryingOtherPlayersTamedAnimals;
         int pettingCooldownTicks;
+        Boolean cozyFeedbackEnabled;
+        Boolean carriedIdleSoundsEnabled;
+        Integer carriedIdleSoundMinTicks;
+        Integer carriedIdleSoundMaxTicks;
+        Boolean pettingMessagesEnabled;
+        Boolean nameAwareMessagesEnabled;
+        Boolean cozyParticlesEnabled;
+        Boolean sleepyBabiesEnabled;
+        Integer sleepyAfterTicks;
+        Integer sleepyMessageCooldownTicks;
+        Integer sleepyParticleCooldownTicks;
 
         static RawConfig from(CarryConfig config) {
             RawConfig raw = new RawConfig();
@@ -140,6 +186,17 @@ public final class CarryConfigManager {
             raw.blockedAnimals = config.blockedAnimals();
             raw.allowCarryingOtherPlayersTamedAnimals = config.allowCarryingOtherPlayersTamedAnimals();
             raw.pettingCooldownTicks = config.pettingCooldownTicks();
+            raw.cozyFeedbackEnabled = config.cozyFeedbackEnabled();
+            raw.carriedIdleSoundsEnabled = config.carriedIdleSoundsEnabled();
+            raw.carriedIdleSoundMinTicks = config.carriedIdleSoundMinTicks();
+            raw.carriedIdleSoundMaxTicks = config.carriedIdleSoundMaxTicks();
+            raw.pettingMessagesEnabled = config.pettingMessagesEnabled();
+            raw.nameAwareMessagesEnabled = config.nameAwareMessagesEnabled();
+            raw.cozyParticlesEnabled = config.cozyParticlesEnabled();
+            raw.sleepyBabiesEnabled = config.sleepyBabiesEnabled();
+            raw.sleepyAfterTicks = config.sleepyAfterTicks();
+            raw.sleepyMessageCooldownTicks = config.sleepyMessageCooldownTicks();
+            raw.sleepyParticleCooldownTicks = config.sleepyParticleCooldownTicks();
             return raw;
         }
     }

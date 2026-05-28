@@ -7,7 +7,18 @@ public record CarryConfig(
         List<String> blockedAnimals,
         boolean allowCarryingOtherPlayersTamedAnimals,
         int pettingCooldownTicks,
-        boolean restrictToAllowedAnimals
+        boolean restrictToAllowedAnimals,
+        boolean cozyFeedbackEnabled,
+        boolean carriedIdleSoundsEnabled,
+        int carriedIdleSoundMinTicks,
+        int carriedIdleSoundMaxTicks,
+        boolean pettingMessagesEnabled,
+        boolean nameAwareMessagesEnabled,
+        boolean cozyParticlesEnabled,
+        boolean sleepyBabiesEnabled,
+        int sleepyAfterTicks,
+        int sleepyMessageCooldownTicks,
+        int sleepyParticleCooldownTicks
 ) {
     public CarryConfig(
             List<String> allowedAnimals,
@@ -20,7 +31,45 @@ public record CarryConfig(
                 blockedAnimals,
                 allowCarryingOtherPlayersTamedAnimals,
                 pettingCooldownTicks,
-                allowedAnimals != null && !allowedAnimals.isEmpty()
+                allowedAnimals != null && !allowedAnimals.isEmpty(),
+                true,
+                true,
+                160,
+                360,
+                true,
+                true,
+                true,
+                true,
+                1200,
+                600,
+                200
+        );
+    }
+
+    public CarryConfig(
+            List<String> allowedAnimals,
+            List<String> blockedAnimals,
+            boolean allowCarryingOtherPlayersTamedAnimals,
+            int pettingCooldownTicks,
+            boolean restrictToAllowedAnimals
+    ) {
+        this(
+                allowedAnimals,
+                blockedAnimals,
+                allowCarryingOtherPlayersTamedAnimals,
+                pettingCooldownTicks,
+                restrictToAllowedAnimals,
+                true,
+                true,
+                160,
+                360,
+                true,
+                true,
+                true,
+                true,
+                1200,
+                600,
+                200
         );
     }
 
@@ -30,6 +79,23 @@ public record CarryConfig(
     }
 
     public static CarryConfig defaultConfig() {
-        return new CarryConfig(List.of(), List.of(), false, 20, false);
+        return new CarryConfig(
+                List.of(),
+                List.of(),
+                false,
+                20,
+                false,
+                true,
+                true,
+                160,
+                360,
+                true,
+                true,
+                true,
+                true,
+                1200,
+                600,
+                200
+        );
     }
 }

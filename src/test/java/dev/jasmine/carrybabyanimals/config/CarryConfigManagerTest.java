@@ -23,6 +23,89 @@ final class CarryConfigManagerTest {
     }
 
     @Test
+    void defaultConfigEnablesCozyFeedbackConservatively() {
+        CarryConfig config = CarryConfig.defaultConfig();
+
+        assertTrue(config.cozyFeedbackEnabled());
+        assertTrue(config.carriedIdleSoundsEnabled());
+        assertEquals(160, config.carriedIdleSoundMinTicks());
+        assertEquals(360, config.carriedIdleSoundMaxTicks());
+        assertTrue(config.pettingMessagesEnabled());
+        assertTrue(config.nameAwareMessagesEnabled());
+        assertTrue(config.cozyParticlesEnabled());
+        assertTrue(config.sleepyBabiesEnabled());
+        assertEquals(1200, config.sleepyAfterTicks());
+        assertEquals(600, config.sleepyMessageCooldownTicks());
+        assertEquals(200, config.sleepyParticleCooldownTicks());
+    }
+
+    @Test
+    void parsedCozyConfigUsesExplicitValues() {
+        String json = """
+            {
+              "cozyFeedbackEnabled": false,
+              "carriedIdleSoundsEnabled": false,
+              "carriedIdleSoundMinTicks": 40,
+              "carriedIdleSoundMaxTicks": 80,
+              "pettingMessagesEnabled": false,
+              "nameAwareMessagesEnabled": false,
+              "cozyParticlesEnabled": false,
+              "sleepyBabiesEnabled": false,
+              "sleepyAfterTicks": 200,
+              "sleepyMessageCooldownTicks": 100,
+              "sleepyParticleCooldownTicks": 50
+            }
+            """;
+
+        CarryConfig config = CarryConfigManager.parse(json);
+
+        assertFalse(config.cozyFeedbackEnabled());
+        assertFalse(config.carriedIdleSoundsEnabled());
+        assertEquals(40, config.carriedIdleSoundMinTicks());
+        assertEquals(80, config.carriedIdleSoundMaxTicks());
+        assertFalse(config.pettingMessagesEnabled());
+        assertFalse(config.nameAwareMessagesEnabled());
+        assertFalse(config.cozyParticlesEnabled());
+        assertFalse(config.sleepyBabiesEnabled());
+        assertEquals(200, config.sleepyAfterTicks());
+        assertEquals(100, config.sleepyMessageCooldownTicks());
+        assertEquals(50, config.sleepyParticleCooldownTicks());
+    }
+
+    @Test
+    void parsedCozyConfigNormalizesInvalidTimingValues() {
+        String json = """
+            {
+              "carriedIdleSoundMinTicks": -1,
+              "carriedIdleSoundMaxTicks": 20,
+              "sleepyAfterTicks": 0,
+              "sleepyMessageCooldownTicks": -5,
+              "sleepyParticleCooldownTicks": -10
+            }
+            """;
+
+        CarryConfig config = CarryConfigManager.parse(json);
+
+        assertEquals(160, config.carriedIdleSoundMinTicks());
+        assertEquals(160, config.carriedIdleSoundMaxTicks());
+        assertEquals(1200, config.sleepyAfterTicks());
+        assertEquals(600, config.sleepyMessageCooldownTicks());
+        assertEquals(200, config.sleepyParticleCooldownTicks());
+    }
+
+    @Test
+    void parsedOlderConfigDefaultsMissingCozyBooleansToEnabled() {
+        CarryConfig config = CarryConfigManager.parse("{}");
+
+        assertTrue(config.cozyFeedbackEnabled());
+        assertTrue(config.carriedIdleSoundsEnabled());
+        assertTrue(config.pettingMessagesEnabled());
+        assertTrue(config.nameAwareMessagesEnabled());
+        assertTrue(config.cozyParticlesEnabled());
+        assertTrue(config.sleepyBabiesEnabled());
+    }
+
+    @Test
     void parsedConfigUsesFriendlyNames() {
         String json = """
             {
