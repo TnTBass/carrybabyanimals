@@ -3,7 +3,6 @@ package dev.jasmine.carrybabyanimals.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
-import net.minecraft.world.entity.EntityType;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -159,9 +158,7 @@ public final class CarryConfigManager {
     }
 
     private static boolean isKnownConfigEntry(String name, AnimalAliasRegistry registry) {
-        return registry.resolve(name)
-                .filter(resolved -> !name.contains(":") || EntityType.byString(resolved.id().toString()).isPresent())
-                .isPresent();
+        return registry.resolve(name).isPresent();
     }
 
     private static List<String> sanitizeNames(List<String> names) {

@@ -354,7 +354,7 @@ final class CarryConfigManagerTest {
     }
 
     @Test
-    void absentFullEntityIdsAreReportedAsUnknown() {
+    void absentFullEntityIdsAreAcceptedWhenSyntacticallyValid() {
         CarryConfig config = new CarryConfig(
                 List.of("examplemod:duck"),
                 List.of("examplemod:goose"),
@@ -367,12 +367,12 @@ final class CarryConfigManagerTest {
                 AnimalAliasRegistry.createDefault()
         );
 
-        assertEquals(List.of("examplemod:duck"), unknownNames.allowedAnimals());
-        assertEquals(List.of("examplemod:goose"), unknownNames.blockedAnimals());
+        assertTrue(unknownNames.allowedAnimals().isEmpty());
+        assertTrue(unknownNames.blockedAnimals().isEmpty());
     }
 
     @Test
-    void absentFullEntityIdsAreRemovedWithoutClearingAllowListRestriction() throws IOException {
+    void absentFullEntityIdsAreKeptWhenFilteringUnknownNames() throws IOException {
         CarryConfigManager manager = loadConfig("""
             {
               "allowedAnimals": ["examplemod:duck"],
@@ -382,8 +382,8 @@ final class CarryConfigManagerTest {
 
         manager.filterAndLogUnknownAnimalNames(AnimalAliasRegistry.createDefault(), LoggerFactory.getLogger(CarryConfigManagerTest.class));
 
-        assertTrue(manager.config().allowedAnimals().isEmpty());
-        assertTrue(manager.config().blockedAnimals().isEmpty());
+        assertEquals(List.of("examplemod:duck"), manager.config().allowedAnimals());
+        assertEquals(List.of("examplemod:goose"), manager.config().blockedAnimals());
         assertTrue(manager.config().restrictToAllowedAnimals());
     }
 
@@ -391,8 +391,8 @@ final class CarryConfigManagerTest {
     void malformedIdsAreLoggedAndRemovedWithoutClearingAllowListRestriction() throws IOException {
         CarryConfigManager manager = loadConfig("""
             {
-              "allowedAnimals": ["examplemod:bad id"],
-              "blockedAnimals": ["bad:id value"]
+              "allowedAnimals": ["examplemod:bad id", "examplemod:"],
+              "blockedAnimals": ["bad:id value", ":duck"]
             }
             """);
         CapturingLogger logger = new CapturingLogger();
