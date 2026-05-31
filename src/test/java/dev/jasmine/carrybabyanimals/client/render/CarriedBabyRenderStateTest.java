@@ -61,4 +61,56 @@ final class CarriedBabyRenderStateTest {
         assertTrue(CarriedBabyRenderState.isCarrier(20));
         assertFalse(CarriedBabyRenderState.isCarrier(21));
     }
+
+    @Test
+    void rememberingNewLevelClearsStaleCarryState() {
+        Object firstLevel = new Object();
+        Object secondLevel = new Object();
+        CarriedBabyRenderState.rememberLevel(firstLevel);
+        CarriedBabyRenderState.set(10, 20);
+
+        CarriedBabyRenderState.rememberLevel(secondLevel);
+
+        assertFalse(CarriedBabyRenderState.isCarriedBaby(10));
+        assertFalse(CarriedBabyRenderState.isCarrier(20));
+    }
+
+    @Test
+    void rememberingNewLevelKeepsPairsAvailableInThatLevel() {
+        Object firstLevel = new Object();
+        Object secondLevel = new Object();
+        CarriedBabyRenderState.rememberLevel(firstLevel);
+        CarriedBabyRenderState.set(10, 20);
+
+        CarriedBabyRenderState.rememberLevel(secondLevel, entityId -> entityId == 10 || entityId == 20);
+
+        assertTrue(CarriedBabyRenderState.isCarriedBaby(10));
+        assertTrue(CarriedBabyRenderState.isCarrier(20));
+    }
+
+    @Test
+    void rememberingSameLevelKeepsCurrentCarryState() {
+        Object level = new Object();
+        CarriedBabyRenderState.rememberLevel(level);
+        CarriedBabyRenderState.set(10, 20);
+
+        CarriedBabyRenderState.rememberLevel(level);
+
+        assertTrue(CarriedBabyRenderState.isCarriedBaby(10));
+        assertTrue(CarriedBabyRenderState.isCarrier(20));
+    }
+
+    @Test
+    void clearAllResetsRememberedLevel() {
+        Object oldLevel = new Object();
+        Object nextLevel = new Object();
+        CarriedBabyRenderState.rememberLevel(oldLevel);
+        CarriedBabyRenderState.clearAll();
+        CarriedBabyRenderState.set(10, 20);
+
+        CarriedBabyRenderState.rememberLevel(nextLevel, entityId -> false);
+
+        assertTrue(CarriedBabyRenderState.isCarriedBaby(10));
+        assertTrue(CarriedBabyRenderState.isCarrier(20));
+    }
 }

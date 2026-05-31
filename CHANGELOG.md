@@ -4,6 +4,7 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
+- Improved the optional modded-client carried-baby render with gentler arm placement, subtle motion, and better cleanup of stale carried visuals after client world changes.
 - Added server config support for full entity IDs in `allowedAnimals` and `blockedAnimals`, letting server owners opt into compatible baby animal entities from other mods without enabling any modded animals by default.
 - Fixed startup config filtering so valid modded full entity IDs are not removed before pickup-time entity matching can use them.
 - Added Parent Reunion feedback so safely setting down a carried baby near a matching adult can show cosmetic hearts and a warm action-bar message, with a five-second default cooldown.

@@ -4,7 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
-- Added a Phase 6 carried baby reactions implementation plan for large-baby visibility and optional client-only creature personality polish.
+- Added a Phase 5 extension carried baby reactions implementation plan for large-baby visibility and optional client-only creature personality polish.
 - Added a post-Phase-5 carried baby reactions design spec for large-baby visibility and optional creature personality polish.
 - Renamed generated jar artifacts from `carry-baby-animals-*` to `carrybabyanimals-*` and aligned release upload paths.
 - Hardened Phase 1 Cozy Feedback after implementation review by rejecting non-server pickup timing fallbacks, varying sleepy message selection, and expanding scheduler feature-flag tests.

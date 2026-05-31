@@ -25,6 +25,7 @@ public final class CarriedBabyRenderer {
         if (client.level == null || context.levelState().cameraRenderState == null) {
             return;
         }
+        CarriedBabyRenderState.rememberLevel(client.level, entityId -> client.level.getEntity(entityId) != null);
 
         Vec3 cameraPosition = context.levelState().cameraRenderState.pos;
         if (cameraPosition == null) {
@@ -86,7 +87,8 @@ public final class CarriedBabyRenderer {
                 horizontalForward,
                 carrier.getBbHeight(),
                 baby.getBbHeight(),
-                leftMainArm
+                leftMainArm,
+                baby.tickCount + tickDelta
         );
     }
 }

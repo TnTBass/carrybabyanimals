@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add Phase 6 Creature Personality Polish by making large carried babies readable without blocking first-person play, then layering optional client-only creature reactions on the modded-client render path.
+**Goal:** Extend Phase 5 Client Polish with Creature Personality Polish by making large carried babies readable without blocking first-person play, then layering optional client-only creature reactions on the modded-client render path.
 
 **Architecture:** Keep the first implementation slice client-render-only: size classification, tucked placement, first-person visibility rules, reaction selection, sleepy visual variants, and client visual config all live in client-side render/config helpers. The server remains authoritative for carry state, permissions, config, petting, sleepy feedback, reunion behavior, animal state, and payload delivery. This phase adds no new payload; a future timing-hint phase would need a separate plan and capability gating with `ServerPlayNetworking.canSend(...)`.
 
@@ -219,7 +219,7 @@ Keep the existing `CarriedBabyRenderState.SUPPRESS_VANILLA_RENDER` behavior limi
 Add manual acceptance to `docs/manual-test-plan.md`:
 
 ```markdown
-### Phase 6 Large Baby First-Person Visibility
+### Phase 5 Extension: Large Baby First-Person Visibility
 
 - Start a dedicated or integrated test world with CarryBabyAnimals installed on server and client.
 - Carry a baby horse at default FOV on a 16:9 display.
@@ -448,13 +448,13 @@ Expected: PASS.
 
 Run: `git diff -- src/main/java/dev/jasmine/carrybabyanimals/network/CarryNetworking.java src/client/java/dev/jasmine/carrybabyanimals/client src/client/java/dev/jasmine/carrybabyanimals/client/render`
 
-Expected: No new clientbound payloads for Phase 6. Existing server sends still use `sendIfSupported`, which checks `ServerPlayNetworking.canSend(player, payload.type())`.
+Expected: No new clientbound payloads for this Phase 5 extension. Existing server sends still use `sendIfSupported`, which checks `ServerPlayNetworking.canSend(player, payload.type())`.
 
 - [ ] **Step 2: Verify no new gameplay permissions**
 
 Run: `rg -n "carrybabyanimals\\.|Permissions|permission" src/main/java src/client/java`
 
-Expected: No new Phase 6 permission node. Existing carry and nursery permissions remain unchanged.
+Expected: No new permission node for this Phase 5 extension. Existing carry and nursery permissions remain unchanged.
 
 - [ ] **Step 3: Verify no client render state feeds server gameplay**
 
@@ -467,7 +467,7 @@ Expected: No matches outside existing client-only registration or shared payload
 Add to `docs/manual-test-plan.md`:
 
 ```markdown
-### Phase 6 Vanilla-Client Fallback
+### Phase 5 Extension: Vanilla-Client Fallback
 
 - Start a server with CarryBabyAnimals installed.
 - Join with a vanilla-compatible client profile that does not install the CarryBabyAnimals client mod.
@@ -517,7 +517,7 @@ Run: `git diff --check`
 
 Expected: no output and exit code `0`.
 
-- [ ] **Step 2: Run focused Phase 6 tests**
+- [ ] **Step 2: Run focused Phase 5 extension tests**
 
 Run:
 
@@ -543,7 +543,7 @@ Expected: PASS.
 
 Run: `git status --short` and `git diff --stat`
 
-Expected: changes are limited to Phase 6 client render/config implementation, focused tests, docs, and changelog entries.
+Expected: changes are limited to Phase 5 extension client render/config implementation, focused tests, docs, and changelog entries.
 
 ## Manual Acceptance Checklist
 
@@ -566,6 +566,6 @@ Expected: changes are limited to Phase 6 client render/config implementation, fo
 - No gameplay effects from reactions.
 - No changes to actual animal AI, age, breeding, taming, ownership, sleeping, sitting, panic, trust, health, or movement state.
 - No server gameplay dependency on client render state, local animation timers, or first-person visibility mode.
-- No required custom payload for the first Phase 6 implementation.
+- No required custom payload for the first Phase 5 extension implementation.
 - No automatic support for arbitrary third-party modded animal renderers beyond safe generic fallback placement.
 - No release push, tag, marketplace publishing, or server deployment as part of this plan.

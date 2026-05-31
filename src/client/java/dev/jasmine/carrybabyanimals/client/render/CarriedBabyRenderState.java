@@ -15,6 +15,7 @@ public final class CarriedBabyRenderState {
 
     private static final ConcurrentMap<Integer, Integer> BABY_TO_CARRIER = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Integer, Integer> CARRIER_TO_BABY = new ConcurrentHashMap<>();
+    private static volatile Object currentLevelIdentity;
 
     private CarriedBabyRenderState() {
     }
@@ -66,9 +67,28 @@ public final class CarriedBabyRenderState {
         );
     }
 
+    public static void rememberLevel(Object levelIdentity) {
+        rememberLevel(levelIdentity, entityId -> false);
+    }
+
+    public static void rememberLevel(Object levelIdentity, IntPredicate entityExists) {
+        if (levelIdentity == null) {
+            return;
+        }
+        Object previousLevelIdentity = currentLevelIdentity;
+        if (previousLevelIdentity == levelIdentity) {
+            return;
+        }
+        currentLevelIdentity = levelIdentity;
+        if (previousLevelIdentity != null) {
+            pruneMissingEntities(entityExists);
+        }
+    }
+
     public static void clearAll() {
         BABY_TO_CARRIER.clear();
         CARRIER_TO_BABY.clear();
+        currentLevelIdentity = null;
     }
 
     private static boolean pruneMissingCarry(Map.Entry<Integer, Integer> entry, IntPredicate entityExists) {
