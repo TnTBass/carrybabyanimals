@@ -1,8 +1,13 @@
 package dev.jasmine.carrybabyanimals.client;
 
+import dev.jasmine.carrybabyanimals.client.config.ClientCarryVisualConfig;
+import dev.jasmine.carrybabyanimals.client.config.ClientCarryVisualConfigManager;
 import dev.jasmine.carrybabyanimals.client.render.CarriedBabyRenderState;
 import dev.jasmine.carrybabyanimals.client.render.CarriedBabyPlacement;
+import dev.jasmine.carrybabyanimals.client.render.CarriedBabyReaction;
+import dev.jasmine.carrybabyanimals.client.render.CarriedBabyReactionRegistry;
 import dev.jasmine.carrybabyanimals.network.CarryNetworking;
+import net.minecraft.world.entity.EntityType;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -12,6 +17,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Set;
 
 public final class ClientCarryInteractionHandler {
     private ClientCarryInteractionHandler() {
@@ -44,6 +51,21 @@ public final class ClientCarryInteractionHandler {
         if (baby == null) {
             return;
         }
+        ClientCarryVisualConfig visualConfig = ClientCarryVisualConfigManager.config();
+        if (shouldStartLocalPetReaction(true, visualConfig.carriedBabyReactionsEnabled())) {
+            CarriedBabyReaction reaction = CarriedBabyReactionRegistry.reactionFor(
+                    EntityType.getKey(baby.getType()).toString(),
+                    true,
+                    Set.copyOf(visualConfig.disabledCarriedReactionAnimals()),
+                    visualConfig.animalReactionIntensity()
+            );
+            CarriedBabyRenderState.startLocalReaction(
+                    babyEntityId,
+                    reaction.type(),
+                    baby.tickCount,
+                    reaction.durationTicks()
+            );
+        }
         Vec3 heldPosition = heldPosition(player, baby, client.getDeltaTracker().getGameTimeDeltaPartialTick(false));
         Vec3 particlePosition = CarriedBabyPlacement.petFeedbackPosition(heldPosition, baby.getBbHeight());
         RandomSource random = baby.getRandom();
@@ -66,6 +88,10 @@ public final class ClientCarryInteractionHandler {
 
     static boolean shouldShowLocalPetFeedback(boolean localPlayerIsCarrier, boolean feedbackBabyBelongsToLocalPlayer) {
         return localPlayerIsCarrier && feedbackBabyBelongsToLocalPlayer;
+    }
+
+    static boolean shouldStartLocalPetReaction(boolean localPetFeedbackAccepted, boolean carriedBabyReactionsEnabled) {
+        return localPetFeedbackAccepted && carriedBabyReactionsEnabled;
     }
 
     private static Vec3 heldPosition(Entity carrier, Entity baby, float tickDelta) {

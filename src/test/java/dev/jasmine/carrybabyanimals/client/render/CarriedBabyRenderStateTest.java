@@ -113,4 +113,14 @@ final class CarriedBabyRenderStateTest {
         assertTrue(CarriedBabyRenderState.isCarriedBaby(10));
         assertTrue(CarriedBabyRenderState.isCarrier(20));
     }
+
+    @Test
+    void localReactionsOnlyStartForKnownCarriedBabies() {
+        assertFalse(CarriedBabyRenderState.startLocalReaction(10, CarriedBabyReactionType.CHICKEN_FLAP, 100L, 12));
+
+        CarriedBabyRenderState.set(10, 20);
+
+        assertTrue(CarriedBabyRenderState.startLocalReaction(10, CarriedBabyReactionType.CHICKEN_FLAP, 100L, 12));
+        assertEquals(CarriedBabyReactionType.CHICKEN_FLAP, CarriedBabyRenderState.localReactionFor(10).orElseThrow().type());
+    }
 }

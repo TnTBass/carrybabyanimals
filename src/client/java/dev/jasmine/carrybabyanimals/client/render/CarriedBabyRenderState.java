@@ -3,6 +3,7 @@ package dev.jasmine.carrybabyanimals.client.render;
 import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -15,6 +16,7 @@ public final class CarriedBabyRenderState {
 
     private static final ConcurrentMap<Integer, Integer> BABY_TO_CARRIER = new ConcurrentHashMap<>();
     private static final ConcurrentMap<Integer, Integer> CARRIER_TO_BABY = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Integer, LocalReactionState> LOCAL_REACTIONS = new ConcurrentHashMap<>();
     private static volatile Object currentLevelIdentity;
 
     private CarriedBabyRenderState() {
@@ -37,6 +39,27 @@ public final class CarriedBabyRenderState {
         if (carrierEntityId != null) {
             CARRIER_TO_BABY.remove(carrierEntityId, babyEntityId);
         }
+        LOCAL_REACTIONS.remove(babyEntityId);
+    }
+
+    public static boolean startLocalReaction(
+            int babyEntityId,
+            CarriedBabyReactionType reactionType,
+            long startTick,
+            int durationTicks
+    ) {
+        if (!isCarriedBaby(babyEntityId)) {
+            return false;
+        }
+        LOCAL_REACTIONS.put(
+                babyEntityId,
+                new LocalReactionState(reactionType, startTick, durationTicks)
+        );
+        return true;
+    }
+
+    public static Optional<LocalReactionState> localReactionFor(int babyEntityId) {
+        return Optional.ofNullable(LOCAL_REACTIONS.get(babyEntityId));
     }
 
     public static boolean isCarriedBaby(int babyEntityId) {
@@ -88,6 +111,7 @@ public final class CarriedBabyRenderState {
     public static void clearAll() {
         BABY_TO_CARRIER.clear();
         CARRIER_TO_BABY.clear();
+        LOCAL_REACTIONS.clear();
         currentLevelIdentity = null;
     }
 
@@ -95,7 +119,15 @@ public final class CarriedBabyRenderState {
         boolean missing = !entityExists.test(entry.getKey()) || !entityExists.test(entry.getValue());
         if (missing) {
             CARRIER_TO_BABY.remove(entry.getValue(), entry.getKey());
+            LOCAL_REACTIONS.remove(entry.getKey());
         }
         return missing;
+    }
+
+    public record LocalReactionState(CarriedBabyReactionType type, long startTick, int durationTicks) {
+        public LocalReactionState {
+            type = type == null ? CarriedBabyReactionType.GENERIC_SETTLE : type;
+            durationTicks = Math.max(1, durationTicks);
+        }
     }
 }

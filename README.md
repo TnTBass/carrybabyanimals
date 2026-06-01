@@ -62,6 +62,8 @@ The server owns the gameplay state.
 
 Players with the mod installed get the nicer client-side presentation: the normal passenger render is hidden and the baby is drawn near the carrier's hands.
 
+Modded clients also get optional creature polish for carried babies. Tall and bulky babies such as horses, camels, llamas, pandas, and turtles use a safer tucked-side placement so first-person play stays readable. Petting can trigger small client-only reactions for animals such as chickens, rabbits, foxes, pandas, and turtles. These visuals are cosmetic only.
+
 Players without the mod can still connect to a modded server. They see the carried baby through Minecraft's normal passenger rendering, usually above the player. It is less polished, but the animal remains real, visible, and safe.
 
 Carry Baby Animals does not make another mod's custom entity compatible with vanilla clients by itself. If another animal mod requires matching client mods, that requirement still belongs to that mod and server setup.
@@ -154,6 +156,36 @@ Cozy Feedback is cosmetic and server-owned. It uses ordinary Minecraft sounds, p
 Nursery Mode is also server-owned and vanilla-client compatible. It validates the server's planned set-down position before the baby is detached. If the spot is unsafe, the carry state remains active and no client-side mod is required for the refusal to work.
 
 Parent Reunion is server-owned, cosmetic, and vanilla-client compatible. It only runs after Nursery Mode allows a deliberate set-down and never moves the baby or adult. Compatible adults are the same animal type, adult, alive, nearby, and in the same loaded server level. Tamed animals only reunite with adults that have the same owner identity.
+
+Client visual config is separate from server gameplay config. Modded clients create:
+
+```text
+config/carrybabyanimals-client.json
+```
+
+Default client visual config:
+
+```json
+{
+  "carriedBabyReactionsEnabled": true,
+  "largeBabyTuckedPoseEnabled": true,
+  "firstPersonLargeBabyVisibilityMode": "TUCKED",
+  "sleepyCarryVisualsEnabled": true,
+  "animalReactionIntensity": 0.75,
+  "disabledCarriedReactionAnimals": []
+}
+```
+
+Client visual options:
+
+- `carriedBabyReactionsEnabled`: Enables small modded-client-only carried reactions during local feedback moments. Default: `true`.
+- `largeBabyTuckedPoseEnabled`: Enables safer tucked-side placement for tall and bulky carried babies. Default: `true`.
+- `firstPersonLargeBabyVisibilityMode`: Controls local first-person handling for tall and bulky babies. Values: `TUCKED`, `LOWERED`, or `HIDE_WHEN_OBSTRUCTING`. Default: `TUCKED`.
+- `sleepyCarryVisualsEnabled`: Reserved for render-only sleepy softening where safe. Default: `true`.
+- `animalReactionIntensity`: Scales cosmetic reaction motion from `0.0` through `1.0`. Default: `0.75`.
+- `disabledCarriedReactionAnimals`: Full entity IDs that should use the generic safe fallback instead of a named carried reaction, such as `["minecraft:panda", "examplemod:duck"]`.
+
+These client settings do not add permissions, do not affect pickup or set-down rules, and are never required by vanilla clients.
 
 Supported animal names:
 

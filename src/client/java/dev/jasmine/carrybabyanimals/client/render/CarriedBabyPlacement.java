@@ -6,6 +6,15 @@ public final class CarriedBabyPlacement {
     private CarriedBabyPlacement() {
     }
 
+    public record PlacementResult(
+            Vec3 position,
+            boolean suppressForLocalFirstPerson,
+            double yawDegrees,
+            double pitchDegrees,
+            double rollDegrees
+    ) {
+    }
+
     public static Vec3 heldPosition(
             Vec3 carrierPosition,
             Vec3 horizontalForward,
@@ -40,11 +49,70 @@ public final class CarriedBabyPlacement {
                 .add(0.0D, carriedHeight - babyLowering + gentleBob, 0.0D);
     }
 
+    public static PlacementResult placement(
+            Vec3 carrierPosition,
+            Vec3 horizontalForward,
+            double carrierHeight,
+            double babyHeight,
+            double babyWidth,
+            boolean leftMainArm,
+            double animationTicks,
+            CarriedBabySizeBucket sizeBucket,
+            boolean localFirstPerson,
+            FirstPersonLargeBabyVisibilityMode visibilityMode
+    ) {
+        Vec3 base = heldPosition(carrierPosition, horizontalForward, carrierHeight, babyHeight, leftMainArm, animationTicks);
+        Vec3 forward = horizontalForward.normalize();
+        Vec3 right = new Vec3(forward.z, 0.0D, -forward.x).normalize();
+        double armSide = leftMainArm ? -1.0D : 1.0D;
+        CarriedBabySizeBucket bucket = sizeBucket == null ? CarriedBabySizeBucket.MEDIUM : sizeBucket;
+        FirstPersonLargeBabyVisibilityMode mode = visibilityMode == null
+                ? FirstPersonLargeBabyVisibilityMode.TUCKED
+                : visibilityMode;
+
+        Vec3 position = base;
+        double yawDegrees = 0.0D;
+        if (bucket == CarriedBabySizeBucket.TALL) {
+            position = position
+                    .add(right.scale(0.24D * armSide))
+                    .add(forward.scale(-0.12D))
+                    .add(0.0D, -0.24D, 0.0D);
+            yawDegrees = 24.0D * armSide;
+        } else if (bucket == CarriedBabySizeBucket.BULKY) {
+            double currentForward = position.subtract(carrierPosition).dot(forward);
+            double forwardAdjustment = Math.min(0.0D, 0.34D - currentForward);
+            position = position
+                    .add(right.scale(0.24D * armSide))
+                    .add(forward.scale(forwardAdjustment))
+                    .add(0.0D, -0.18D, 0.0D);
+            yawDegrees = 18.0D * armSide;
+        }
+
+        boolean large = bucket == CarriedBabySizeBucket.TALL || bucket == CarriedBabySizeBucket.BULKY;
+        boolean suppress = false;
+        if (localFirstPerson && large) {
+            if (mode == FirstPersonLargeBabyVisibilityMode.LOWERED) {
+                position = position.add(0.0D, -0.18D, 0.0D);
+            } else if (mode == FirstPersonLargeBabyVisibilityMode.HIDE_WHEN_OBSTRUCTING) {
+                suppress = obstructsFirstPersonCenter(position, carrierPosition, forward, right);
+            }
+        }
+
+        return new PlacementResult(position, suppress, yawDegrees, 0.0D, 0.0D);
+    }
+
     public static Vec3 petFeedbackPosition(Vec3 heldPosition, double babyHeight) {
         return heldPosition.add(0.0D, babyHeight * 0.75D, 0.0D);
     }
 
     private static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    private static boolean obstructsFirstPersonCenter(Vec3 position, Vec3 carrierPosition, Vec3 forward, Vec3 right) {
+        Vec3 offset = position.subtract(carrierPosition);
+        double lateralOffset = Math.abs(offset.dot(right));
+        double forwardOffset = offset.dot(forward);
+        return forwardOffset > 0.20D && lateralOffset < 0.24D;
     }
 }

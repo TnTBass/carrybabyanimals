@@ -1,16 +1,20 @@
 package dev.jasmine.carrybabyanimals.client.render;
 
+import dev.jasmine.carrybabyanimals.client.config.ClientCarryVisualConfig;
+import dev.jasmine.carrybabyanimals.client.config.ClientCarryVisualConfigManager;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
+import java.util.Set;
 
 public final class CarriedBabyRenderer {
     private CarriedBabyRenderer() {
@@ -40,6 +44,7 @@ public final class CarriedBabyRenderer {
 
         float tickDelta = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         EntityRenderDispatcher dispatcher = client.getEntityRenderDispatcher();
+        ClientCarryVisualConfig visualConfig = ClientCarryVisualConfigManager.config();
         for (Map.Entry<Integer, Integer> entry : carriedBabies.entrySet()) {
             Entity baby = client.level.getEntity(entry.getKey());
             Entity carrier = client.level.getEntity(entry.getValue());
@@ -49,7 +54,11 @@ public final class CarriedBabyRenderer {
             }
 
             EntityRenderState renderState = dispatcher.extractEntity(baby, tickDelta);
-            Vec3 heldPosition = heldPosition(carrier, baby, tickDelta);
+            CarriedBabyVisualFrame frame = visualFrame(client, carrier, baby, tickDelta, visualConfig);
+            if (frame.suppressForLocalFirstPerson()) {
+                continue;
+            }
+            Vec3 heldPosition = frame.position();
             renderState.x = heldPosition.x;
             renderState.y = heldPosition.y;
             renderState.z = heldPosition.z;
@@ -72,7 +81,13 @@ public final class CarriedBabyRenderer {
         }
     }
 
-    private static Vec3 heldPosition(Entity carrier, Entity baby, float tickDelta) {
+    private static CarriedBabyVisualFrame visualFrame(
+            Minecraft client,
+            Entity carrier,
+            Entity baby,
+            float tickDelta,
+            ClientCarryVisualConfig visualConfig
+    ) {
         Vec3 base = carrier.getPosition(tickDelta);
         Vec3 forward = carrier.getViewVector(tickDelta);
         Vec3 horizontalForward = new Vec3(forward.x, 0.0D, forward.z);
@@ -82,13 +97,42 @@ public final class CarriedBabyRenderer {
         horizontalForward = horizontalForward.normalize();
 
         boolean leftMainArm = carrier instanceof LivingEntity living && living.getMainArm() == HumanoidArm.LEFT;
-        return CarriedBabyPlacement.heldPosition(
+        CarriedBabySizeBucket sizeBucket = CarriedBabySizeClassifier.classify(
+                EntityType.getKey(baby.getType()).toString(),
+                baby.getBbHeight(),
+                baby.getBbWidth()
+        );
+        if (!visualConfig.largeBabyTuckedPoseEnabled()) {
+            sizeBucket = CarriedBabySizeBucket.MEDIUM;
+        }
+        boolean localFirstPerson = carrier == client.player && client.options.getCameraType().isFirstPerson();
+        CarriedBabyPlacement.PlacementResult placement = CarriedBabyPlacement.placement(
                 base,
                 horizontalForward,
                 carrier.getBbHeight(),
                 baby.getBbHeight(),
+                baby.getBbWidth(),
                 leftMainArm,
-                baby.tickCount + tickDelta
+                baby.tickCount + tickDelta,
+                sizeBucket,
+                localFirstPerson,
+                visualConfig.firstPersonLargeBabyVisibilityMode()
         );
+        return CarriedBabyRenderState.localReactionFor(baby.getId())
+                .filter(reactionState -> baby.tickCount - reactionState.startTick() < reactionState.durationTicks())
+                .map(reactionState -> CarriedBabyVisualFrame.evaluate(
+                        placement,
+                        CarriedBabyReactionRegistry.reactionFor(
+                                EntityType.getKey(baby.getType()).toString(),
+                                visualConfig.carriedBabyReactionsEnabled(),
+                                Set.copyOf(visualConfig.disabledCarriedReactionAnimals()),
+                                visualConfig.animalReactionIntensity()
+                        ),
+                        reactionState.startTick(),
+                        baby.tickCount,
+                        false,
+                        true
+                ))
+                .orElseGet(() -> CarriedBabyVisualFrame.fromPlacement(placement));
     }
 }

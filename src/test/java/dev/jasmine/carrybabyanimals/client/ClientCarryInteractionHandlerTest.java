@@ -18,4 +18,11 @@ final class ClientCarryInteractionHandlerTest {
         assertFalse(ClientCarryInteractionHandler.shouldShowLocalPetFeedback(false, true));
         assertFalse(ClientCarryInteractionHandler.shouldShowLocalPetFeedback(true, false));
     }
+
+    @Test
+    void localPetReactionRequiresFeedbackAndEnabledClientReactions() {
+        assertTrue(ClientCarryInteractionHandler.shouldStartLocalPetReaction(true, true));
+        assertFalse(ClientCarryInteractionHandler.shouldStartLocalPetReaction(false, true));
+        assertFalse(ClientCarryInteractionHandler.shouldStartLocalPetReaction(true, false));
+    }
 }

@@ -59,6 +59,25 @@ Use this matrix before release candidates and after changes that touch carry sta
 | Parent reunion fallback | Trigger Parent Reunion while the unmodded observer is nearby. | The observer remains connected and sees ordinary server-side heart particles without installing the client mod. |
 | Modded renderer remains upgraded | Watch the same carry from a modded observer at the same time. | The modded observer sees the held render instead of the passenger-position fallback. |
 
+### Phase 5 Extension: Large Baby First-Person Visibility
+
+- Start a dedicated or integrated test world with CarryBabyAnimals installed on server and client.
+- Carry a baby horse at default FOV on a 16:9 display.
+- Switch to first person.
+- Verify the crosshair and horizon line remain unobstructed.
+- Verify the carried baby is limited to the lower-left or lower-right quadrant depending on arm side.
+- Repeat with a baby camel, then repeat with a baby llama.
+- Toggle `firstPersonLargeBabyVisibilityMode` through `TUCKED`, `LOWERED`, and `HIDE_WHEN_OBSTRUCTING`.
+- Verify `HIDE_WHEN_OBSTRUCTING` hides only the local first-person carried render and does not drop the real baby or affect third-person/other-player views.
+
+### Phase 5 Extension: Vanilla-Client Fallback
+
+- Start a server with CarryBabyAnimals installed.
+- Join with a vanilla-compatible client profile that does not install the CarryBabyAnimals client mod.
+- Carry a baby cow and a baby horse.
+- Verify the baby remains a real passenger entity and no custom client payload is required.
+- Verify pickup, petting, set-down, Nursery Mode, and Parent Reunion behavior remain server-owned.
+
 ## Config
 
 The config file is `config/carrybabyanimals.json`.
