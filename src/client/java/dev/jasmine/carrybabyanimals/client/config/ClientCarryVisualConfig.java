@@ -26,7 +26,7 @@ public record ClientCarryVisualConfig(
         return new ClientCarryVisualConfig(
                 true,
                 true,
-                FirstPersonLargeBabyVisibilityMode.TUCKED,
+                FirstPersonLargeBabyVisibilityMode.LOWERED,
                 true,
                 0.75D,
                 List.of()

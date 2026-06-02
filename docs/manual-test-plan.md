@@ -88,6 +88,16 @@ Use this matrix before release candidates and after changes that touch carry sta
 - Repeat with `sleepyCarryVisualsEnabled` set to `false`.
 - Verify disabling the client visual setting prevents sleepy softening while pickup, petting, set-down, Nursery Mode, Parent Reunion, and vanilla passenger fallback behavior remain unchanged.
 
+### Phase 5 Follow-up: ModMenu Client Visual Config
+
+- Install Carry Baby Animals with ModMenu on a client.
+- Open ModMenu, then open the Carry Baby Animals config screen.
+- Confirm `firstPersonLargeBabyVisibilityMode` defaults to `LOWERED`, then change it to `TUCKED` and back to `LOWERED`.
+- Save and close the config screen.
+- Carry a baby cow, horse, camel, or llama in first person and verify the local first-person render uses the lowered placement.
+- Toggle `sleepyCarryVisualsEnabled` and verify it affects only local sleepy visual softening.
+- Remove ModMenu and verify Carry Baby Animals still loads using `config/carrybabyanimals-client.json`.
+
 ## Config
 
 The config file is `config/carrybabyanimals.json`.

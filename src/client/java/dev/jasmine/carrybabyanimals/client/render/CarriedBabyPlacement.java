@@ -89,12 +89,19 @@ public final class CarriedBabyPlacement {
         }
 
         boolean large = bucket == CarriedBabySizeBucket.TALL || bucket == CarriedBabySizeBucket.BULKY;
+        boolean firstPersonSafetyPlacement = bucket == CarriedBabySizeBucket.MEDIUM || large;
         boolean suppress = false;
-        if (localFirstPerson && large) {
+        if (localFirstPerson && bucket == CarriedBabySizeBucket.MEDIUM) {
+            position = position
+                    .add(right.scale(0.20D * armSide))
+                    .add(forward.scale(-0.08D))
+                    .add(0.0D, -0.12D, 0.0D);
+        }
+        if (localFirstPerson && firstPersonSafetyPlacement) {
             if (mode == FirstPersonLargeBabyVisibilityMode.LOWERED) {
-                position = position.add(0.0D, -0.18D, 0.0D);
+                position = position.add(0.0D, -0.42D, 0.0D);
             } else if (mode == FirstPersonLargeBabyVisibilityMode.HIDE_WHEN_OBSTRUCTING) {
-                suppress = obstructsFirstPersonCenter(position, carrierPosition, forward, right);
+                suppress = obstructsFirstPersonCenter(position, carrierPosition, forward, right, babyWidth);
             }
         }
 
@@ -109,10 +116,11 @@ public final class CarriedBabyPlacement {
         return Math.max(min, Math.min(max, value));
     }
 
-    private static boolean obstructsFirstPersonCenter(Vec3 position, Vec3 carrierPosition, Vec3 forward, Vec3 right) {
+    private static boolean obstructsFirstPersonCenter(Vec3 position, Vec3 carrierPosition, Vec3 forward, Vec3 right, double babyWidth) {
         Vec3 offset = position.subtract(carrierPosition);
         double lateralOffset = Math.abs(offset.dot(right));
         double forwardOffset = offset.dot(forward);
-        return forwardOffset > 0.20D && lateralOffset < 0.24D;
+        double nearestBodyEdgeToCenter = lateralOffset - (Math.max(0.0D, babyWidth) * 0.5D);
+        return forwardOffset > 0.20D && nearestBodyEdgeToCenter < 0.16D;
     }
 }

@@ -1,21 +1,34 @@
 package dev.jasmine.carrybabyanimals.client.config;
 
 import dev.jasmine.carrybabyanimals.client.render.FirstPersonLargeBabyVisibilityMode;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ClientCarryVisualConfigManagerTest {
+    @TempDir
+    Path tempDir;
+
+    @AfterEach
+    void resetCurrentConfig() throws Exception {
+        Path path = tempDir.resolve("reset").resolve("carrybabyanimals-client.json");
+        ClientCarryVisualConfigManager.save(path, ClientCarryVisualConfig.defaultConfig());
+    }
+
     @Test
     void defaultsEnableConservativeClientVisualPolish() {
         ClientCarryVisualConfig config = ClientCarryVisualConfig.defaultConfig();
 
         assertTrue(config.carriedBabyReactionsEnabled());
         assertTrue(config.largeBabyTuckedPoseEnabled());
-        assertEquals(FirstPersonLargeBabyVisibilityMode.TUCKED, config.firstPersonLargeBabyVisibilityMode());
+        assertEquals(FirstPersonLargeBabyVisibilityMode.LOWERED, config.firstPersonLargeBabyVisibilityMode());
         assertTrue(config.sleepyCarryVisualsEnabled());
         assertEquals(0.75D, config.animalReactionIntensity(), 1.0E-6D);
         assertEquals(List.of(), config.disabledCarriedReactionAnimals());
@@ -70,5 +83,29 @@ final class ClientCarryVisualConfigManagerTest {
                 """);
 
         assertEquals(List.of("minecraft:chicken", "modded:baby_duck"), config.disabledCarriedReactionAnimals());
+    }
+
+    @Test
+    void savesUpdatedConfigAndUsesItAsCurrentConfig() throws Exception {
+        Path path = tempDir.resolve("client-config").resolve("carrybabyanimals-client.json");
+        ClientCarryVisualConfig updated = new ClientCarryVisualConfig(
+                false,
+                false,
+                FirstPersonLargeBabyVisibilityMode.LOWERED,
+                false,
+                0.4D,
+                List.of(" Minecraft:Panda ", "examplemod:duck")
+        );
+
+        ClientCarryVisualConfigManager.save(path, updated);
+        ClientCarryVisualConfigManager.load(path);
+
+        assertTrue(Files.exists(path));
+        assertEquals(false, ClientCarryVisualConfigManager.config().carriedBabyReactionsEnabled());
+        assertEquals(false, ClientCarryVisualConfigManager.config().largeBabyTuckedPoseEnabled());
+        assertEquals(FirstPersonLargeBabyVisibilityMode.LOWERED, ClientCarryVisualConfigManager.config().firstPersonLargeBabyVisibilityMode());
+        assertEquals(false, ClientCarryVisualConfigManager.config().sleepyCarryVisualsEnabled());
+        assertEquals(0.4D, ClientCarryVisualConfigManager.config().animalReactionIntensity(), 1.0E-6D);
+        assertEquals(List.of("minecraft:panda", "examplemod:duck"), ClientCarryVisualConfigManager.config().disabledCarriedReactionAnimals());
     }
 }

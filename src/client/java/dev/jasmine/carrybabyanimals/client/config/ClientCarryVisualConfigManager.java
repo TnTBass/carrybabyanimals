@@ -40,11 +40,21 @@ public final class ClientCarryVisualConfigManager {
     }
 
     public static void saveDefault(Path path) throws IOException {
+        write(path, defaultConfigText());
+    }
+
+    public static void save(Path path, ClientCarryVisualConfig updatedConfig) throws IOException {
+        ClientCarryVisualConfig normalizedConfig = parse(GSON.toJson(RawConfig.from(updatedConfig)));
+        write(path, GSON.toJson(RawConfig.from(normalizedConfig)));
+        config = normalizedConfig;
+    }
+
+    private static void write(Path path, String text) throws IOException {
         Path parent = path.getParent();
         if (parent != null) {
             Files.createDirectories(parent);
         }
-        Files.writeString(path, defaultConfigText());
+        Files.writeString(path, text);
     }
 
     public static ClientCarryVisualConfig parse(String json) {
@@ -69,7 +79,7 @@ public final class ClientCarryVisualConfigManager {
         return GSON.toJson(RawConfig.from(ClientCarryVisualConfig.defaultConfig()));
     }
 
-    private static Path configPath() {
+    static Path configPath() {
         return FabricLoader.getInstance()
                 .getConfigDir()
                 .resolve("carrybabyanimals-client.json");

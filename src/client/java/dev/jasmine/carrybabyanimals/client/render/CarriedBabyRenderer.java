@@ -105,10 +105,8 @@ public final class CarriedBabyRenderer {
                 baby.getBbHeight(),
                 baby.getBbWidth()
         );
-        if (!visualConfig.largeBabyTuckedPoseEnabled()) {
-            sizeBucket = CarriedBabySizeBucket.MEDIUM;
-        }
         boolean localFirstPerson = carrier == client.player && client.options.getCameraType().isFirstPerson();
+        sizeBucket = effectiveSizeBucket(sizeBucket, localFirstPerson, visualConfig);
         CarriedBabyPlacement.PlacementResult placement = CarriedBabyPlacement.placement(
                 base,
                 horizontalForward,
@@ -147,5 +145,16 @@ public final class CarriedBabyRenderer {
                         true
                 ))
                 .orElseGet(() -> CarriedBabyVisualFrame.fromPlacement(placement));
+    }
+
+    static CarriedBabySizeBucket effectiveSizeBucket(
+            CarriedBabySizeBucket classifiedSizeBucket,
+            boolean localFirstPerson,
+            ClientCarryVisualConfig visualConfig
+    ) {
+        if (localFirstPerson || visualConfig.largeBabyTuckedPoseEnabled()) {
+            return classifiedSizeBucket;
+        }
+        return CarriedBabySizeBucket.MEDIUM;
     }
 }

@@ -117,7 +117,48 @@ final class CarriedBabyPlacementTest {
     }
 
     @Test
-    void hideWhenObstructingModeKeepsClearTuckedTallBabyVisible() {
+    void firstPersonMediumBabyTucksAwayFromCrosshairCorridor() {
+        CarriedBabyPlacement.PlacementResult thirdPerson = placement(CarriedBabySizeBucket.MEDIUM, 0.7D, 0.45D, false);
+        CarriedBabyPlacement.PlacementResult firstPerson = placement(CarriedBabySizeBucket.MEDIUM, 0.7D, 0.45D, true);
+
+        assertTrue(Math.abs(firstPerson.position().x) >= 0.24D);
+        assertTrue(firstPerson.position().y <= thirdPerson.position().y - 0.10D);
+        assertFalse(firstPerson.suppressForLocalFirstPerson());
+    }
+
+    @Test
+    void hideWhenObstructingModeKeepsNarrowTuckedTallBabyVisible() {
+        CarriedBabyPlacement.PlacementResult tallFirstPerson = CarriedBabyPlacement.placement(
+                Vec3.ZERO,
+                new Vec3(0.0D, 0.0D, 1.0D),
+                1.8D,
+                1.15D,
+                0.2D,
+                false,
+                0.0D,
+                CarriedBabySizeBucket.TALL,
+                true,
+                FirstPersonLargeBabyVisibilityMode.HIDE_WHEN_OBSTRUCTING
+        );
+        CarriedBabyPlacement.PlacementResult smallFirstPerson = CarriedBabyPlacement.placement(
+                Vec3.ZERO,
+                new Vec3(0.0D, 0.0D, 1.0D),
+                1.8D,
+                0.4D,
+                0.35D,
+                false,
+                0.0D,
+                CarriedBabySizeBucket.SMALL,
+                true,
+                FirstPersonLargeBabyVisibilityMode.HIDE_WHEN_OBSTRUCTING
+        );
+
+        assertFalse(tallFirstPerson.suppressForLocalFirstPerson());
+        assertFalse(smallFirstPerson.suppressForLocalFirstPerson());
+    }
+
+    @Test
+    void hideWhenObstructingModeSuppressesLargeBabyWhoseBodyOverlapsCenterView() {
         CarriedBabyPlacement.PlacementResult tallFirstPerson = CarriedBabyPlacement.placement(
                 Vec3.ZERO,
                 new Vec3(0.0D, 0.0D, 1.0D),
@@ -130,7 +171,13 @@ final class CarriedBabyPlacementTest {
                 true,
                 FirstPersonLargeBabyVisibilityMode.HIDE_WHEN_OBSTRUCTING
         );
-        CarriedBabyPlacement.PlacementResult mediumFirstPerson = CarriedBabyPlacement.placement(
+
+        assertTrue(tallFirstPerson.suppressForLocalFirstPerson());
+    }
+
+    @Test
+    void hideWhenObstructingModeSuppressesMediumBabyWhoseBodyOverlapsCenterView() {
+        CarriedBabyPlacement.PlacementResult cowFirstPerson = CarriedBabyPlacement.placement(
                 Vec3.ZERO,
                 new Vec3(0.0D, 0.0D, 1.0D),
                 1.8D,
@@ -143,8 +190,38 @@ final class CarriedBabyPlacementTest {
                 FirstPersonLargeBabyVisibilityMode.HIDE_WHEN_OBSTRUCTING
         );
 
-        assertFalse(tallFirstPerson.suppressForLocalFirstPerson());
-        assertFalse(mediumFirstPerson.suppressForLocalFirstPerson());
+        assertTrue(cowFirstPerson.suppressForLocalFirstPerson());
+    }
+
+    @Test
+    void loweredModeMovesLargeFirstPersonBabyClearlyBelowTuckedPlacement() {
+        CarriedBabyPlacement.PlacementResult tucked = CarriedBabyPlacement.placement(
+                Vec3.ZERO,
+                new Vec3(0.0D, 0.0D, 1.0D),
+                1.8D,
+                1.15D,
+                0.55D,
+                false,
+                0.0D,
+                CarriedBabySizeBucket.TALL,
+                true,
+                FirstPersonLargeBabyVisibilityMode.TUCKED
+        );
+        CarriedBabyPlacement.PlacementResult lowered = CarriedBabyPlacement.placement(
+                Vec3.ZERO,
+                new Vec3(0.0D, 0.0D, 1.0D),
+                1.8D,
+                1.15D,
+                0.55D,
+                false,
+                0.0D,
+                CarriedBabySizeBucket.TALL,
+                true,
+                FirstPersonLargeBabyVisibilityMode.LOWERED
+        );
+
+        assertTrue(lowered.position().y <= tucked.position().y - 0.35D);
+        assertFalse(lowered.suppressForLocalFirstPerson());
     }
 
     @Test

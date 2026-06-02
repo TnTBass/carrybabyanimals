@@ -169,7 +169,7 @@ Default client visual config:
 {
   "carriedBabyReactionsEnabled": true,
   "largeBabyTuckedPoseEnabled": true,
-  "firstPersonLargeBabyVisibilityMode": "TUCKED",
+  "firstPersonLargeBabyVisibilityMode": "LOWERED",
   "sleepyCarryVisualsEnabled": true,
   "animalReactionIntensity": 0.75,
   "disabledCarriedReactionAnimals": []
@@ -180,12 +180,14 @@ Client visual options:
 
 - `carriedBabyReactionsEnabled`: Enables small modded-client-only carried reactions during local feedback moments. Default: `true`.
 - `largeBabyTuckedPoseEnabled`: Enables safer tucked-side placement for tall and bulky carried babies. Default: `true`.
-- `firstPersonLargeBabyVisibilityMode`: Controls local first-person handling for tall and bulky babies. Values: `TUCKED`, `LOWERED`, or `HIDE_WHEN_OBSTRUCTING`. Default: `TUCKED`.
+- `firstPersonLargeBabyVisibilityMode`: Controls local first-person handling for medium, tall, and bulky babies. Values: `TUCKED`, `LOWERED`, or `HIDE_WHEN_OBSTRUCTING`. Default: `LOWERED`.
 - `sleepyCarryVisualsEnabled`: Enables render-only sleepy softening for eligible carried-baby reactions after the client has locally observed the carry for a while. Unsafe or non-eligible reactions fall back to stillness. Default: `true`.
 - `animalReactionIntensity`: Scales cosmetic reaction motion from `0.0` through `1.0`. Default: `0.75`.
 - `disabledCarriedReactionAnimals`: Full entity IDs that should use the generic safe fallback instead of a named carried reaction, such as `["minecraft:panda", "examplemod:duck"]`.
 
 These client settings do not add permissions, do not affect pickup or set-down rules, and are never required by vanilla clients.
+
+If ModMenu is installed on the client, these same client visual settings can be changed from ModMenu's Carry Baby Animals config screen. ModMenu is optional; without it, Carry Baby Animals still uses `config/carrybabyanimals-client.json`.
 
 Supported animal names:
 

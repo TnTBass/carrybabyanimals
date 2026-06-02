@@ -26,6 +26,10 @@ repositories {
         name = "Fabric"
         url = "https://maven.fabricmc.net/"
     }
+    maven {
+        name = "Terraformers"
+        url = "https://maven.terraformersmc.com/"
+    }
     mavenCentral()
 }
 
@@ -34,6 +38,7 @@ dependencies {
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     compileOnly "me.lucko:fabric-permissions-api:0.7.0"
+    compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.3"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
