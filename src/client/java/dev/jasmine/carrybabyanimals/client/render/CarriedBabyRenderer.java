@@ -18,7 +18,7 @@ import java.util.Set;
 
 public final class CarriedBabyRenderer {
     private static final int LOCAL_SLEEPY_VISUAL_DELAY_TICKS = 1200;
-    private static final int LOCAL_SLEEPY_VISUAL_DURATION_TICKS = 160;
+    private static final int LOCAL_ASLEEP_VISUAL_DELAY_TICKS = 160;
 
     private CarriedBabyRenderer() {
     }
@@ -122,9 +122,9 @@ public final class CarriedBabyRenderer {
         CarriedBabyRenderState.ensureLocalSleepyVisual(
                 baby.getId(),
                 baby.tickCount + LOCAL_SLEEPY_VISUAL_DELAY_TICKS,
-                LOCAL_SLEEPY_VISUAL_DURATION_TICKS
+                LOCAL_ASLEEP_VISUAL_DELAY_TICKS
         );
-        boolean sleepyVisual = CarriedBabyRenderState.sleepyVisualActiveFor(
+        CarriedBabySleepyVisualPhase sleepyVisualPhase = CarriedBabyRenderState.sleepyVisualPhaseFor(
                 baby.getId(),
                 baby.tickCount,
                 visualConfig.sleepyCarryVisualsEnabled()
@@ -141,10 +141,17 @@ public final class CarriedBabyRenderer {
                         ),
                         reactionState.startTick(),
                         baby.tickCount,
-                        sleepyVisual,
+                        sleepyVisualPhase,
                         true
                 ))
-                .orElseGet(() -> CarriedBabyVisualFrame.fromPlacement(placement));
+                .orElseGet(() -> CarriedBabyVisualFrame.evaluate(
+                        placement,
+                        null,
+                        0,
+                        baby.tickCount,
+                        sleepyVisualPhase,
+                        true
+                ));
     }
 
     static CarriedBabySizeBucket effectiveSizeBucket(

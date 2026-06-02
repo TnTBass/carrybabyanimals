@@ -83,6 +83,7 @@ Use this matrix before release candidates and after changes that touch carry sta
 - Start a dedicated or integrated test world with CarryBabyAnimals installed on server and client.
 - Carry a baby with a visible named carried reaction, such as a chicken or rabbit.
 - Keep carrying it until the local sleepy visual window is reached.
+- Hold a small baby animal long enough for sleepy carry visuals to begin. Confirm it first looks tucked and drowsy, then settles into a more readable asleep pose with restrained motion.
 - Pet the carried baby during that window.
 - Verify eligible reactions use gentler motion than an immediate non-sleepy pet reaction.
 - Repeat with `sleepyCarryVisualsEnabled` set to `false`.

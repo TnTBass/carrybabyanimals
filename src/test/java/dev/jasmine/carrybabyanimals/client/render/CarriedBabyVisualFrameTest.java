@@ -88,7 +88,7 @@ final class CarriedBabyVisualFrameTest {
     }
 
     @Test
-    void sleepyVisualFallsBackToStillnessWhenRendererSpecificPoseIsUnsafe() {
+    void sleepyVisualKeepsSleepPoseButSuppressesUnsafeReactionMotion() {
         CarriedBabyPlacement.PlacementResult placement = placement();
         CarriedBabyReaction reaction = new CarriedBabyReaction(
                 CarriedBabyReactionType.PANDA_SNEEZE,
@@ -104,10 +104,10 @@ final class CarriedBabyVisualFrameTest {
 
         CarriedBabyVisualFrame sleepy = CarriedBabyVisualFrame.evaluate(placement, reaction, 0, 3, true, true);
 
-        assertEquals(placement.position(), sleepy.position());
+        assertTrue(sleepy.position().y < placement.position().y);
         assertEquals(placement.yawDegrees(), sleepy.yawDegrees(), 1.0E-6D);
-        assertEquals(placement.pitchDegrees(), sleepy.pitchDegrees(), 1.0E-6D);
-        assertEquals(placement.rollDegrees(), sleepy.rollDegrees(), 1.0E-6D);
+        assertTrue(sleepy.pitchDegrees() < placement.pitchDegrees());
+        assertTrue(sleepy.rollDegrees() > placement.rollDegrees());
     }
 
     @Test
@@ -147,6 +147,67 @@ final class CarriedBabyVisualFrameTest {
 
         assertTrue(Math.abs(enabled.position().x - placement.position().x) < Math.abs(disabled.position().x - placement.position().x));
         assertTrue(Math.abs(enabled.rollDegrees()) < Math.abs(disabled.rollDegrees()));
+    }
+
+    @Test
+    void sleepyPhaseLowersAndTucksFrameWithoutPettingReaction() {
+        CarriedBabyPlacement.PlacementResult placement = placement();
+
+        CarriedBabyVisualFrame sleepy = CarriedBabyVisualFrame.evaluate(
+                placement,
+                null,
+                0,
+                120,
+                CarriedBabySleepyVisualPhase.SLEEPY,
+                true
+        );
+
+        assertTrue(sleepy.position().y < placement.position().y);
+        assertTrue(sleepy.pitchDegrees() < placement.pitchDegrees());
+        assertEquals(placement.suppressForLocalFirstPerson(), sleepy.suppressForLocalFirstPerson());
+    }
+
+    @Test
+    void asleepPhaseIsMoreReadableThanSleepyAndAddsOnlyTinyBreathingMotion() {
+        CarriedBabyPlacement.PlacementResult placement = placement();
+
+        CarriedBabyVisualFrame sleepy = CarriedBabyVisualFrame.evaluate(
+                placement,
+                null,
+                0,
+                140,
+                CarriedBabySleepyVisualPhase.SLEEPY,
+                true
+        );
+        CarriedBabyVisualFrame asleep = CarriedBabyVisualFrame.evaluate(
+                placement,
+                null,
+                0,
+                140,
+                CarriedBabySleepyVisualPhase.ASLEEP,
+                true
+        );
+
+        assertTrue(asleep.position().y <= sleepy.position().y + 0.012D);
+        assertTrue(asleep.pitchDegrees() < sleepy.pitchDegrees());
+        assertTrue(Math.abs(asleep.position().y - placement.position().y) <= 0.08D);
+    }
+
+    @Test
+    void alertPhasePreservesBasePlacementWithoutReaction() {
+        CarriedBabyPlacement.PlacementResult placement = placement();
+
+        CarriedBabyVisualFrame alert = CarriedBabyVisualFrame.evaluate(
+                placement,
+                null,
+                0,
+                120,
+                CarriedBabySleepyVisualPhase.ALERT,
+                true
+        );
+
+        assertEquals(placement.position(), alert.position());
+        assertEquals(placement.pitchDegrees(), alert.pitchDegrees(), 1.0E-6D);
     }
 
     @Test

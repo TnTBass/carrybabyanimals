@@ -74,22 +74,22 @@ public final class CarriedBabyRenderState {
         }
         LOCAL_SLEEPY_VISUALS.put(
                 babyEntityId,
-                new LocalSleepyVisualState(startTick, durationTicks)
+                LocalSleepyVisualState.fromDelay(startTick, durationTicks)
         );
         return true;
     }
 
     public static Optional<LocalSleepyVisualState> ensureLocalSleepyVisual(
             int babyEntityId,
-            long startTick,
-            int durationTicks
+            long sleepyStartTick,
+            int asleepDelayTicks
     ) {
         if (!isCarriedBaby(babyEntityId)) {
             return Optional.empty();
         }
         return Optional.of(LOCAL_SLEEPY_VISUALS.computeIfAbsent(
                 babyEntityId,
-                ignored -> new LocalSleepyVisualState(startTick, durationTicks)
+                ignored -> LocalSleepyVisualState.fromDelay(sleepyStartTick, asleepDelayTicks)
         ));
     }
 
@@ -102,6 +102,19 @@ public final class CarriedBabyRenderState {
                 && localSleepyVisualFor(babyEntityId)
                 .map(sleepyVisual -> sleepyVisual.activeAt(currentTick))
                 .orElse(false);
+    }
+
+    public static CarriedBabySleepyVisualPhase sleepyVisualPhaseFor(
+            int babyEntityId,
+            long currentTick,
+            boolean sleepyCarryVisualsEnabled
+    ) {
+        if (!sleepyCarryVisualsEnabled) {
+            return CarriedBabySleepyVisualPhase.ALERT;
+        }
+        return localSleepyVisualFor(babyEntityId)
+                .map(sleepyVisual -> sleepyVisual.phaseAt(currentTick))
+                .orElse(CarriedBabySleepyVisualPhase.ALERT);
     }
 
     public static boolean isCarriedBaby(int babyEntityId) {
@@ -175,14 +188,38 @@ public final class CarriedBabyRenderState {
         }
     }
 
-    public record LocalSleepyVisualState(long startTick, int durationTicks) {
+    public record LocalSleepyVisualState(long sleepyStartTick, long asleepStartTick) {
         public LocalSleepyVisualState {
-            durationTicks = Math.max(1, durationTicks);
+            asleepStartTick = Math.max(sleepyStartTick + 1L, asleepStartTick);
+        }
+
+        static LocalSleepyVisualState fromDelay(long sleepyStartTick, int asleepDelayTicks) {
+            return new LocalSleepyVisualState(
+                    sleepyStartTick,
+                    sleepyStartTick + Math.max(1, asleepDelayTicks)
+            );
+        }
+
+        public long startTick() {
+            return sleepyStartTick;
+        }
+
+        public int durationTicks() {
+            long duration = asleepStartTick - sleepyStartTick;
+            return duration > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) duration;
         }
 
         public boolean activeAt(long currentTick) {
-            long elapsedTicks = currentTick - startTick;
-            return elapsedTicks >= 0L && elapsedTicks < durationTicks;
+            return phaseAt(currentTick) != CarriedBabySleepyVisualPhase.ALERT;
+        }
+
+        public CarriedBabySleepyVisualPhase phaseAt(long currentTick) {
+            if (currentTick < sleepyStartTick) {
+                return CarriedBabySleepyVisualPhase.ALERT;
+            }
+            return currentTick < asleepStartTick
+                    ? CarriedBabySleepyVisualPhase.SLEEPY
+                    : CarriedBabySleepyVisualPhase.ASLEEP;
         }
     }
 }

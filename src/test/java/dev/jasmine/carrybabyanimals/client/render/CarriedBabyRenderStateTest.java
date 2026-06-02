@@ -138,7 +138,51 @@ final class CarriedBabyRenderStateTest {
         assertTrue(sleepy.activeAt(100L));
         assertTrue(sleepy.activeAt(140L));
         assertTrue(sleepy.activeAt(179L));
-        assertFalse(sleepy.activeAt(180L));
+        assertTrue(sleepy.activeAt(180L));
+        assertEquals(CarriedBabySleepyVisualPhase.ASLEEP, sleepy.phaseAt(180L));
+    }
+
+    @Test
+    void localSleepyVisualPhaseTransitionsFromAlertToSleepyToAsleep() {
+        CarriedBabyRenderState.set(10, 20);
+        CarriedBabyRenderState.ensureLocalSleepyVisual(10, 100L, 40);
+
+        assertEquals(CarriedBabySleepyVisualPhase.ALERT, CarriedBabyRenderState.sleepyVisualPhaseFor(10, 99L, true));
+        assertEquals(CarriedBabySleepyVisualPhase.SLEEPY, CarriedBabyRenderState.sleepyVisualPhaseFor(10, 100L, true));
+        assertEquals(CarriedBabySleepyVisualPhase.SLEEPY, CarriedBabyRenderState.sleepyVisualPhaseFor(10, 139L, true));
+        assertEquals(CarriedBabySleepyVisualPhase.ASLEEP, CarriedBabyRenderState.sleepyVisualPhaseFor(10, 140L, true));
+        assertEquals(CarriedBabySleepyVisualPhase.ASLEEP, CarriedBabyRenderState.sleepyVisualPhaseFor(10, 200L, true));
+    }
+
+    @Test
+    void disabledSleepyVisualConfigReportsAlertPhase() {
+        CarriedBabyRenderState.set(10, 20);
+        CarriedBabyRenderState.ensureLocalSleepyVisual(10, 100L, 40);
+
+        assertEquals(CarriedBabySleepyVisualPhase.ALERT, CarriedBabyRenderState.sleepyVisualPhaseFor(10, 140L, false));
+    }
+
+    @Test
+    void ensuringLocalSleepyVisualDoesNotRestartExistingPhaseTiming() {
+        CarriedBabyRenderState.set(10, 20);
+
+        CarriedBabyRenderState.ensureLocalSleepyVisual(10, 100L, 40);
+        CarriedBabyRenderState.ensureLocalSleepyVisual(10, 500L, 40);
+
+        CarriedBabyRenderState.LocalSleepyVisualState sleepy = CarriedBabyRenderState.localSleepyVisualFor(10).orElseThrow();
+        assertEquals(100L, sleepy.sleepyStartTick());
+        assertEquals(140L, sleepy.asleepStartTick());
+    }
+
+    @Test
+    void asleepPhaseNeverExpiresAfterTransition() {
+        CarriedBabyRenderState.set(10, 20);
+        CarriedBabyRenderState.ensureLocalSleepyVisual(10, 100L, 40);
+
+        CarriedBabyRenderState.LocalSleepyVisualState sleepy = CarriedBabyRenderState.localSleepyVisualFor(10).orElseThrow();
+
+        assertTrue(sleepy.activeAt(Long.MAX_VALUE));
+        assertEquals(CarriedBabySleepyVisualPhase.ASLEEP, sleepy.phaseAt(Long.MAX_VALUE));
     }
 
     @Test
