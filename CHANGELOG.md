@@ -5,6 +5,7 @@ Public release notes for players and server admins. These notes are safe to publ
 ## Unreleased
 
 - Added optional ModMenu integration so modded clients can edit Carry Baby Animals client visual settings without hand-editing `config/carrybabyanimals-client.json`.
+- Fixed sleepy/asleep carried-baby visuals so the readable tucked pose is applied to the actual client render state instead of only the internal visual frame.
 - Made optional modded-client sleepy carried-baby visuals easier to read for small babies by adding clearer sleepy/asleep presentation while preserving vanilla-client passenger fallback.
 - Added optional modded-client creature personality polish for carried babies, including safer large-baby first-person placement, gentle animal-specific carried reactions, and render-only sleepy reaction softening while preserving vanilla-client passenger fallback.
 - Improved the optional modded-client carried-baby render with gentler arm placement, subtle motion, and better cleanup of stale carried visuals after client world changes.

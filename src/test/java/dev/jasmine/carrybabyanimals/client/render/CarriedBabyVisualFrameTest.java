@@ -162,7 +162,7 @@ final class CarriedBabyVisualFrameTest {
                 true
         );
 
-        assertTrue(sleepy.position().y < placement.position().y);
+        assertTrue(sleepy.position().y <= placement.position().y - 0.08D);
         assertTrue(sleepy.pitchDegrees() < placement.pitchDegrees());
         assertEquals(placement.suppressForLocalFirstPerson(), sleepy.suppressForLocalFirstPerson());
     }
@@ -188,9 +188,9 @@ final class CarriedBabyVisualFrameTest {
                 true
         );
 
-        assertTrue(asleep.position().y <= sleepy.position().y + 0.012D);
+        assertTrue(asleep.position().y <= sleepy.position().y - 0.04D);
         assertTrue(asleep.pitchDegrees() < sleepy.pitchDegrees());
-        assertTrue(Math.abs(asleep.position().y - placement.position().y) <= 0.08D);
+        assertTrue(Math.abs(asleep.position().y - placement.position().y) <= 0.18D);
     }
 
     @Test

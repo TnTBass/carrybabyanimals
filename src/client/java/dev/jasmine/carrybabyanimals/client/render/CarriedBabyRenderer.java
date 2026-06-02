@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.HumanoidArm;
@@ -61,11 +62,7 @@ public final class CarriedBabyRenderer {
             if (frame.suppressForLocalFirstPerson()) {
                 continue;
             }
-            Vec3 heldPosition = frame.position();
-            renderState.x = heldPosition.x;
-            renderState.y = heldPosition.y;
-            renderState.z = heldPosition.z;
-            renderState.distanceToCameraSq = cameraPosition.distanceToSqr(heldPosition);
+            applyVisualFrame(renderState, frame, cameraPosition);
             renderState.nameTag = null;
             renderState.scoreText = null;
             renderState.shadowRadius = 0.0F;
@@ -81,6 +78,21 @@ public final class CarriedBabyRenderer {
                     context.poseStack(),
                     context.submitNodeCollector()
             );
+        }
+    }
+
+    static void applyVisualFrame(EntityRenderState renderState, CarriedBabyVisualFrame frame, Vec3 cameraPosition) {
+        Vec3 heldPosition = frame.position();
+        renderState.x = heldPosition.x;
+        renderState.y = heldPosition.y;
+        renderState.z = heldPosition.z;
+        renderState.distanceToCameraSq = cameraPosition.distanceToSqr(heldPosition);
+        if (renderState instanceof LivingEntityRenderState livingRenderState) {
+            // Frame yaw/pitch are visual deltas layered over the entity's extracted orientation.
+            // LivingEntityRenderState has no roll channel, so roll remains a frame-only/future pose-stack value.
+            livingRenderState.yRot += (float) frame.yawDegrees();
+            livingRenderState.bodyRot += (float) frame.yawDegrees();
+            livingRenderState.xRot += (float) frame.pitchDegrees();
         }
     }
 

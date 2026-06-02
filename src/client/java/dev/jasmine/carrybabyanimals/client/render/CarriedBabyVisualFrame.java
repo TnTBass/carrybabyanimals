@@ -97,7 +97,7 @@ public record CarriedBabyVisualFrame(
         double breathing = phase == CarriedBabySleepyVisualPhase.ASLEEP
                 ? Math.sin(currentTick * 0.12D) * 0.006D
                 : 0.0D;
-        double lower = phase == CarriedBabySleepyVisualPhase.ASLEEP ? -0.045D : -0.025D;
+        double lower = phase == CarriedBabySleepyVisualPhase.ASLEEP ? -0.15D : -0.10D;
         double pitch = rendererSpecificPoseSafe
                 ? (phase == CarriedBabySleepyVisualPhase.ASLEEP ? -10.0D : -5.0D)
                 : 0.0D;
