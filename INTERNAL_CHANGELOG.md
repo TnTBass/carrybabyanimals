@@ -4,6 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Added a Phase 5 extension sleepy carried-baby visuals design spec for clearer client-only sleepy/asleep presentation while preserving vanilla fallback.
 - Added a Phase 5 extension carried baby reactions implementation plan for large-baby visibility and optional client-only creature personality polish.
 - Added a post-Phase-5 carried baby reactions design spec for large-baby visibility and optional creature personality polish.
 - Renamed generated jar artifacts from `carry-baby-animals-*` to `carrybabyanimals-*` and aligned release upload paths.
