@@ -84,6 +84,7 @@ Use this matrix before release candidates and after changes that touch carry sta
 - Carry a baby with a visible named carried reaction, such as a chicken or rabbit.
 - Keep carrying it until the local sleepy visual window is reached.
 - Hold a small baby animal long enough for sleepy carry visuals to begin. Confirm it first looks tucked and drowsy, then settles into a more readable asleep pose with restrained motion.
+- Repeat with a baby cat or ocelot and confirm the asleep stage uses a visible curled lie-down pose rather than only lowering the carried render.
 - Pet the carried baby during that window.
 - Verify eligible reactions use gentler motion than an immediate non-sleepy pet reaction.
 - Repeat with `sleepyCarryVisualsEnabled` set to `false`.

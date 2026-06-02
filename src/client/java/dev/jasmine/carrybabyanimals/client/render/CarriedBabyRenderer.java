@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.entity.state.FelineRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -92,8 +93,43 @@ public final class CarriedBabyRenderer {
             // LivingEntityRenderState has no roll channel, so roll remains a frame-only/future pose-stack value.
             livingRenderState.yRot += (float) frame.yawDegrees();
             livingRenderState.bodyRot += (float) frame.yawDegrees();
-            livingRenderState.xRot += (float) frame.pitchDegrees();
+            if (!usesSleepyModelPose(renderState, frame.sleepyVisualPhase())) {
+                livingRenderState.xRot += (float) frame.pitchDegrees();
+            }
         }
+        applySleepyModelPose(renderState, frame.sleepyVisualPhase());
+    }
+
+    private static boolean usesSleepyModelPose(
+            EntityRenderState renderState,
+            CarriedBabySleepyVisualPhase sleepyVisualPhase
+    ) {
+        return sleepyVisualPhase != CarriedBabySleepyVisualPhase.ALERT && renderState instanceof FelineRenderState;
+    }
+
+    private static void applySleepyModelPose(
+            EntityRenderState renderState,
+            CarriedBabySleepyVisualPhase sleepyVisualPhase
+    ) {
+        if (!(renderState instanceof FelineRenderState felineRenderState)) {
+            return;
+        }
+
+        float lieDownAmount = switch (sleepyVisualPhase) {
+            case ALERT -> 0.0F;
+            case SLEEPY -> 0.45F;
+            case ASLEEP -> 1.0F;
+        };
+        if (lieDownAmount <= 0.0F) {
+            return;
+        }
+
+        // Vanilla feline models and CatRenderer.setupRotations read these fields for the curled lie-down pose.
+        felineRenderState.isSprinting = false;
+        felineRenderState.isSitting = false;
+        felineRenderState.lieDownAmount = Math.max(felineRenderState.lieDownAmount, lieDownAmount);
+        felineRenderState.lieDownAmountTail = Math.max(felineRenderState.lieDownAmountTail, lieDownAmount);
+        felineRenderState.relaxStateOneAmount = Math.max(felineRenderState.relaxStateOneAmount, lieDownAmount);
     }
 
     private static CarriedBabyVisualFrame visualFrame(

@@ -7,8 +7,26 @@ public record CarriedBabyVisualFrame(
         boolean suppressForLocalFirstPerson,
         double yawDegrees,
         double pitchDegrees,
-        double rollDegrees
+        double rollDegrees,
+        CarriedBabySleepyVisualPhase sleepyVisualPhase
 ) {
+    public CarriedBabyVisualFrame(
+            Vec3 position,
+            boolean suppressForLocalFirstPerson,
+            double yawDegrees,
+            double pitchDegrees,
+            double rollDegrees
+    ) {
+        this(
+                position,
+                suppressForLocalFirstPerson,
+                yawDegrees,
+                pitchDegrees,
+                rollDegrees,
+                CarriedBabySleepyVisualPhase.ALERT
+        );
+    }
+
     public static CarriedBabyVisualFrame evaluate(
             CarriedBabyPlacement.PlacementResult placement,
             CarriedBabyReaction reaction,
@@ -71,7 +89,8 @@ public record CarriedBabyVisualFrame(
                 phaseBase.suppressForLocalFirstPerson(),
                 phaseBase.yawDegrees() + descriptor.yawDegrees() * amount,
                 phaseBase.pitchDegrees() + descriptor.pitchDegrees() * amount,
-                phaseBase.rollDegrees() + descriptor.rollDegrees() * amount
+                phaseBase.rollDegrees() + descriptor.rollDegrees() * amount,
+                phaseBase.sleepyVisualPhase()
         );
     }
 
@@ -81,7 +100,8 @@ public record CarriedBabyVisualFrame(
                 placement.suppressForLocalFirstPerson(),
                 placement.yawDegrees(),
                 placement.pitchDegrees(),
-                placement.rollDegrees()
+                placement.rollDegrees(),
+                CarriedBabySleepyVisualPhase.ALERT
         );
     }
 
@@ -109,7 +129,8 @@ public record CarriedBabyVisualFrame(
                 placement.suppressForLocalFirstPerson(),
                 placement.yawDegrees(),
                 placement.pitchDegrees() + pitch,
-                placement.rollDegrees() + roll
+                placement.rollDegrees() + roll,
+                phase
         );
     }
 }
