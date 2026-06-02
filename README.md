@@ -62,7 +62,7 @@ The server owns the gameplay state.
 
 Players with the mod installed get the nicer client-side presentation: the normal passenger render is hidden and the baby is drawn near the carrier's hands.
 
-Modded clients also get optional creature polish for carried babies. Tall and bulky babies such as horses, camels, llamas, pandas, and turtles use a safer tucked-side placement so first-person play stays readable. Petting can trigger small client-only reactions for animals such as chickens, rabbits, foxes, pandas, and turtles. These visuals are cosmetic only.
+Modded clients also get optional creature polish for carried babies. Tall and bulky babies such as horses, camels, llamas, pandas, and turtles use a safer tucked-side placement so first-person play stays readable. Petting can trigger small client-only reactions for animals such as chickens, rabbits, foxes, pandas, and turtles. After the client has observed a carried baby for a while, sleepy visual softening can reduce eligible reaction motion or fall back to stillness where renderer-specific poses are unsafe. These visuals are cosmetic only.
 
 Players without the mod can still connect to a modded server. They see the carried baby through Minecraft's normal passenger rendering, usually above the player. It is less polished, but the animal remains real, visible, and safe.
 
@@ -181,7 +181,7 @@ Client visual options:
 - `carriedBabyReactionsEnabled`: Enables small modded-client-only carried reactions during local feedback moments. Default: `true`.
 - `largeBabyTuckedPoseEnabled`: Enables safer tucked-side placement for tall and bulky carried babies. Default: `true`.
 - `firstPersonLargeBabyVisibilityMode`: Controls local first-person handling for tall and bulky babies. Values: `TUCKED`, `LOWERED`, or `HIDE_WHEN_OBSTRUCTING`. Default: `TUCKED`.
-- `sleepyCarryVisualsEnabled`: Reserved for render-only sleepy softening where safe. Default: `true`.
+- `sleepyCarryVisualsEnabled`: Enables render-only sleepy softening for eligible carried-baby reactions after the client has locally observed the carry for a while. Unsafe or non-eligible reactions fall back to stillness. Default: `true`.
 - `animalReactionIntensity`: Scales cosmetic reaction motion from `0.0` through `1.0`. Default: `0.75`.
 - `disabledCarriedReactionAnimals`: Full entity IDs that should use the generic safe fallback instead of a named carried reaction, such as `["minecraft:panda", "examplemod:duck"]`.
 

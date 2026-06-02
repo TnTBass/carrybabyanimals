@@ -111,6 +111,56 @@ final class CarriedBabyVisualFrameTest {
     }
 
     @Test
+    void disabledSleepyVisualsPreventFrameSoftening() {
+        CarriedBabyPlacement.PlacementResult placement = placement();
+        CarriedBabyReaction reaction = new CarriedBabyReaction(
+                CarriedBabyReactionType.RABBIT_WIGGLE,
+                10,
+                1.0D,
+                0.08D,
+                0.08D,
+                12.0D,
+                0.0D,
+                12.0D,
+                true
+        );
+
+        CarriedBabyRenderState.set(10, 20);
+        CarriedBabyRenderState.startLocalSleepyVisual(10, 0L, 40);
+
+        CarriedBabyVisualFrame disabled = CarriedBabyVisualFrame.evaluate(
+                placement,
+                reaction,
+                0,
+                3,
+                CarriedBabyRenderState.sleepyVisualActiveFor(10, 3L, false),
+                true
+        );
+        CarriedBabyVisualFrame enabled = CarriedBabyVisualFrame.evaluate(
+                placement,
+                reaction,
+                0,
+                3,
+                CarriedBabyRenderState.sleepyVisualActiveFor(10, 3L, true),
+                true
+        );
+
+        assertTrue(Math.abs(enabled.position().x - placement.position().x) < Math.abs(disabled.position().x - placement.position().x));
+        assertTrue(Math.abs(enabled.rollDegrees()) < Math.abs(disabled.rollDegrees()));
+    }
+
+    @Test
+    void sleepyVisualTimingDoesNotAffectCarriedBabyMaps() {
+        CarriedBabyRenderState.set(10, 20);
+
+        CarriedBabyRenderState.startLocalSleepyVisual(10, 100L, 80);
+
+        assertTrue(CarriedBabyRenderState.sleepyVisualActiveFor(10, 120L, true));
+        assertEquals(20, CarriedBabyRenderState.carrierFor(10).orElseThrow());
+        assertEquals(10, CarriedBabyRenderState.carriedBabyFor(20).orElseThrow());
+    }
+
+    @Test
     void multipleReactionTriggersDoNotStackAmplitude() {
         CarriedBabyRenderState.set(10, 20);
         CarriedBabyRenderState.startLocalReaction(10, CarriedBabyReactionType.CHICKEN_FLAP, 100L, 12);

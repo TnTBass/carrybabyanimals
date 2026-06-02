@@ -17,6 +17,9 @@ import java.util.Map;
 import java.util.Set;
 
 public final class CarriedBabyRenderer {
+    private static final int LOCAL_SLEEPY_VISUAL_DELAY_TICKS = 1200;
+    private static final int LOCAL_SLEEPY_VISUAL_DURATION_TICKS = 160;
+
     private CarriedBabyRenderer() {
     }
 
@@ -118,6 +121,16 @@ public final class CarriedBabyRenderer {
                 localFirstPerson,
                 visualConfig.firstPersonLargeBabyVisibilityMode()
         );
+        CarriedBabyRenderState.ensureLocalSleepyVisual(
+                baby.getId(),
+                baby.tickCount + LOCAL_SLEEPY_VISUAL_DELAY_TICKS,
+                LOCAL_SLEEPY_VISUAL_DURATION_TICKS
+        );
+        boolean sleepyVisual = CarriedBabyRenderState.sleepyVisualActiveFor(
+                baby.getId(),
+                baby.tickCount,
+                visualConfig.sleepyCarryVisualsEnabled()
+        );
         return CarriedBabyRenderState.localReactionFor(baby.getId())
                 .filter(reactionState -> baby.tickCount - reactionState.startTick() < reactionState.durationTicks())
                 .map(reactionState -> CarriedBabyVisualFrame.evaluate(
@@ -130,7 +143,7 @@ public final class CarriedBabyRenderer {
                         ),
                         reactionState.startTick(),
                         baby.tickCount,
-                        false,
+                        sleepyVisual,
                         true
                 ))
                 .orElseGet(() -> CarriedBabyVisualFrame.fromPlacement(placement));

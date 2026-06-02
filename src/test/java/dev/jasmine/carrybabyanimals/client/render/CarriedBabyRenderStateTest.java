@@ -123,4 +123,58 @@ final class CarriedBabyRenderStateTest {
         assertTrue(CarriedBabyRenderState.startLocalReaction(10, CarriedBabyReactionType.CHICKEN_FLAP, 100L, 12));
         assertEquals(CarriedBabyReactionType.CHICKEN_FLAP, CarriedBabyRenderState.localReactionFor(10).orElseThrow().type());
     }
+
+    @Test
+    void localSleepyVisualsOnlyStartForKnownCarriedBabies() {
+        assertFalse(CarriedBabyRenderState.startLocalSleepyVisual(10, 100L, 80));
+
+        CarriedBabyRenderState.set(10, 20);
+
+        assertTrue(CarriedBabyRenderState.startLocalSleepyVisual(10, 100L, 80));
+        CarriedBabyRenderState.LocalSleepyVisualState sleepy = CarriedBabyRenderState.localSleepyVisualFor(10).orElseThrow();
+
+        assertEquals(100L, sleepy.startTick());
+        assertEquals(80, sleepy.durationTicks());
+        assertTrue(sleepy.activeAt(100L));
+        assertTrue(sleepy.activeAt(140L));
+        assertTrue(sleepy.activeAt(179L));
+        assertFalse(sleepy.activeAt(180L));
+    }
+
+    @Test
+    void clearingCarryStateClearsLocalSleepyVisualsWithoutChangingCarryMaps() {
+        CarriedBabyRenderState.set(10, 20);
+        CarriedBabyRenderState.startLocalSleepyVisual(10, 100L, 80);
+
+        assertTrue(CarriedBabyRenderState.isCarriedBaby(10));
+        assertTrue(CarriedBabyRenderState.localSleepyVisualFor(10).isPresent());
+
+        CarriedBabyRenderState.clear(10);
+
+        assertFalse(CarriedBabyRenderState.isCarriedBaby(10));
+        assertTrue(CarriedBabyRenderState.localSleepyVisualFor(10).isEmpty());
+    }
+
+    @Test
+    void ensuringLocalSleepyVisualDoesNotRestartExistingWindow() {
+        CarriedBabyRenderState.set(10, 20);
+
+        CarriedBabyRenderState.ensureLocalSleepyVisual(10, 100L, 80);
+        CarriedBabyRenderState.ensureLocalSleepyVisual(10, 200L, 80);
+
+        assertEquals(100L, CarriedBabyRenderState.localSleepyVisualFor(10).orElseThrow().startTick());
+    }
+
+    @Test
+    void replacingCarrierForBabyClearsLocalVisualState() {
+        CarriedBabyRenderState.set(10, 20);
+        CarriedBabyRenderState.startLocalReaction(10, CarriedBabyReactionType.CHICKEN_FLAP, 100L, 12);
+        CarriedBabyRenderState.startLocalSleepyVisual(10, 100L, 80);
+
+        CarriedBabyRenderState.set(10, 21);
+
+        assertEquals(21, CarriedBabyRenderState.carrierFor(10).orElseThrow());
+        assertTrue(CarriedBabyRenderState.localReactionFor(10).isEmpty());
+        assertTrue(CarriedBabyRenderState.localSleepyVisualFor(10).isEmpty());
+    }
 }

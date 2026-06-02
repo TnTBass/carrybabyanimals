@@ -78,6 +78,16 @@ Use this matrix before release candidates and after changes that touch carry sta
 - Verify the baby remains a real passenger entity and no custom client payload is required.
 - Verify pickup, petting, set-down, Nursery Mode, and Parent Reunion behavior remain server-owned.
 
+### Phase 5 Extension: Sleepy Carried-Baby Visuals
+
+- Start a dedicated or integrated test world with CarryBabyAnimals installed on server and client.
+- Carry a baby with a visible named carried reaction, such as a chicken or rabbit.
+- Keep carrying it until the local sleepy visual window is reached.
+- Pet the carried baby during that window.
+- Verify eligible reactions use gentler motion than an immediate non-sleepy pet reaction.
+- Repeat with `sleepyCarryVisualsEnabled` set to `false`.
+- Verify disabling the client visual setting prevents sleepy softening while pickup, petting, set-down, Nursery Mode, Parent Reunion, and vanilla passenger fallback behavior remain unchanged.
+
 ## Config
 
 The config file is `config/carrybabyanimals.json`.

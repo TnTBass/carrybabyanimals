@@ -4,7 +4,7 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
-- Added optional modded-client creature personality polish for carried babies, including safer large-baby first-person placement and gentle animal-specific carried reactions while preserving vanilla-client passenger fallback.
+- Added optional modded-client creature personality polish for carried babies, including safer large-baby first-person placement, gentle animal-specific carried reactions, and render-only sleepy reaction softening while preserving vanilla-client passenger fallback.
 - Improved the optional modded-client carried-baby render with gentler arm placement, subtle motion, and better cleanup of stale carried visuals after client world changes.
 - Added server config support for full entity IDs in `allowedAnimals` and `blockedAnimals`, letting server owners opt into compatible baby animal entities from other mods without enabling any modded animals by default.
 - Fixed startup config filtering so valid modded full entity IDs are not removed before pickup-time entity matching can use them.
