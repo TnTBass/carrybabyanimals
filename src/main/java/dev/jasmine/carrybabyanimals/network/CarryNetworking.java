@@ -4,6 +4,8 @@ import dev.jasmine.carrybabyanimals.CarryBabyAnimals;
 import dev.jasmine.carrybabyanimals.carry.CarryInteractionHandler;
 import dev.jasmine.carrybabyanimals.carry.CarryManager;
 import dev.jasmine.carrybabyanimals.carry.CarryState;
+import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusVersionPayload;
+import dev.jasmine.carrybabyanimals.modstatus.CarryBabyAnimalsModStatus;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -39,6 +41,7 @@ public final class CarryNetworking {
         PayloadTypeRegistry.clientboundPlay().register(SetCarriedPayload.TYPE, SetCarriedPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ClearCarriedPayload.TYPE, ClearCarriedPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(PetFeedbackPayload.TYPE, PetFeedbackPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ServerVersionPayload.TYPE, ServerVersionPayload.CODEC);
         clientboundPlayPayloadsRegistered = true;
     }
 
@@ -74,6 +77,24 @@ public final class CarryNetworking {
 
     public static void sendPetFeedbackToCarrier(ServerPlayer carrier, int babyEntityId) {
         sendIfSupported(carrier, new PetFeedbackPayload(babyEntityId));
+    }
+
+    public static boolean sendServerVersionIfSupported(ServerPlayer player) {
+        return sendConfiguredServerVersionIfSupported(
+                channel -> ServerPlayNetworking.canSend(player, ServerVersionPayload.TYPE),
+                (channel, payload) -> ServerPlayNetworking.send(player, new ServerVersionPayload(payload))
+        );
+    }
+
+    static boolean sendConfiguredServerVersionIfSupported(
+            ModStatusVersionPayload.PayloadSupport support,
+            ModStatusVersionPayload.PayloadSender sender
+    ) {
+        return ModStatusVersionPayload.sendServerVersionIfSupported(
+                CarryBabyAnimalsModStatus.CONFIG,
+                support,
+                sender
+        );
     }
 
     public static void sendPassengerSync(ServerPlayer carrier, Entity baby) {
@@ -212,6 +233,35 @@ public final class CarryNetworking {
         @Override
         public Type<? extends CustomPacketPayload> type() {
             return TYPE;
+        }
+    }
+
+    public record ServerVersionPayload(byte[] encodedVersion) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<ServerVersionPayload> TYPE = new CustomPacketPayload.Type<>(id(CarryBabyAnimalsModStatus.PAYLOAD_PATH));
+        public static final StreamCodec<RegistryFriendlyByteBuf, ServerVersionPayload> CODEC = StreamCodec.of(
+                ServerVersionPayload::write,
+                ServerVersionPayload::read
+        );
+
+        public ServerVersionPayload(String serverVersion) {
+            this(ModStatusVersionPayload.encodeServerVersion(serverVersion));
+        }
+
+        public String serverVersion() {
+            return ModStatusVersionPayload.decodeServerVersion(encodedVersion);
+        }
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+
+        private static void write(RegistryFriendlyByteBuf buffer, ServerVersionPayload payload) {
+            buffer.writeByteArray(payload.encodedVersion());
+        }
+
+        private static ServerVersionPayload read(RegistryFriendlyByteBuf buffer) {
+            return new ServerVersionPayload(buffer.readByteArray());
         }
     }
 }

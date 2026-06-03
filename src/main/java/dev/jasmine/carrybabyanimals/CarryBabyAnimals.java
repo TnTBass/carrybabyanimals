@@ -102,7 +102,10 @@ public final class CarryBabyAnimals implements ModInitializer {
             }
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
-                CarryNetworking.replayVisibleCarries(CARRY_MANAGER, handler.getPlayer())
+                {
+                    CarryNetworking.sendServerVersionIfSupported(handler.getPlayer());
+                    CarryNetworking.replayVisibleCarries(CARRY_MANAGER, handler.getPlayer());
+                }
         );
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 INTERACTIONS.dropCurrent(handler.getPlayer())

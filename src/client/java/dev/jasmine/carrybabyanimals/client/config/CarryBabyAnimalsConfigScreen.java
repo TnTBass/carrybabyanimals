@@ -1,6 +1,8 @@
 package dev.jasmine.carrybabyanimals.client.config;
 
+import dev.jasmine.carrybabyanimals.client.modstatus.ClientModStatusTracker;
 import dev.jasmine.carrybabyanimals.client.render.FirstPersonLargeBabyVisibilityMode;
+import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusDisplay;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.CycleButton;
@@ -15,6 +17,10 @@ import java.util.Arrays;
 public final class CarryBabyAnimalsConfigScreen extends Screen {
     private final Screen parent;
     private final ClientCarryVisualConfigEditState editState;
+    private StringWidget modStatusWidget;
+    private StringWidget modStatusHelpWidget;
+    private String lastModStatusLine = "";
+    private String lastModStatusHelp = "";
 
     public CarryBabyAnimalsConfigScreen(Screen parent) {
         super(Component.literal("Carry Baby Animals"));
@@ -30,6 +36,7 @@ public final class CarryBabyAnimalsConfigScreen extends Screen {
         int rowHeight = layout.rowHeight();
 
         addRenderableOnly(new StringWidget(left, layout.titleY(), contentWidth, rowHeight, Component.literal("Carry Baby Animals"), this.font));
+        addModStatus(layout);
 
         addRenderableWidget(Checkbox.builder(Component.literal("Carried baby reactions"), this.font)
                 .pos(left, layout.reactionsY())
@@ -83,6 +90,11 @@ public final class CarryBabyAnimalsConfigScreen extends Screen {
         }
     }
 
+    @Override
+    public void tick() {
+        refreshModStatus();
+    }
+
     private void saveAndClose(Button button) {
         try {
             ClientCarryVisualConfigManager.save(ClientCarryVisualConfigManager.configPath(), editState.toConfig());
@@ -98,5 +110,53 @@ public final class CarryBabyAnimalsConfigScreen extends Screen {
             case LOWERED -> "Lowered";
             case HIDE_WHEN_OBSTRUCTING -> "Hide when obstructing";
         });
+    }
+
+    private void addModStatus(CarryBabyAnimalsConfigScreenLayout layout) {
+        ModStatusDisplay display = ClientModStatusTracker.display();
+        this.lastModStatusLine = modStatusLine(display);
+        this.lastModStatusHelp = display.helpText();
+        this.modStatusWidget = new StringWidget(
+                layout.left(),
+                layout.statusY(),
+                layout.contentWidth(),
+                layout.rowHeight(),
+                Component.literal(lastModStatusLine),
+                this.font
+        );
+        addRenderableOnly(modStatusWidget);
+        this.modStatusHelpWidget = new StringWidget(
+                layout.left(),
+                layout.statusHelpY(),
+                layout.contentWidth(),
+                layout.rowHeight(),
+                Component.literal(lastModStatusHelp),
+                this.font
+        );
+        addRenderableOnly(modStatusHelpWidget);
+    }
+
+    private void refreshModStatus() {
+        if (modStatusWidget == null || modStatusHelpWidget == null) {
+            return;
+        }
+        ModStatusDisplay display = ClientModStatusTracker.display();
+        String statusLine = modStatusLine(display);
+        String helpText = display.helpText();
+        if (!statusLine.equals(lastModStatusLine)) {
+            lastModStatusLine = statusLine;
+            modStatusWidget.setMessage(Component.literal(statusLine));
+        }
+        if (!helpText.equals(lastModStatusHelp)) {
+            lastModStatusHelp = helpText;
+            modStatusHelpWidget.setMessage(Component.literal(helpText));
+        }
+    }
+
+    private static String modStatusLine(ModStatusDisplay display) {
+        return CarryBabyAnimalsConfigScreenLayout.MOD_STATUS_LABEL_PREFIX
+                + ": " + display.statusLabel()
+                + " | Client " + display.clientVersion()
+                + " | Server " + display.serverVersion();
     }
 }

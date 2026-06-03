@@ -3,6 +3,8 @@ package dev.jasmine.carrybabyanimals.client.config;
 record CarryBabyAnimalsConfigScreenLayout(
         int left,
         int titleY,
+        int statusY,
+        int statusHelpY,
         int reactionsY,
         int tuckedPoseY,
         int firstPersonModeY,
@@ -18,6 +20,7 @@ record CarryBabyAnimalsConfigScreenLayout(
 ) {
     static final String TUCKED_POSE_LABEL = "Third-person large baby side tuck";
     static final String FIRST_PERSON_MODE_LABEL = "First-person large baby placement";
+    static final String MOD_STATUS_LABEL_PREFIX = "Mod status";
 
     private static final int CONTENT_WIDTH = 320;
     private static final int ROW_HEIGHT = 20;
@@ -34,6 +37,10 @@ record CarryBabyAnimalsConfigScreenLayout(
         int rowSpacing = screenHeight < 340 ? 23 : 27;
         int labelInputGap = screenHeight < 340 ? 0 : 2;
 
+        int statusY = y;
+        y += rowSpacing;
+        int statusHelpY = y;
+        y += rowSpacing;
         int reactionsY = y;
         y += rowSpacing;
         int tuckedPoseY = y;
@@ -51,6 +58,8 @@ record CarryBabyAnimalsConfigScreenLayout(
         return new CarryBabyAnimalsConfigScreenLayout(
                 left,
                 titleY,
+                statusY,
+                statusHelpY,
                 reactionsY,
                 tuckedPoseY,
                 firstPersonModeY,

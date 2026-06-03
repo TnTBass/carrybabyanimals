@@ -1,10 +1,12 @@
 package dev.jasmine.carrybabyanimals.client;
 
 import dev.jasmine.carrybabyanimals.client.config.ClientCarryVisualConfigManager;
+import dev.jasmine.carrybabyanimals.client.modstatus.ClientModStatusTracker;
 import dev.jasmine.carrybabyanimals.client.render.CarriedBabyRenderState;
 import dev.jasmine.carrybabyanimals.client.render.CarriedBabyRenderer;
 import dev.jasmine.carrybabyanimals.network.CarryNetworking;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.event.client.player.ClientPreAttackCallback;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -38,7 +40,17 @@ public final class CarryBabyAnimalsClient implements ClientModInitializer {
                         ClientCarryInteractionHandler.onPetFeedback(payload.babyEntityId())
                 )
         );
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> CarriedBabyRenderState.clearAll());
+        ClientPlayNetworking.registerGlobalReceiver(CarryNetworking.ServerVersionPayload.TYPE, (payload, context) ->
+                context.client().execute(() ->
+                        ClientModStatusTracker.onServerVersion(payload.serverVersion())
+                )
+        );
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> ClientModStatusTracker.onJoin());
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            CarriedBabyRenderState.clearAll();
+            ClientModStatusTracker.onDisconnect();
+        });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> ClientModStatusTracker.tick());
         ClientPreAttackCallback.EVENT.register(ClientCarryInteractionHandler::onPreAttack);
         CarriedBabyRenderer.register();
     }
