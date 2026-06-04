@@ -4,16 +4,14 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
-- Added Nursery Mode safety checks that keep carried babies from being set down in dangerous spots such as lava, fire, cactus, damaging blocks, cramped spaces, and unsafe drops.
-- Added Parent Reunion feedback so safely setting down a carried baby near a matching adult can show hearts and a warm action-bar message.
-- Added server config support for full entity IDs in `allowedAnimals` and `blockedAnimals`, letting server owners opt into compatible baby animal entities from other mods without enabling modded animals by default.
-- Added optional ModMenu integration so modded clients can edit Carry Baby Animals client visual settings without hand-editing `config/carrybabyanimals-client.json`.
-- Added an optional ModMenu connection status indicator so players can see whether the server also has Carry Baby Animals installed.
-- Improved modded-client carried-baby visuals with safer large-baby first-person placement, gentler arm positioning, subtle motion, animal-specific carried reactions, and clearer sleepy/asleep poses.
-- Improved sleepy/asleep carried-cat visuals so supported feline babies use a curled lie-down pose while carried.
-- Fixed stale carried-baby visuals after client world changes.
-- Fixed the mod metadata icon so Minecraft and ModMenu show the Carry Baby Animals icon instead of the fallback question mark.
-- Changed Nursery Mode bypass to default to disabled when Fabric Permissions API is installed, so permission providers must explicitly grant `carrybabyanimals.nursery.bypass`.
+- Nursery Mode now helps keep carried babies out of trouble by refusing set-downs in unsafe spots like lava, fire, cactus, cramped spaces, and dangerous drops.
+- Nursery Mode bypass now defaults to off when Fabric Permissions API is installed, so permission providers must explicitly grant `carrybabyanimals.nursery.bypass`.
+- Setting a carried baby down near a matching adult can now show a little Parent Reunion moment with hearts and a warm action-bar message.
+- Server owners can now use full entity IDs in `allowedAnimals` and `blockedAnimals`, making it easier to opt into compatible baby animals from other mods without enabling modded animals by default.
+- With Carry Baby Animals installed on the client, players can now edit visual settings directly through ModMenu.
+- ModMenu now includes a small connection status indicator that shows whether the server also has Carry Baby Animals installed, including the client and server versions when available.
+- Client-side carried-baby visuals now look better, with gentler arm placement, safer first-person positioning for large babies, subtle movement, animal-specific reactions, and clearer sleepy/asleep poses.
+- Carried baby cats and ocelots now curl up into a more recognizable sleeping pose when they get sleepy.
 
 ## 0.1.3
 
