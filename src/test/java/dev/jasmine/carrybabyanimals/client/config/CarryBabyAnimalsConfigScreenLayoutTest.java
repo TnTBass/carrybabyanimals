@@ -15,11 +15,20 @@ final class CarryBabyAnimalsConfigScreenLayoutTest {
     }
 
     @Test
-    void veryCompactScreenKeepsStatusAndFooterRowsOrdered() {
+    void veryCompactScreenKeepsTitleStatusAndFooterRowsOrdered() {
         CarryBabyAnimalsConfigScreenLayout layout = CarryBabyAnimalsConfigScreenLayout.create(480, 240);
 
-        assertTrue(layout.statusHelpY() + layout.rowHeight() <= layout.reactionsY());
+        assertTrue(layout.statusY() >= layout.titleY());
+        assertTrue(layout.statusY() + layout.statusWidth() <= layout.titleY() + layout.rowHeight());
+        assertTrue(layout.left() + layout.titleWidth() < layout.statusX());
         assertTrue(layout.disabledAnimalsInputY() + layout.rowHeight() <= layout.buttonY());
+    }
+
+    @Test
+    void statusDoesNotPushControlsBelowTitleSpacing() {
+        CarryBabyAnimalsConfigScreenLayout layout = CarryBabyAnimalsConfigScreenLayout.create(480, 320);
+
+        assertTrue(layout.reactionsY() <= layout.titleY() + 28);
     }
 
     @Test
@@ -28,8 +37,4 @@ final class CarryBabyAnimalsConfigScreenLayoutTest {
         assertEquals("First-person large baby placement", CarryBabyAnimalsConfigScreenLayout.FIRST_PERSON_MODE_LABEL);
     }
 
-    @Test
-    void exposesNativeModStatusSectionLabel() {
-        assertEquals("Mod status", CarryBabyAnimalsConfigScreenLayout.MOD_STATUS_LABEL_PREFIX);
-    }
 }

@@ -40,4 +40,9 @@ public final class ClientModStatusTracker {
             STATE.markServerNotDetectedIfUnknown();
         }
     }
+
+    static void resetForTesting() {
+        STATE.disconnected();
+        unknownTicks = 0;
+    }
 }

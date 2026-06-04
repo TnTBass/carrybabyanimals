@@ -11,7 +11,7 @@
     "issues": "https://github.com/TnTBass/carrybabyanimals/issues"
   },
   "license": "MIT",
-  "icon": "assets/carrybabyanimals/icon.png",
+  "icon": "assets/carrybabyanimals/icon_128.png",
   "environment": "*",
   "entrypoints": {
     "main": [

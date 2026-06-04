@@ -4,6 +4,9 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
+- Moved the optional ModMenu connection status into a small hoverable status dot so it no longer pushes config controls down or overlaps text.
+- Kept the optional connection status independent of Carry Baby Animals gameplay packets by using its own capability-gated status payload.
+- Fixed the mod metadata icon path to use a standard 128x128 icon so Minecraft and ModMenu show the Carry Baby Animals icon instead of the fallback question mark.
 - Added optional ModMenu integration so modded clients can edit Carry Baby Animals client visual settings without hand-editing `config/carrybabyanimals-client.json`.
 - Improved sleepy/asleep carried-cat visuals so supported feline babies use the vanilla curled lie-down pose instead of only moving lower in the player's arms.
 - Fixed sleepy/asleep carried-baby visuals so the readable tucked pose is applied to the actual client render state instead of only the internal visual frame.

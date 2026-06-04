@@ -3,24 +3,25 @@ package dev.jasmine.carrybabyanimals.client.config;
 import dev.jasmine.carrybabyanimals.client.modstatus.ClientModStatusTracker;
 import dev.jasmine.carrybabyanimals.client.render.FirstPersonLargeBabyVisibilityMode;
 import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusDisplay;
+import dev.jasmine.carrybabyanimals.internal.modstatus.StatusTone;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public final class CarryBabyAnimalsConfigScreen extends Screen {
     private final Screen parent;
     private final ClientCarryVisualConfigEditState editState;
-    private StringWidget modStatusWidget;
-    private StringWidget modStatusHelpWidget;
-    private String lastModStatusLine = "";
-    private String lastModStatusHelp = "";
 
     public CarryBabyAnimalsConfigScreen(Screen parent) {
         super(Component.literal("Carry Baby Animals"));
@@ -35,7 +36,7 @@ public final class CarryBabyAnimalsConfigScreen extends Screen {
         int contentWidth = layout.contentWidth();
         int rowHeight = layout.rowHeight();
 
-        addRenderableOnly(new StringWidget(left, layout.titleY(), contentWidth, rowHeight, Component.literal("Carry Baby Animals"), this.font));
+        addRenderableOnly(new StringWidget(left, layout.titleY(), layout.titleWidth(), rowHeight, Component.literal("Carry Baby Animals"), this.font));
         addModStatus(layout);
 
         addRenderableWidget(Checkbox.builder(Component.literal("Carried baby reactions"), this.font)
@@ -90,11 +91,6 @@ public final class CarryBabyAnimalsConfigScreen extends Screen {
         }
     }
 
-    @Override
-    public void tick() {
-        refreshModStatus();
-    }
-
     private void saveAndClose(Button button) {
         try {
             ClientCarryVisualConfigManager.save(ClientCarryVisualConfigManager.configPath(), editState.toConfig());
@@ -113,50 +109,52 @@ public final class CarryBabyAnimalsConfigScreen extends Screen {
     }
 
     private void addModStatus(CarryBabyAnimalsConfigScreenLayout layout) {
-        ModStatusDisplay display = ClientModStatusTracker.display();
-        this.lastModStatusLine = modStatusLine(display);
-        this.lastModStatusHelp = display.helpText();
-        this.modStatusWidget = new StringWidget(
-                layout.left(),
-                layout.statusY(),
-                layout.contentWidth(),
-                layout.rowHeight(),
-                Component.literal(lastModStatusLine),
-                this.font
-        );
-        addRenderableOnly(modStatusWidget);
-        this.modStatusHelpWidget = new StringWidget(
-                layout.left(),
-                layout.statusHelpY(),
-                layout.contentWidth(),
-                layout.rowHeight(),
-                Component.literal(lastModStatusHelp),
-                this.font
-        );
-        addRenderableOnly(modStatusHelpWidget);
+        addRenderableOnly(new ConnectionStatusDot(layout));
     }
 
-    private void refreshModStatus() {
-        if (modStatusWidget == null || modStatusHelpWidget == null) {
-            return;
-        }
-        ModStatusDisplay display = ClientModStatusTracker.display();
-        String statusLine = modStatusLine(display);
-        String helpText = display.helpText();
-        if (!statusLine.equals(lastModStatusLine)) {
-            lastModStatusLine = statusLine;
-            modStatusWidget.setMessage(Component.literal(statusLine));
-        }
-        if (!helpText.equals(lastModStatusHelp)) {
-            lastModStatusHelp = helpText;
-            modStatusHelpWidget.setMessage(Component.literal(helpText));
-        }
+    private static int toneColor(StatusTone tone) {
+        return switch (tone) {
+            case GREEN -> 0xFF55FF55;
+            case ORANGE -> 0xFFFFAA00;
+            case GRAY -> 0xFFAAAAAA;
+        };
     }
 
-    private static String modStatusLine(ModStatusDisplay display) {
-        return CarryBabyAnimalsConfigScreenLayout.MOD_STATUS_LABEL_PREFIX
-                + ": " + display.statusLabel()
-                + " | Client " + display.clientVersion()
-                + " | Server " + display.serverVersion();
+    private static List<Component> tooltipLines(ModStatusDisplay display) {
+        List<Component> lines = new ArrayList<>();
+        lines.add(Component.literal(display.displayName()));
+        lines.add(Component.literal("Status: " + display.statusLabel()));
+        lines.add(Component.literal("Client: " + display.clientVersion()));
+        lines.add(Component.literal("Server: " + display.serverVersion()));
+        if (!display.helpText().isEmpty()) {
+            lines.add(Component.literal(display.helpText()));
+        }
+        return lines;
+    }
+
+    private final class ConnectionStatusDot implements Renderable {
+        private final int x;
+        private final int y;
+        private final int size;
+
+        private ConnectionStatusDot(CarryBabyAnimalsConfigScreenLayout layout) {
+            this.x = layout.statusX();
+            this.y = layout.statusY();
+            this.size = layout.statusWidth();
+        }
+
+        @Override
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+            ModStatusDisplay display = ClientModStatusTracker.display();
+            graphics.fill(x, y, x + size, y + size, 0xAA000000);
+            graphics.fill(x + 1, y + 1, x + size - 1, y + size - 1, toneColor(display.tone()));
+            if (isHovered(mouseX, mouseY)) {
+                graphics.setComponentTooltipForNextFrame(font, tooltipLines(display), mouseX, mouseY);
+            }
+        }
+
+        private boolean isHovered(int mouseX, int mouseY) {
+            return mouseX >= x && mouseX < x + size && mouseY >= y && mouseY < y + size;
+        }
     }
 }
