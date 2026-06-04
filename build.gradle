@@ -70,9 +70,16 @@ tasks.register("checkReleasePublishingSources", Exec) {
     commandLine "pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${rootDir}/scripts/test-release-publishing-sources.ps1"
 }
 
+tasks.register("checkReleaseNotesStyle", Exec) {
+    group = "verification"
+    description = "Requires CHANGELOG.md release notes to be written for players and server admins."
+    commandLine "python", "${rootDir}/scripts/check-changelog-style.py"
+}
+
 tasks.named("check") {
     dependsOn tasks.named("checkChangelog")
     dependsOn tasks.named("checkReleasePublishingSources")
+    dependsOn tasks.named("checkReleaseNotesStyle")
 }
 
 tasks.register("showPublicReleaseNotes", Exec) {

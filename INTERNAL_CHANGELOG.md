@@ -4,6 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Added a public changelog style gate, modeled on MultiGolem, so release notes stay framed for players and server admins instead of implementation history.
 - Embedded ModStatusKit 0.1.1 from `TnTBass/ModStatusKit` commit `06f37b9` under this mod's internal package and wired passive, capability-gated client/server version status display.
 - Added a Phase 5 extension sleepy carried-baby visuals implementation plan for clearer client-only sleepy/asleep presentation.
 - Added a Phase 5 extension sleepy carried-baby visuals design spec for clearer client-only sleepy/asleep presentation while preserving vanilla fallback.

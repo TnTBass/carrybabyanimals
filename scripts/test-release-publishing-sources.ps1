@@ -27,6 +27,17 @@ function Assert-NotContains {
     }
 }
 
+function Assert-True {
+    param(
+        [bool] $Condition,
+        [string] $Message
+    )
+
+    if (-not $Condition) {
+        throw $Message
+    }
+}
+
 function Get-Text {
     param([string] $RelativePath)
 
@@ -122,6 +133,72 @@ function Test-GradleRunsReleasePublishingSourceGate {
     Assert-Contains $build 'dependsOn tasks.named("checkReleasePublishingSources")' 'Gradle check must depend on checkReleasePublishingSources.'
 }
 
+function Test-GradleRunsReleaseNotesStyleGate {
+    $build = Get-Text 'build.gradle'
+
+    Assert-Contains $build 'tasks.register("checkReleaseNotesStyle"' 'Gradle must register checkReleaseNotesStyle.'
+    Assert-Contains $build 'scripts/check-changelog-style.py' 'Release notes style gate must run the changelog style checker.'
+    Assert-Contains $build 'dependsOn tasks.named("checkReleaseNotesStyle")' 'Gradle check must depend on checkReleaseNotesStyle.'
+}
+
+function Test-ChangelogStyleScriptFlagsDevelopmentLogEntries {
+    $script = Join-Path $RepoRoot 'scripts/check-changelog-style.py'
+    if (-not (Test-Path -LiteralPath $script)) {
+        throw 'scripts/check-changelog-style.py is missing.'
+    }
+
+    $caseRoot = Join-Path $RepoRoot 'build/release-notes-style-tests'
+    New-Item -ItemType Directory -Force $caseRoot | Out-Null
+    $caseChangelog = Join-Path $caseRoot 'CHANGELOG.md'
+    @'
+# CarryBabyAnimals Changelog
+
+## Unreleased
+
+- Added Nursery Mode safety checks so carried babies are not set down in lava.
+- Fixed CarryStateMixin TAIL inject handling for task 5.
+'@ | Set-Content -Encoding UTF8 $caseChangelog
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $output = & python $script --changelog $caseChangelog --section Unreleased 2>&1
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    Assert-True ($LASTEXITCODE -ne 0) 'Development-log changelog entry unexpectedly passed style gate.'
+    Assert-Contains ($output -join "`n") 'players/server admins' 'Style gate failure should explain the public changelog audience.'
+    Assert-Contains ($output -join "`n") 'mixin implementation detail' 'Style gate should flag mixin implementation details.'
+}
+
+function Test-ChangelogStyleScriptAllowsPlayerAdminReleaseNotes {
+    $script = Join-Path $RepoRoot 'scripts/check-changelog-style.py'
+    if (-not (Test-Path -LiteralPath $script)) {
+        throw 'scripts/check-changelog-style.py is missing.'
+    }
+
+    $caseRoot = Join-Path $RepoRoot 'build/release-notes-style-tests'
+    New-Item -ItemType Directory -Force $caseRoot | Out-Null
+    $caseChangelog = Join-Path $caseRoot 'CHANGELOG.md'
+    @'
+# CarryBabyAnimals Changelog
+
+## Unreleased
+
+- Added Nursery Mode safety checks so carried babies are not set down in lava, fire, cactus, cramped spaces, or unsafe drops.
+- Added server config support for full entity IDs in `allowedAnimals` and `blockedAnimals`.
+'@ | Set-Content -Encoding UTF8 $caseChangelog
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $output = & python $script --changelog $caseChangelog --section Unreleased 2>&1
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    Assert-True ($LASTEXITCODE -eq 0) "Player/admin changelog entry failed style gate: $($output -join "`n")"
+}
+
 function Test-FabricPermissionsApiIsOptional {
     $modJson = Get-Text 'src/main/resources/fabric.mod.json' | ConvertFrom-Json
 
@@ -176,6 +253,9 @@ Test-ModrinthUploadEnforcesRequiredServerOptionalClient
 Test-CurseForgeUploadDocumentsSideLimitAndDependencies
 Test-CurseForgeOnlyRetryWorkflow
 Test-GradleRunsReleasePublishingSourceGate
+Test-GradleRunsReleaseNotesStyleGate
+Test-ChangelogStyleScriptFlagsDevelopmentLogEntries
+Test-ChangelogStyleScriptAllowsPlayerAdminReleaseNotes
 Test-FabricPermissionsApiIsOptional
 Test-MarketplaceDescriptionExists
 Test-ReadmeContainsReleaseCriticalFacts
