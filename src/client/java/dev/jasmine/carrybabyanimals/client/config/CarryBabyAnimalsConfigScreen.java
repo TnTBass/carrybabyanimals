@@ -20,6 +20,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class CarryBabyAnimalsConfigScreen extends Screen {
+    static final int STATUS_SQUARE_SIZE = 8;
+    static final int STATUS_SQUARE_BORDER_COLOR = 0xFF222222;
+
     private final Screen parent;
     private final ClientCarryVisualConfigEditState editState;
 
@@ -115,21 +118,36 @@ public final class CarryBabyAnimalsConfigScreen extends Screen {
     private static int toneColor(StatusTone tone) {
         return switch (tone) {
             case GREEN -> 0xFF55FF55;
+            case TEAL -> 0xFF55FFFF;
             case ORANGE -> 0xFFFFAA00;
+            case RED -> 0xFFFF5555;
             case GRAY -> 0xFFAAAAAA;
         };
     }
 
     private static List<Component> tooltipLines(ModStatusDisplay display) {
-        List<Component> lines = new ArrayList<>();
-        lines.add(Component.literal(display.displayName()));
-        lines.add(Component.literal("Status: " + display.statusLabel()));
-        lines.add(Component.literal("Client: " + display.clientVersion()));
-        lines.add(Component.literal("Server: " + display.serverVersion()));
+        return tooltipText(display).stream()
+                .<Component>map(Component::literal)
+                .toList();
+    }
+
+    static List<String> tooltipText(ModStatusDisplay display) {
+        List<String> text = new ArrayList<>();
+        text.add(display.displayName());
+        text.add("Status: " + display.statusLabel());
+        text.add("Client: " + versionWithBuild(display.clientVersion(), display.clientBuild()));
+        text.add("Server: " + versionWithBuild(display.serverVersion(), display.serverBuild()));
         if (!display.helpText().isEmpty()) {
-            lines.add(Component.literal(display.helpText()));
+            text.add(display.helpText());
         }
-        return lines;
+        return text;
+    }
+
+    private static String versionWithBuild(String version, String build) {
+        if (version == null || version.isBlank()) {
+            return "Unknown";
+        }
+        return build == null || build.isBlank() || "dev".equalsIgnoreCase(build) ? version : version + "+" + build;
     }
 
     private final class ConnectionStatusDot implements Renderable {
@@ -146,7 +164,7 @@ public final class CarryBabyAnimalsConfigScreen extends Screen {
         @Override
         public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             ModStatusDisplay display = ClientModStatusTracker.display();
-            graphics.fill(x, y, x + size, y + size, 0xAA000000);
+            graphics.fill(x, y, x + size, y + size, STATUS_SQUARE_BORDER_COLOR);
             graphics.fill(x + 1, y + 1, x + size - 1, y + size - 1, toneColor(display.tone()));
             if (isHovered(mouseX, mouseY)) {
                 graphics.setComponentTooltipForNextFrame(font, tooltipLines(display), mouseX, mouseY);

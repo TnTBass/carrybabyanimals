@@ -5,6 +5,8 @@ package dev.jasmine.carrybabyanimals.internal.modstatus;
  */
 public enum StatusTone {
     GREEN,
+    TEAL,
     ORANGE,
+    RED,
     GRAY
 }

@@ -2,6 +2,7 @@ package dev.jasmine.carrybabyanimals.client.modstatus;
 
 import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusClientState;
 import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusDisplay;
+import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusServerStatus;
 import dev.jasmine.carrybabyanimals.modstatus.CarryBabyAnimalsModStatus;
 
 public final class ClientModStatusTracker {
@@ -23,6 +24,11 @@ public final class ClientModStatusTracker {
 
     public static void onServerVersion(String serverVersion) {
         STATE.connected(serverVersion);
+        unknownTicks = 0;
+    }
+
+    public static void onServerStatus(ModStatusServerStatus serverStatus) {
+        STATE.connected(serverStatus);
         unknownTicks = 0;
     }
 

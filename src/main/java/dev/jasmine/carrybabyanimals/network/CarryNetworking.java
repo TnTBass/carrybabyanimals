@@ -5,6 +5,8 @@ import dev.jasmine.carrybabyanimals.carry.CarryInteractionHandler;
 import dev.jasmine.carrybabyanimals.carry.CarryManager;
 import dev.jasmine.carrybabyanimals.carry.CarryState;
 import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusVersionPayload;
+import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusServerStatus;
+import dev.jasmine.carrybabyanimals.internal.modstatus.VersionMismatchSeverity;
 import dev.jasmine.carrybabyanimals.modstatus.CarryBabyAnimalsModStatus;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -90,8 +92,9 @@ public final class CarryNetworking {
             ModStatusVersionPayload.PayloadSupport support,
             ModStatusVersionPayload.PayloadSender sender
     ) {
-        return ModStatusVersionPayload.sendServerVersionIfSupported(
+        return ModStatusVersionPayload.sendServerStatusIfSupported(
                 CarryBabyAnimalsModStatus.CONFIG,
+                VersionMismatchSeverity.WARN,
                 support,
                 sender
         );
@@ -237,6 +240,8 @@ public final class CarryNetworking {
     }
 
     public record ServerVersionPayload(byte[] encodedVersion) implements CustomPacketPayload {
+        static final int MAX_ENCODED_BYTES = 256;
+
         public static final CustomPacketPayload.Type<ServerVersionPayload> TYPE = new CustomPacketPayload.Type<>(id(CarryBabyAnimalsModStatus.PAYLOAD_PATH));
         public static final StreamCodec<RegistryFriendlyByteBuf, ServerVersionPayload> CODEC = StreamCodec.of(
                 ServerVersionPayload::write,
@@ -251,6 +256,10 @@ public final class CarryNetworking {
             return ModStatusVersionPayload.decodeServerVersion(encodedVersion);
         }
 
+        public ModStatusServerStatus serverStatus() {
+            return ModStatusVersionPayload.decodeServerStatus(encodedVersion);
+        }
+
         @Override
         public Type<? extends CustomPacketPayload> type() {
             return TYPE;
@@ -261,7 +270,7 @@ public final class CarryNetworking {
         }
 
         private static ServerVersionPayload read(RegistryFriendlyByteBuf buffer) {
-            return new ServerVersionPayload(buffer.readByteArray());
+            return new ServerVersionPayload(buffer.readByteArray(MAX_ENCODED_BYTES));
         }
     }
 

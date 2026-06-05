@@ -19,11 +19,13 @@ public final class ModStatusMessages {
     public static ModStatusMessages defaults() {
         return builder()
                 .label(VersionStatus.MATCHED, "Matched")
+                .label(VersionStatus.BUILD_DIFFERENT, "Same version, different builds")
                 .label(VersionStatus.DIFFERENT, "Different versions")
                 .label(VersionStatus.DISCONNECTED, "Disconnected")
                 .label(VersionStatus.SERVER_NOT_DETECTED, "Server not detected")
                 .label(VersionStatus.UNKNOWN, "Unknown")
                 .help(VersionStatus.MATCHED, "Client and server versions match.")
+                .help(VersionStatus.BUILD_DIFFERENT, "Client and server versions match, but their build details differ.")
                 .help(VersionStatus.DIFFERENT, "Different versions may affect optional features.")
                 .help(VersionStatus.DISCONNECTED, "Not connected to a server or world.")
                 .help(VersionStatus.SERVER_NOT_DETECTED, "No matching server-side mod was detected.")
@@ -72,6 +74,7 @@ public final class ModStatusMessages {
         private static String defaultLabel(VersionStatus status) {
             return switch (status) {
                 case MATCHED -> "Matched";
+                case BUILD_DIFFERENT -> "Same version, different builds";
                 case DIFFERENT -> "Different versions";
                 case DISCONNECTED -> "Disconnected";
                 case SERVER_NOT_DETECTED -> "Server not detected";

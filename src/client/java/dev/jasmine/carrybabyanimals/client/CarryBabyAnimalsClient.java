@@ -42,7 +42,7 @@ public final class CarryBabyAnimalsClient implements ClientModInitializer {
         );
         ClientPlayNetworking.registerGlobalReceiver(CarryNetworking.ServerVersionPayload.TYPE, (payload, context) ->
                 context.client().execute(() ->
-                        ClientModStatusTracker.onServerVersion(payload.serverVersion())
+                        ClientModStatusTracker.onServerStatus(payload.serverStatus())
                 )
         );
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> ClientModStatusTracker.onJoin());

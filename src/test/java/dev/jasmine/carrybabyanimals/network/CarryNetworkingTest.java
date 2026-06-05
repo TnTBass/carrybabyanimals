@@ -1,6 +1,10 @@
 package dev.jasmine.carrybabyanimals.network;
 
+import dev.jasmine.carrybabyanimals.CarryBabyAnimals;
+import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusConfig;
 import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusVersionPayload;
+import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusVersion;
+import dev.jasmine.carrybabyanimals.internal.modstatus.VersionMismatchSeverity;
 import dev.jasmine.carrybabyanimals.modstatus.CarryBabyAnimalsModStatus;
 import org.junit.jupiter.api.Test;
 
@@ -25,10 +29,65 @@ final class CarryNetworkingTest {
         CarryNetworking.ServerVersionPayload payload = new CarryNetworking.ServerVersionPayload("0.1.3");
 
         assertEquals("0.1.3", payload.serverVersion());
+        assertEquals(
+                VersionMismatchSeverity.WARN,
+                ModStatusVersionPayload.decodeServerStatus(payload.encodedVersion()).versionMismatchSeverity()
+        );
     }
 
     @Test
-    void configuredServerVersionPayloadIsCapabilityGated() {
+    void serverVersionPayloadRoundTripsBuildMetadata() {
+        CarryNetworking.ServerVersionPayload payload = new CarryNetworking.ServerVersionPayload("0.1.3+12345");
+        var version = ModStatusVersionPayload.decodeServerVersionInfo(payload.encodedVersion());
+
+        assertEquals("0.1.3", version.version());
+        assertEquals("12345", version.build());
+        assertEquals(
+                VersionMismatchSeverity.WARN,
+                ModStatusVersionPayload.decodeServerStatus(payload.encodedVersion()).versionMismatchSeverity()
+        );
+    }
+
+    @Test
+    void serverVersionPayloadRoundTripsStructuredWarnStatus() {
+        byte[] encoded = ModStatusVersionPayload.encodeServerStatus(
+                "0.1.3",
+                "12345",
+                VersionMismatchSeverity.WARN
+        );
+        CarryNetworking.ServerVersionPayload payload = new CarryNetworking.ServerVersionPayload(encoded);
+        var status = payload.serverStatus();
+
+        assertEquals("0.1.3", status.serverVersion());
+        assertEquals("12345", status.serverBuild());
+        assertEquals(VersionMismatchSeverity.WARN, status.versionMismatchSeverity());
+        assertEquals("0.1.3+12345", payload.serverVersion());
+    }
+
+    @Test
+    void structuredStatusPayloadWithReleaseCandidateBuildFitsCodecLimit() {
+        byte[] encoded = ModStatusVersionPayload.encodeServerStatus(
+                "0.2.0",
+                "manual-test-0.2.0",
+                VersionMismatchSeverity.WARN
+        );
+
+        assertTrue(encoded.length > 64, "This regression payload should cover the old too-small decode cap.");
+        assertTrue(encoded.length <= CarryNetworking.ServerVersionPayload.MAX_ENCODED_BYTES);
+    }
+
+    @Test
+    void structuredPayloadWithBlankBuildDecodesAsNoBuild() {
+        String encoded = "MSK2\nversion=0.1.3\nbuild= \nversionMismatchSeverity=WARN\n";
+        var status = ModStatusVersionPayload.decodeServerStatus(encoded.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        assertEquals("0.1.3", status.serverVersion());
+        assertNull(status.serverBuild());
+        assertEquals(VersionMismatchSeverity.WARN, status.versionMismatchSeverity());
+    }
+
+    @Test
+    void configuredServerStatusPayloadIsCapabilityGatedAndWarnSeverity() {
         RecordingPayloadSender sender = new RecordingPayloadSender();
 
         assertFalse(CarryNetworking.sendConfiguredServerVersionIfSupported(channel -> false, sender));
@@ -40,7 +99,28 @@ final class CarryNetworkingTest {
             return true;
         }, sender));
         assertEquals("carrybabyanimals:server_version", sender.channel);
-        assertEquals(CarryBabyAnimalsModStatus.CONFIG.clientVersion(), ModStatusVersionPayload.decodeServerVersion(sender.payload));
+        var sentStatus = ModStatusVersionPayload.decodeServerStatus(sender.payload);
+        assertEquals(CarryBabyAnimalsModStatus.CONFIG.clientVersion(), sentStatus.serverVersion());
+        assertEquals(CarryBabyAnimalsModStatus.CONFIG.clientBuild(), sentStatus.serverBuild());
+        assertEquals(VersionMismatchSeverity.WARN, sentStatus.versionMismatchSeverity());
+        assertEquals(
+                ModStatusVersion.of(CarryBabyAnimalsModStatus.CONFIG.clientVersion(), CarryBabyAnimalsModStatus.CONFIG.clientBuild()).toPayloadString(),
+                ModStatusVersionPayload.decodeServerVersion(sender.payload)
+        );
+    }
+
+    @Test
+    void legacyServerVersionSenderSupportsConfigsWithoutBuildMetadata() {
+        ModStatusConfig noBuildConfig = ModStatusConfig.builder()
+                .modId(CarryBabyAnimals.MOD_ID)
+                .displayName(CarryBabyAnimalsModStatus.DISPLAY_NAME)
+                .clientVersion(CarryBabyAnimalsModStatus.CONFIG.clientVersion())
+                .payloadChannel(CarryBabyAnimals.MOD_ID, CarryBabyAnimalsModStatus.PAYLOAD_PATH)
+                .build();
+        RecordingPayloadSender sender = new RecordingPayloadSender();
+
+        assertTrue(ModStatusVersionPayload.sendServerVersionIfSupported(noBuildConfig, channel -> true, sender));
+        assertEquals(noBuildConfig.clientVersion(), ModStatusVersionPayload.decodeServerVersion(sender.payload));
     }
 
     private static final class RecordingPayloadSender implements dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusVersionPayload.PayloadSender {

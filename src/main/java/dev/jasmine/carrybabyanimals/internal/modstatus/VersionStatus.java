@@ -5,6 +5,7 @@ package dev.jasmine.carrybabyanimals.internal.modstatus;
  */
 public enum VersionStatus {
     MATCHED,
+    BUILD_DIFFERENT,
     DIFFERENT,
     DISCONNECTED,
     SERVER_NOT_DETECTED,
@@ -12,7 +13,7 @@ public enum VersionStatus {
 
     public StatusTone tone() {
         return switch (this) {
-            case MATCHED -> StatusTone.GREEN;
+            case MATCHED, BUILD_DIFFERENT -> StatusTone.GREEN;
             case DIFFERENT -> StatusTone.ORANGE;
             case DISCONNECTED, SERVER_NOT_DETECTED, UNKNOWN -> StatusTone.GRAY;
         };

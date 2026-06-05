@@ -1,6 +1,7 @@
 package dev.jasmine.carrybabyanimals.modstatus;
 
 import dev.jasmine.carrybabyanimals.CarryBabyAnimals;
+import dev.jasmine.carrybabyanimals.BuildInfo;
 import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusConfig;
 import dev.jasmine.carrybabyanimals.internal.modstatus.ModStatusMessages;
 import dev.jasmine.carrybabyanimals.internal.modstatus.VersionStatus;
@@ -14,10 +15,12 @@ public final class CarryBabyAnimalsModStatus {
             .modId(CarryBabyAnimals.MOD_ID)
             .displayName(DISPLAY_NAME)
             .clientVersion(currentVersion())
+            .clientBuild(BuildInfo.BUILD_NUMBER)
             .updateUrl(UPDATE_URL)
             .payloadChannel(CarryBabyAnimals.MOD_ID, PAYLOAD_PATH)
             .messages(ModStatusMessages.builder()
                     .help(VersionStatus.MATCHED, "Client and server versions match.")
+                    .help(VersionStatus.BUILD_DIFFERENT, "Client and server are compatible, but their build details differ.")
                     .help(VersionStatus.DIFFERENT, "Different versions may miss or hide optional visuals. Gameplay remains compatible.")
                     .help(VersionStatus.DISCONNECTED, "Not connected to a server or world.")
                     .help(VersionStatus.SERVER_NOT_DETECTED, "This server does not appear to have Carry Baby Animals installed.")

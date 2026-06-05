@@ -47,6 +47,10 @@ public final class ModStatusClientState {
         snapshot = ModStatusKit.connected(config, serverVersion);
     }
 
+    public void connected(ModStatusServerStatus serverStatus) {
+        snapshot = ModStatusKit.connected(config, serverStatus);
+    }
+
     public boolean markServerNotDetectedIfUnknown() {
         if (snapshot.status() != VersionStatus.UNKNOWN) {
             return false;
