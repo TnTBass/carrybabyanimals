@@ -4,6 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Accepted the Phase 1 Fabric-preserving multiloader refactor baseline after a clean general playtest found no issues in the exercised paths; remaining untested manual-test-plan items stay as residual risk for later verification.
 - Implemented the Phase 1 Fabric-preserving multiloader source layout, moving loader-neutral code into common/commonClient roots and Fabric entrypoints, resources, mixins, networking, permissions, ModMenu, config path, and render hooks into Fabric adapter roots.
 - Added a Phase 1 implementation plan for the Fabric-preserving multiloader refactor, covering common/Fabric source layout, adapter boundaries, verification gates, and Revue-reviewed handoff scope.
 - Added a design-only multiloader refactor spec, reusable migration packet, and scoped agent guidance for a Fabric-preserving CarryBabyAnimals pilot before any NeoForge adapter work.
