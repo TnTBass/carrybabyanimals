@@ -4,6 +4,9 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Implemented the Phase 1 Fabric-preserving multiloader source layout, moving loader-neutral code into common/commonClient roots and Fabric entrypoints, resources, mixins, networking, permissions, ModMenu, config path, and render hooks into Fabric adapter roots.
+- Added a Phase 1 implementation plan for the Fabric-preserving multiloader refactor, covering common/Fabric source layout, adapter boundaries, verification gates, and Revue-reviewed handoff scope.
+- Added a design-only multiloader refactor spec, reusable migration packet, and scoped agent guidance for a Fabric-preserving CarryBabyAnimals pilot before any NeoForge adapter work.
 - Added a public changelog style gate, modeled on MultiGolem, so release notes stay framed for players and server admins instead of implementation history.
 - Updated the embedded ModStatusKit helper to 0.1.8, added Gradle-generated build metadata stamping without changing the base jar filename, wired structured WARN severity status payloads, adopted the teal diagnostic tone for different builds of the same public version, and aligned the Fabric reference status UI/networking helpers.
 - Embedded ModStatusKit 0.1.1 from `TnTBass/ModStatusKit` commit `06f37b9` under this mod's internal package and wired passive, capability-gated client/server version status display.

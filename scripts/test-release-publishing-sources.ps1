@@ -200,7 +200,7 @@ function Test-ChangelogStyleScriptAllowsPlayerAdminReleaseNotes {
 }
 
 function Test-FabricPermissionsApiIsOptional {
-    $modJson = Get-Text 'src/main/resources/fabric.mod.json' | ConvertFrom-Json
+    $modJson = Get-Text 'src/fabric/resources/fabric.mod.json' | ConvertFrom-Json
 
     if ($modJson.depends.PSObject.Properties.Name -contains 'fabric-permissions-api-v0') {
         throw 'Fabric Permissions API must not be a required dependency.'

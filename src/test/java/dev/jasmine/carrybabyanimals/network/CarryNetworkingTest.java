@@ -36,6 +36,49 @@ final class CarryNetworkingTest {
     }
 
     @Test
+    void commonPacketChannelsKeepExistingNames() {
+        assertEquals("set_carried", CarryPacketChannels.SET_CARRIED);
+        assertEquals("clear_carried", CarryPacketChannels.CLEAR_CARRIED);
+        assertEquals("pet_carried", CarryPacketChannels.PET_CARRIED);
+        assertEquals("pet_feedback", CarryPacketChannels.PET_FEEDBACK);
+        assertEquals("server_version", CarryPacketChannels.SERVER_VERSION);
+    }
+
+    @Test
+    void commonServerVersionPayloadDefensivelyCopiesEncodedBytes() {
+        byte[] encoded = ModStatusVersionPayload.encodeServerStatus(
+                "0.1.3",
+                "12345",
+                VersionMismatchSeverity.WARN
+        );
+        CarryPayloads.ServerVersion payload = new CarryPayloads.ServerVersion(encoded);
+
+        encoded[0] = 0;
+        byte[] returned = payload.encodedVersion();
+        returned[1] = 0;
+
+        assertEquals("0.1.3+12345", payload.serverVersion());
+        assertEquals(
+                VersionMismatchSeverity.WARN,
+                payload.serverStatus().versionMismatchSeverity()
+        );
+    }
+
+    @Test
+    void commonServerVersionIntentDefensivelyCopiesEncodedBytes() {
+        byte[] encoded = ModStatusVersionPayload.encodeServerVersion("0.1.3+12345");
+        CarryNetworkIntents.ServerVersionToRecipient intent =
+                new CarryNetworkIntents.ServerVersionToRecipient(encoded, 42);
+
+        encoded[0] = 0;
+        byte[] returned = intent.encodedVersion();
+        returned[1] = 0;
+
+        assertEquals(42, intent.recipientEntityId());
+        assertEquals("0.1.3+12345", ModStatusVersionPayload.decodeServerVersion(intent.encodedVersion()));
+    }
+
+    @Test
     void serverVersionPayloadRoundTripsBuildMetadata() {
         CarryNetworking.ServerVersionPayload payload = new CarryNetworking.ServerVersionPayload("0.1.3+12345");
         var version = ModStatusVersionPayload.decodeServerVersionInfo(payload.encodedVersion());

@@ -10,7 +10,7 @@ base {
     archivesName = project.archives_base_name
 }
 
-def generatedBuildInfoDir = layout.buildDirectory.dir("generated/sources/buildInfo/java/main")
+def generatedBuildInfoDir = layout.buildDirectory.dir("generated/sources/buildInfo/java/commonMain")
 
 def resolveBuildNumber = {
     if (project.hasProperty("buildNumber")) {
@@ -51,20 +51,109 @@ def javaStringLiteral = { String value ->
             .replace("\r", "\\r")
 }
 
+sourceSets {
+    commonMain {
+        java.srcDirs = ["src/common/java", generatedBuildInfoDir]
+        resources.srcDirs = ["src/common/resources"]
+    }
+    commonClient {
+        java.srcDir "src/commonClient/java"
+        resources.srcDirs = ["src/commonClient/resources"]
+        compileClasspath += sourceSets.commonMain.output
+        runtimeClasspath += sourceSets.commonMain.output
+    }
+    fabricMain {
+        java.srcDir "src/fabric/java"
+        resources.srcDirs = ["src/fabric/resources"]
+        compileClasspath += sourceSets.commonMain.output + sourceSets.main.output
+        runtimeClasspath += sourceSets.commonMain.output + sourceSets.main.output
+    }
+    fabricClient {
+        java.srcDir "src/fabricClient/java"
+        resources.srcDirs = ["src/fabricClient/resources"]
+        compileClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output + sourceSets.main.output + sourceSets.fabricMain.output
+        runtimeClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output + sourceSets.main.output + sourceSets.fabricMain.output
+    }
+    main {
+        java.srcDirs = ["src/main/java"]
+        compileClasspath += sourceSets.commonMain.output
+        runtimeClasspath += sourceSets.commonMain.output
+    }
+    test {
+        compileClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output + sourceSets.fabricMain.output + sourceSets.fabricClient.output
+        runtimeClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output + sourceSets.fabricMain.output + sourceSets.fabricClient.output
+    }
+}
+
+configurations.named("commonMainImplementation") {
+    extendsFrom configurations.implementation
+}
+
+configurations.named("commonMainCompileOnly") {
+    extendsFrom configurations.compileOnly
+}
+
+configurations.named("commonClientImplementation") {
+    extendsFrom configurations.implementation
+}
+
+configurations.named("commonClientCompileOnly") {
+    extendsFrom configurations.compileOnly
+}
+
+configurations.named("fabricMainImplementation") {
+    extendsFrom configurations.implementation
+}
+
+configurations.named("fabricMainCompileOnly") {
+    extendsFrom configurations.compileOnly
+}
+
+configurations.named("fabricClientImplementation") {
+    extendsFrom configurations.implementation
+}
+
+configurations.named("fabricClientCompileOnly") {
+    extendsFrom configurations.compileOnly
+}
+
 loom {
     splitEnvironmentSourceSets()
 
     mods {
         "carrybabyanimals" {
+            sourceSet sourceSets.commonMain
+            sourceSet sourceSets.commonClient
+            sourceSet sourceSets.fabricMain
+            sourceSet sourceSets.fabricClient
             sourceSet sourceSets.main
             sourceSet sourceSets.client
         }
     }
 }
 
+// This block must stay after loom {}: Loom creates the named Minecraft configurations
+// and the built-in client source set used by transitional fabricClient classpaths.
 sourceSets {
-    main {
-        java.srcDir generatedBuildInfoDir
+    commonMain {
+        compileClasspath += configurations.minecraftCommonNamedCompile
+        runtimeClasspath += configurations.minecraftCommonNamedCompile
+    }
+    commonClient {
+        compileClasspath += configurations.minecraftCommonNamedCompile + configurations.minecraftClientOnlyNamedCompile
+        runtimeClasspath += configurations.minecraftCommonNamedCompile + configurations.minecraftClientOnlyNamedCompile
+    }
+    fabricMain {
+        compileClasspath += configurations.minecraftCommonNamedCompile
+        runtimeClasspath += configurations.minecraftCommonNamedCompile
+    }
+    fabricClient {
+        compileClasspath += configurations.minecraftCommonNamedCompile + configurations.minecraftClientOnlyNamedCompile + sourceSets.client.output
+        runtimeClasspath += configurations.minecraftCommonNamedCompile + configurations.minecraftClientOnlyNamedCompile + sourceSets.client.output
+    }
+    client {
+        compileClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output
+        runtimeClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output
     }
 }
 
@@ -126,12 +215,31 @@ public final class BuildInfo {
     }
 }
 
-tasks.named("compileJava") {
+tasks.named("compileCommonMainJava") {
     dependsOn tasks.named("generateBuildInfo")
+}
+
+tasks.named("compileFabricMainJava") {
+    dependsOn tasks.named("compileJava")
+}
+
+tasks.named("compileFabricClientJava") {
+    dependsOn tasks.named("compileClientJava")
+}
+
+tasks.named("compileTestJava") {
+    dependsOn tasks.named("compileFabricClientJava")
 }
 
 tasks.named("sourcesJar") {
     dependsOn tasks.named("generateBuildInfo")
+}
+
+tasks.named("jar") {
+    from sourceSets.commonMain.output
+    from sourceSets.commonClient.output
+    from sourceSets.fabricMain.output
+    from sourceSets.fabricClient.output
 }
 
 test {
@@ -156,8 +264,72 @@ tasks.register("checkReleaseNotesStyle", Exec) {
     commandLine "python", "${rootDir}/scripts/check-changelog-style.py"
 }
 
+tasks.register("checkCommonSourceSetsLoaderNeutral") {
+    group = "verification"
+    description = "Ensures common source sets do not import loader-specific APIs."
+
+    doLast {
+        def commonRoots = [
+                file("src/common/java"),
+                file("src/commonClient/java")
+        ]
+        def forbiddenImport = ~/(?m)^\s*import\s+(net\.fabricmc|com\.terraformersmc\.modmenu|me\.lucko\.fabric|net\.neoforged)\./
+        def violations = commonRoots.findAll { it.exists() }.collectMany { root ->
+            fileTree(root).matching { include "**/*.java" }.files.findAll { sourceFile ->
+                (sourceFile.getText("UTF-8") =~ forbiddenImport).find()
+            }
+        }.collect { rootDir.relativePath(it) }
+        if (!violations.isEmpty()) {
+            throw new GradleException("Common source sets must remain loader-neutral: ${violations}")
+        }
+    }
+}
+
+tasks.register("checkFabricModJsonPresent") {
+    group = "verification"
+    description = "Ensures Fabric metadata moved with the fabric source set and gets version expansion."
+    dependsOn tasks.named("processFabricMainResources")
+
+    doLast {
+        File sourceMetadata = file("src/fabric/resources/fabric.mod.json")
+        if (!sourceMetadata.exists()) {
+            throw new GradleException("Missing Fabric metadata: ${rootDir.relativePath(sourceMetadata)}")
+        }
+        File processedMetadata = new File(tasks.named("processFabricMainResources").get().destinationDir, "fabric.mod.json")
+        if (!processedMetadata.exists()) {
+            throw new GradleException("Missing processed Fabric metadata: ${rootDir.relativePath(processedMetadata)}")
+        }
+        if (processedMetadata.getText("UTF-8").contains('${version}')) {
+            throw new GradleException("Fabric metadata version was not expanded: ${rootDir.relativePath(processedMetadata)}")
+        }
+    }
+}
+
+tasks.register("checkLegacyProductionRootsEmpty") {
+    group = "verification"
+    description = "Ensures Phase 1 production code no longer lives in src/main or src/client."
+
+    doLast {
+        def legacyRoots = [
+                file("src/main/java"),
+                file("src/main/resources"),
+                file("src/client/java"),
+                file("src/client/resources")
+        ]
+        def remainingFiles = legacyRoots.findAll { it.exists() }.collectMany { root ->
+            fileTree(root).files
+        }.collect { rootDir.relativePath(it) }
+        if (!remainingFiles.isEmpty()) {
+            throw new GradleException("Legacy production roots must be empty: ${remainingFiles}")
+        }
+    }
+}
+
 tasks.named("check") {
     dependsOn tasks.named("checkChangelog")
+    dependsOn tasks.named("checkCommonSourceSetsLoaderNeutral")
+    dependsOn tasks.named("checkFabricModJsonPresent")
+    dependsOn tasks.named("checkLegacyProductionRootsEmpty")
     dependsOn tasks.named("checkReleasePublishingSources")
     dependsOn tasks.named("checkReleaseNotesStyle")
 }
@@ -173,7 +345,7 @@ tasks.register("showPublicReleaseNotes", Exec) {
     commandLine "pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${rootDir}/scripts/check-changelogs.ps1", "-RepoRoot", rootDir, "-ReleasePrep", "-Version", project.findProperty("releaseVersion") ?: ""
 }
 
-processResources {
+tasks.named("processFabricMainResources") {
     inputs.property "version", project.version
     filesMatching("fabric.mod.json") {
         expand "version": inputs.properties.version

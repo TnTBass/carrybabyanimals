@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "dev.jasmine.carrybabyanimals.fabric.client.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "LivingEntityRendererMixin",
+    "PlayerModelMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
