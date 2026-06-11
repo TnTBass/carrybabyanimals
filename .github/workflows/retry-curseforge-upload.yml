@@ -4,8 +4,17 @@ name: Retry CurseForge Upload
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version to upload to CurseForge, for example 0.1.2"
+        description: "Release version to upload to CurseForge, for example 0.3.0"
         required: true
+      loader:
+        description: "Loader to retry: fabric,neoforge,both"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - fabric
+          - neoforge
+          - both
 
 jobs:
   retry-curseforge:
@@ -57,8 +66,9 @@ jobs:
             exit 1
           fi
 
-      - name: Publish to CurseForge
-        id: curseforge
+      - name: Publish Fabric to CurseForge
+        id: curseforge_fabric
+        if: ${{ inputs.loader == 'fabric' || inputs.loader == 'both' }}
         shell: pwsh
         env:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
@@ -68,10 +78,34 @@ jobs:
           ./scripts/upload-curseforge.ps1 `
             -Slug "carry-baby-animals" `
             -Version $version `
-            -JarPath "build/libs/carrybabyanimals-$version.jar" `
+            -Loader "fabric" `
+            -JarPath "fabric/build/libs/carrybabyanimals-$version-fabric.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
 
-      - name: Report CurseForge file ID
+      - name: Publish NeoForge to CurseForge
+        id: curseforge_neoforge
+        if: ${{ inputs.loader == 'neoforge' || inputs.loader == 'both' }}
+        shell: pwsh
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
         run: |
-          echo "CurseForge file ID: ${{ steps.curseforge.outputs.curseforge_file_id }}"
+          $version = "${{ inputs.version }}"
+          ./scripts/upload-curseforge.ps1 `
+            -Slug "carry-baby-animals" `
+            -Version $version `
+            -Loader "neoforge" `
+            -JarPath "neoforge/build/libs/carrybabyanimals-$version-neoforge.jar" `
+            -ChangelogPath "release-notes.md" `
+            -DescriptionPath "docs/marketplace-description.md"
+
+      - name: Report Fabric CurseForge file ID
+        if: ${{ inputs.loader == 'fabric' || inputs.loader == 'both' }}
+        run: |
+          echo "Fabric CurseForge file ID: ${{ steps.curseforge_fabric.outputs.curseforge_file_id }}"
+
+      - name: Report NeoForge CurseForge file ID
+        if: ${{ inputs.loader == 'neoforge' || inputs.loader == 'both' }}
+        run: |
+          echo "NeoForge CurseForge file ID: ${{ steps.curseforge_neoforge.outputs.curseforge_file_id }}"

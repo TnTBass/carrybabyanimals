@@ -12,6 +12,18 @@ param(
     [string] $SourcesJarPath,
 
     [Parameter(Mandatory = $false)]
+    [string] $FabricJarPath,
+
+    [Parameter(Mandatory = $false)]
+    [string] $FabricSourcesJarPath,
+
+    [Parameter(Mandatory = $false)]
+    [string] $NeoForgeJarPath,
+
+    [Parameter(Mandatory = $false)]
+    [string] $NeoForgeSourcesJarPath,
+
+    [Parameter(Mandatory = $false)]
     [string] $ChangelogPath = "release-notes.md",
 
     [Parameter(Mandatory = $false)]
@@ -139,20 +151,42 @@ if ($SyncDescriptionOnly) {
     return
 }
 
-if ([string]::IsNullOrWhiteSpace($JarPath)) {
-    $JarPath = "build/libs/carrybabyanimals-$Version.jar"
+if ([string]::IsNullOrWhiteSpace($FabricJarPath)) {
+    $FabricJarPath = if ([string]::IsNullOrWhiteSpace($JarPath)) {
+        "fabric/build/libs/carrybabyanimals-$Version-fabric.jar"
+    } else {
+        $JarPath
+    }
 }
-if ([string]::IsNullOrWhiteSpace($SourcesJarPath)) {
-    $SourcesJarPath = "build/libs/carrybabyanimals-$Version-sources.jar"
+if ([string]::IsNullOrWhiteSpace($FabricSourcesJarPath)) {
+    $FabricSourcesJarPath = if ([string]::IsNullOrWhiteSpace($SourcesJarPath)) {
+        "fabric/build/libs/carrybabyanimals-$Version-sources.jar"
+    } else {
+        $SourcesJarPath
+    }
+}
+if ([string]::IsNullOrWhiteSpace($NeoForgeJarPath)) {
+    $NeoForgeJarPath = "neoforge/build/libs/carrybabyanimals-$Version-neoforge.jar"
+}
+if ([string]::IsNullOrWhiteSpace($NeoForgeSourcesJarPath)) {
+    $NeoForgeSourcesJarPath = "neoforge/build/libs/carrybabyanimals-$Version-sources.jar"
 }
 
-$jarFullPath = Resolve-RepoPath $JarPath
-$sourcesFullPath = Resolve-RepoPath $SourcesJarPath
-if (-not (Test-Path -LiteralPath $jarFullPath)) {
-    throw "Jar not found: $JarPath"
+$fabricJarFullPath = Resolve-RepoPath $FabricJarPath
+$fabricSourcesFullPath = Resolve-RepoPath $FabricSourcesJarPath
+$neoForgeJarFullPath = Resolve-RepoPath $NeoForgeJarPath
+$neoForgeSourcesFullPath = Resolve-RepoPath $NeoForgeSourcesJarPath
+if (-not (Test-Path -LiteralPath $fabricJarFullPath)) {
+    throw "Fabric jar not found: $FabricJarPath"
 }
-if (-not (Test-Path -LiteralPath $sourcesFullPath)) {
-    throw "Sources jar not found: $SourcesJarPath"
+if (-not (Test-Path -LiteralPath $fabricSourcesFullPath)) {
+    throw "Fabric sources jar not found: $FabricSourcesJarPath"
+}
+if (-not (Test-Path -LiteralPath $neoForgeJarFullPath)) {
+    throw "NeoForge jar not found: $NeoForgeJarPath"
+}
+if (-not (Test-Path -LiteralPath $neoForgeSourcesFullPath)) {
+    throw "NeoForge sources jar not found: $NeoForgeSourcesJarPath"
 }
 
 $existingVersion = Invoke-ModrinthApi -Method "GET" -Uri "https://api.modrinth.com/v2/project/$projectId/version" -Headers $headers |
@@ -167,15 +201,11 @@ $versionData = @{
     name = "Carry Baby Animals $Version for Minecraft $minecraftVersion"
     version_number = $Version
     changelog = Read-PublicChangelog $ChangelogPath
+    # Modrinth dependencies are version-wide, not scoped per loader. Keep Fabric API optional
+    # here so the combined Fabric+NeoForge version does not require Fabric API for NeoForge installs.
     dependencies = @(
         @{
             project_id = "P7dR8mSH"
-            version_id = $null
-            file_name = $null
-            dependency_type = "required"
-        },
-        @{
-            project_id = "lzVo0Dll"
             version_id = $null
             file_name = $null
             dependency_type = "optional"
@@ -183,13 +213,13 @@ $versionData = @{
     )
     game_versions = @($minecraftVersion)
     version_type = "release"
-    loaders = @("fabric")
+    loaders = @("fabric", "neoforge")
     featured = $true
     status = "listed"
     requested_status = "listed"
     project_id = $projectId
-    file_parts = @("file", "sources")
-    primary_file = "file"
+    file_parts = @("fabric", "fabric-sources", "neoforge", "neoforge-sources")
+    primary_file = "fabric"
 } | ConvertTo-Json -Depth 20
 $versionData | Set-Content -LiteralPath $VersionDataPath -Encoding UTF8
 
@@ -199,8 +229,10 @@ $versionResponse = & $Curl -sS `
     -H "User-Agent: TnTBass/carrybabyanimals" `
     -H "Accept: application/json" `
     -F "data=<$VersionDataPath;type=application/json" `
-    -F "file=@$jarFullPath" `
-    -F "sources=@$sourcesFullPath"
+    -F "fabric=@$fabricJarFullPath" `
+    -F "fabric-sources=@$fabricSourcesFullPath" `
+    -F "neoforge=@$neoForgeJarFullPath" `
+    -F "neoforge-sources=@$neoForgeSourcesFullPath"
 
 if ($LASTEXITCODE -ne 0) {
     throw "curl failed while creating Modrinth version."

@@ -9,6 +9,10 @@ param(
     [string] $JarPath,
 
     [Parameter(Mandatory = $false)]
+    [ValidateSet("fabric", "neoforge")]
+    [string] $Loader = "fabric",
+
+    [Parameter(Mandatory = $false)]
     [string] $ChangelogPath = "release-notes.md",
 
     [Parameter(Mandatory = $false)]
@@ -110,7 +114,11 @@ New-Item -ItemType Directory -Force -Path $UploadDir | Out-Null
 Assert-PublicDescriptionExists $DescriptionPath
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
-    $JarPath = "build/libs/carrybabyanimals-$Version.jar"
+    $JarPath = if ($Loader -eq "neoforge") {
+        "neoforge/build/libs/carrybabyanimals-$Version-neoforge.jar"
+    } else {
+        "fabric/build/libs/carrybabyanimals-$Version-fabric.jar"
+    }
 }
 
 $jarFullPath = Resolve-RepoPath $JarPath
@@ -128,26 +136,36 @@ $gameVersions = Invoke-RestMethod -Uri "https://minecraft.curseforge.com/api/gam
 # Keep the CurseForge project listing set to server required / client optional in the site UI.
 # CurseForge upload API does not expose project-page description updates.
 # Copy docs/marketplace-description.md into the CurseForge description field manually.
-# Fabric Permissions API remains optional in fabric.mod.json and Modrinth metadata,
-# but CurseForge does not accept it as a project relation for this root category.
-$metadata = @{
+# Fabric permission-provider integration is covered by the required Fabric API dependency.
+# CurseForge does not accept a separate legacy permission relation for this root category.
+$loaderGameVersionId = if ($Loader -eq "neoforge") {
+    Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name "NeoForge"
+} else {
+    Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name "Fabric"
+}
+$relations = @()
+if ($Loader -eq "fabric") {
+    $relations += @{
+        slug = "fabric-api"
+        type = "requiredDependency"
+    }
+}
+$metadataPayload = @{
     changelog = Read-PublicChangelog $ChangelogPath
     changelogType = "markdown"
-    displayName = "Carry Baby Animals $Version for Minecraft $minecraftVersion"
+    displayName = "Carry Baby Animals $Version $Loader for Minecraft $minecraftVersion"
     gameVersions = @(
         Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name $minecraftVersion
-        Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name "Fabric"
+        $loaderGameVersionId
     )
     releaseType = "release"
-    relations = @{
-        projects = @(
-            @{
-                slug = "fabric-api"
-                type = "requiredDependency"
-            }
-        )
+}
+if ($relations.Count -gt 0) {
+    $metadataPayload.relations = @{
+        projects = $relations
     }
-} | ConvertTo-Json -Depth 20
+}
+$metadata = $metadataPayload | ConvertTo-Json -Depth 20
 $metadata | Set-Content -LiteralPath $MetadataPath -Encoding UTF8
 
 $uploadResponse = & $Curl -sS `
@@ -183,4 +201,4 @@ if (-not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable("GIT
     Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "curseforge_file_id=$curseForgeFileId"
 }
 
-Write-Host "Published CurseForge $Slug $Version. CurseForgeFileId=$curseForgeFileId. Verify project listing side metadata remains server required / client optional. Copy $DescriptionPath into the CurseForge project description manually."
+Write-Host "Published CurseForge $Slug $Version $Loader. CurseForgeFileId=$curseForgeFileId. Verify project listing side metadata remains server required / client optional. Copy $DescriptionPath into the CurseForge project description manually."

@@ -16,6 +16,7 @@ base {
 def generatedBuildInfoDir = layout.buildDirectory.dir("generated/sources/buildInfo/java/main")
 
 def buildNumberProvider = providers.provider { rootProject.ext.resolveBuildNumber() }
+def expectedFabricArtifactName = "${rootProject.archives_base_name}-${version}-fabric.jar"
 
 def javaStringLiteral = { String value ->
     return value
@@ -198,7 +199,7 @@ tasks.register("checkFabricArtifact") {
         if (!missingEntries.isEmpty()) {
             throw new GradleException("Fabric artifact ${artifact.name} is missing required entries: ${missingEntries}")
         }
-        if (artifact.name != "${rootProject.archives_base_name}-${project.version}-fabric.jar") {
+        if (artifact.name != expectedFabricArtifactName) {
             throw new GradleException("Unexpected Fabric artifact name: ${artifact.name}")
         }
     }

@@ -1,6 +1,6 @@
 # Carry Baby Animals
 
-Carry Baby Animals is a Fabric mod for Minecraft 26.1.2 that lets players pick up, carry, pet, and safely put down baby animals.
+Carry Baby Animals is a Minecraft mod that lets players pick up, carry, pet, and safely put down baby animals.
 
 This is a father-daughter project by Tyler and Jasmine, built around the kind of small Minecraft moment that should feel gentle, useful, and a little bit magical.
 
@@ -17,7 +17,7 @@ The mod is built around a simple idea: baby animals stay as real world entities,
 - Modded clients get improved carried baby visuals, including tucked placement for larger babies and sleepy carry poses for smaller babies.
 - Server owners can opt into compatible baby animal entity types from other mods with full entity IDs in config.
 - Vanilla clients can still join and use the server-side carry behavior through Minecraft's passenger fallback.
-- ModMenu support lets client players edit Carry Baby Animals visual settings in-game when ModMenu is installed.
+- Fabric clients can use ModMenu and NeoForge clients can use NeoForge's built-in Mods screen to edit Carry Baby Animals visual settings in-game.
 
 ## Server And Client Setup
 
@@ -27,21 +27,21 @@ For players and server admins, Carry Baby Animals is server-required and the cli
 
 Marketplace environment metadata may list the client as optional because vanilla clients can still join and use the server-side carry behavior.
 
-Players can also install the mod on their clients for the nicer held-in-arms rendering, first-person petting feedback, carried baby reactions, sleepy visuals, and optional ModMenu configuration. Players without the mod can still join a modded server and use the carry behavior, but they will see the baby animal through Minecraft's normal passenger rendering.
+Players can also install the mod on their clients for the nicer held-in-arms rendering, first-person petting feedback, carried baby reactions, sleepy visuals, and optional in-game visual configuration. Players without the mod can still join a modded server and use the carry behavior, but they will see the baby animal through Minecraft's normal passenger rendering.
 
 Carry Baby Animals does not make another mod's custom entity compatible with vanilla clients by itself. If another animal mod requires matching client mods, that requirement still belongs to that mod and server setup.
 
 ## Requirements
 
 - Minecraft 26.1.2
-- Fabric Loader 0.19.2 or newer
+- Fabric Loader 0.19.2 or newer, or NeoForge 26.1.2.74 or newer
 - Java 25 or newer
-- Fabric API
+- Fabric API 0.149.0+26.1.2 or newer when running on Fabric
 
 Optional:
 
-- Fabric Permissions API is optional, not required. Install it only if you want permission-plugin integration through tools such as LuckPerms.
-- ModMenu is optional on the client. Install it only if you want an in-game screen for Carry Baby Animals client visual settings.
+- Permission providers are optional, not required. On Fabric, providers integrate through Fabric API's permission API. On NeoForge, providers integrate through NeoForge's built-in permission API.
+- ModMenu is optional on Fabric clients. Install it only if you want an in-game Fabric screen for Carry Baby Animals client visual settings.
 
 ## How To Use
 
@@ -86,7 +86,7 @@ Client visual settings are stored in:
 config/carrybabyanimals-client.json
 ```
 
-If ModMenu is installed on the client, these same client visual settings can be changed from ModMenu's Carry Baby Animals config screen. ModMenu is optional; without it, Carry Baby Animals still uses `config/carrybabyanimals-client.json`.
+Fabric clients can change these same client visual settings from ModMenu's Carry Baby Animals config screen when ModMenu is installed. NeoForge clients can change them from NeoForge's built-in Mods screen. Without an in-game config screen, Carry Baby Animals still uses `config/carrybabyanimals-client.json`.
 
 Client visual options include carried baby reactions, large baby tucked placement, first-person large baby visibility, sleepy carry visuals, reaction intensity, and disabled reaction animal IDs.
 
@@ -151,20 +151,20 @@ Tamed animals follow ownership rules. Players can carry their own tamed baby ani
 
 ## Permissions
 
-Carry Baby Animals can integrate with Fabric Permissions API, but Fabric Permissions API is not required. If it is installed, permission providers such as LuckPerms can manage server rules.
+Carry Baby Animals can integrate with loader permission providers, but a permission provider is not required. Fabric servers use Fabric API's permission API. NeoForge servers use NeoForge's built-in permission API.
 
-If Fabric Permissions API is installed:
+If a loader permission provider is active:
 
 - `carrybabyanimals.nursery.bypass` defaults to disabled unless a permission provider explicitly grants it.
 - All other Carry Baby Animals permissions delegate to your permission provider and use the defaults listed below when the provider has no explicit rule.
 
-If Fabric Permissions API is not installed:
+If no loader permission provider is active:
 
 - All players can carry untamed baby animals.
 - Players can carry their own tamed baby animals.
 - Players cannot carry another player's tamed baby animals.
 - The reserved reload permission falls back to vanilla game-master command permission when exposed.
-- The Nursery Mode bypass permission falls back to vanilla game-master command permission.
+- The Nursery Mode bypass permission falls back to vanilla game-master command permission on Fabric. On NeoForge, it is granted only through the loader permission provider.
 
 Permission nodes:
 
@@ -181,5 +181,5 @@ Default behavior:
 - `carrybabyanimals.carry`: allowed by default.
 - `carrybabyanimals.carry.tamed`: allowed by default for the player's own tamed baby animals.
 - `carrybabyanimals.carry.others_tamed`: denied by default.
-- `carrybabyanimals.nursery.bypass`: defaults to disabled with Fabric Permissions API installed; without Fabric Permissions API it falls back to vanilla game-master command permission.
+- `carrybabyanimals.nursery.bypass`: defaults to disabled with a loader permission provider active. Without a provider, Fabric falls back to vanilla game-master command permission, while NeoForge requires an explicit provider grant.
 - `carrybabyanimals.reload`: reserved for reload support and defaults to vanilla game-master command permission when exposed.

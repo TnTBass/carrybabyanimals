@@ -59,7 +59,6 @@ public final class CarryBabyAnimalsNeoForge {
 
     public CarryBabyAnimalsNeoForge(IEventBus modBus, ModContainer modContainer) {
         NeoForgeCarryPermissions.install();
-        warnUnsupportedPermissionProvider();
         CarryBabyAnimalsModStatus.useCurrentVersion(currentVersion());
         loadConfig();
         modBus.addListener(CarryBabyAnimalsNeoForge::registerPayloads);
@@ -78,6 +77,7 @@ public final class CarryBabyAnimalsNeoForge {
         CarryTicker ticker = new CarryTicker(CARRY_MANAGER, INTERACTIONS, CONFIG, COZY_FEEDBACK_SCHEDULER);
 
         NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> ticker.tick(event.getServer()));
+        NeoForge.EVENT_BUS.addListener(NeoForgeCarryPermissions::registerNodes);
         NeoForge.EVENT_BUS.addListener(CarryBabyAnimalsNeoForge::onEntityInteractSpecific);
         NeoForge.EVENT_BUS.addListener(CarryBabyAnimalsNeoForge::onEntityInteract);
         NeoForge.EVENT_BUS.addListener(CarryBabyAnimalsNeoForge::onAttackEntity);
@@ -253,15 +253,6 @@ public final class CarryBabyAnimalsNeoForge {
             HANDLED_ENTITY_INTERACTIONS.add(key);
         }
         return result;
-    }
-
-    private static void warnUnsupportedPermissionProvider() {
-        if (ModList.get().isLoaded("luckperms")) {
-            CarryBabyAnimals.LOGGER.warn(
-                    "LuckPerms is installed, but Carry Baby Animals does not yet read NeoForge permission nodes; {} is ignored on NeoForge and currently defaults to disabled.",
-                    dev.jasmine.carrybabyanimals.permissions.CarryPermissions.NURSERY_BYPASS
-            );
-        }
     }
 
     private static void loadConfig() {

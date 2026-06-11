@@ -4,9 +4,18 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
-- Actioned Revue findings on the NeoForge adapter by centralizing MSK build-number generation, warning when LuckPerms is installed but NeoForge permission nodes are not yet honored, deduplicating same-tick NeoForge entity interaction events, and sending carry payloads to carrier trackers as well as baby trackers.
+## 0.3.0
+
+- Updated the GitHub, Modrinth, and CurseForge release paths for loader-suffixed Fabric and NeoForge artifacts, including loader-specific CurseForge retry support.
+- Adjusted combined-loader Modrinth metadata so Fabric API is optional rather than globally required for NeoForge installs, and split CurseForge retry file-ID reporting by loader.
+- Staged GitHub Release assets with unique loader-suffixed sources filenames so Fabric and NeoForge sources jars do not collide during release upload.
+- Kept CurseForge relation metadata array-shaped for single Fabric dependency uploads.
+- Omitted CurseForge relation metadata for loaders without dependency relations so NeoForge uploads do not send an empty projects list.
+- Removed Gradle execution-time `Task.project` usage from release and artifact verification tasks so release prep no longer emits Gradle 10 deprecation warnings.
+- Replumbed Fabric permissions to prefer Fabric API `0.149.0+26.1.2` / `fabric-permission-api-v1:1.0.0+f3e738be4c`, retained the legacy `me.lucko:fabric-permissions-api:0.7.0` compatibility path with a one-time deprecation warning, and wired NeoForge permissions through registered `PermissionNode`s plus `PermissionAPI`.
+- Actioned Revue findings on the NeoForge adapter by centralizing MSK build-number generation, deduplicating same-tick NeoForge entity interaction events, and sending carry payloads to carrier trackers as well as baby trackers.
 - Local dirty Fabric and NeoForge builds now append a UTC timestamp to the generated MSK build metadata, so repeated playtest jars from the same commit can be distinguished without changing the public mod version.
-- Implemented the Phase 2 NeoForge adapter/build foundation, including loader-suffixed Fabric and NeoForge jars, NeoForge metadata, config paths, permissions fallback, networking, client ModStatus/config wiring, render hooks, and artifact verification gates; manual NeoForge verification remains required before release prep.
+- Implemented the Phase 2 NeoForge adapter/build foundation, including loader-suffixed Fabric and NeoForge jars, NeoForge metadata, config paths, permissions fallback, networking, client ModStatus/config wiring, render hooks, artifact verification gates, and completed manual NeoForge verification.
 - Added a Phase 2 implementation plan for adding a separate NeoForge adapter/build on top of the accepted Fabric-preserving multiloader baseline.
 - Accepted the Phase 1 Fabric-preserving multiloader refactor baseline after a clean general playtest found no issues in the exercised paths; remaining untested manual-test-plan items stay as residual risk for later verification.
 - Implemented the Phase 1 Fabric-preserving multiloader source layout, moving loader-neutral code into common/commonClient roots and Fabric entrypoints, resources, mixins, networking, permissions, ModMenu, config path, and render hooks into Fabric adapter roots.

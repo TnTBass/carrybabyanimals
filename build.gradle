@@ -46,6 +46,10 @@ ext.resolveBuildNumber = {
     return "dev"
 }
 
+def releaseVersionProvider = providers.gradleProperty("releaseVersion")
+        .map { it.trim() }
+        .orElse("")
+
 tasks.register("checkChangelog", Exec) {
     group = "verification"
     description = "Ensures releasable changes update either the public or internal changelog."
@@ -121,10 +125,13 @@ tasks.named("check") {
 tasks.register("showPublicReleaseNotes", Exec) {
     group = "release"
     description = "Prints the exact public CHANGELOG.md section to review before pushing or tagging a release."
+    inputs.property "releaseVersion", releaseVersionProvider
     doFirst {
-        if (!project.hasProperty("releaseVersion") || project.property("releaseVersion").toString().trim().isEmpty()) {
+        String releaseVersion = releaseVersionProvider.get()
+        if (releaseVersion.isEmpty()) {
             throw new GradleException("Run with -PreleaseVersion=<version> to print public release notes from CHANGELOG.md.")
         }
+        args "-Version", releaseVersion
     }
-    commandLine "pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${rootDir}/scripts/check-changelogs.ps1", "-RepoRoot", rootDir, "-ReleasePrep", "-Version", project.findProperty("releaseVersion") ?: ""
+    commandLine "pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${rootDir}/scripts/check-changelogs.ps1", "-RepoRoot", rootDir, "-ReleasePrep"
 }

@@ -17,6 +17,7 @@ base {
 def generatedBuildInfoDir = layout.buildDirectory.dir("generated/sources/buildInfo/java/main")
 
 def buildNumberProvider = providers.provider { rootProject.ext.resolveBuildNumber() }
+def expectedNeoForgeArtifactName = "${rootProject.archives_base_name}-${version}-neoforge.jar"
 
 def javaStringLiteral = { String value ->
     return value
@@ -180,7 +181,7 @@ tasks.register("checkNeoForgeArtifact") {
         if (!missingEntries.isEmpty()) {
             throw new GradleException("NeoForge artifact ${artifact.name} is missing required entries: ${missingEntries}")
         }
-        if (artifact.name != "${rootProject.archives_base_name}-${project.version}-neoforge.jar") {
+        if (artifact.name != expectedNeoForgeArtifactName) {
             throw new GradleException("Unexpected NeoForge artifact name: ${artifact.name}")
         }
     }

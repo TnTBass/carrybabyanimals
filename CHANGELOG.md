@@ -4,9 +4,11 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
-- NeoForge players can now pick up baby animals by sneak-right-clicking them with empty hands.
-- NeoForge players can now open the Carry Baby Animals config screen from NeoForge's Mods menu, including the existing connection/build status indicator.
-- NeoForge Nursery Mode bypass no longer treats OP status as an automatic bypass while a real NeoForge permission integration is unavailable.
+## 0.3.0
+
+- Added NeoForge modloader support with the same Carry Baby Animals gameplay as Fabric.
+- On NeoForge, Carry Baby Animals version and build status from [ModStatusKit](https://github.com/TnTBass/ModStatusKit) appear in NeoForge's built-in Mods screen. On Fabric, this is located in ModMenu.
+- Permission checks now use each loader's current permission-provider support: modern Fabric API on Fabric and NeoForge's built-in permission API on NeoForge.
 - Nursery Mode refusal messages now capitalize "Baby" when an unnamed baby animal starts the sentence.
 
 ## 0.2.0

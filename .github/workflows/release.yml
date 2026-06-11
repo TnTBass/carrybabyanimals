@@ -50,8 +50,24 @@ jobs:
         shell: bash
         run: |
           version="${{ steps.version.outputs.version }}"
-          test -f "build/libs/carrybabyanimals-${version}.jar"
-          test -f "build/libs/carrybabyanimals-${version}-sources.jar"
+          test -f "fabric/build/libs/carrybabyanimals-${version}-fabric.jar"
+          test -f "fabric/build/libs/carrybabyanimals-${version}-sources.jar"
+          test -f "neoforge/build/libs/carrybabyanimals-${version}-neoforge.jar"
+          test -f "neoforge/build/libs/carrybabyanimals-${version}-sources.jar"
+
+      - name: Stage release assets
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          mkdir -p build/release-assets
+          cp "fabric/build/libs/carrybabyanimals-${version}-fabric.jar" \
+            "build/release-assets/carrybabyanimals-${version}-fabric.jar"
+          cp "fabric/build/libs/carrybabyanimals-${version}-sources.jar" \
+            "build/release-assets/carrybabyanimals-${version}-fabric-sources.jar"
+          cp "neoforge/build/libs/carrybabyanimals-${version}-neoforge.jar" \
+            "build/release-assets/carrybabyanimals-${version}-neoforge.jar"
+          cp "neoforge/build/libs/carrybabyanimals-${version}-sources.jar" \
+            "build/release-assets/carrybabyanimals-${version}-neoforge-sources.jar"
 
       - name: Extract public release notes
         shell: bash
@@ -77,14 +93,18 @@ jobs:
               --title "Carry Baby Animals ${version}" \
               --notes-file release-notes.md
             gh release upload "${GITHUB_REF_NAME}" --clobber \
-              "build/libs/carrybabyanimals-${version}.jar" \
-              "build/libs/carrybabyanimals-${version}-sources.jar"
+              "build/release-assets/carrybabyanimals-${version}-fabric.jar" \
+              "build/release-assets/carrybabyanimals-${version}-fabric-sources.jar" \
+              "build/release-assets/carrybabyanimals-${version}-neoforge.jar" \
+              "build/release-assets/carrybabyanimals-${version}-neoforge-sources.jar"
           else
             gh release create "${GITHUB_REF_NAME}" \
               --title "Carry Baby Animals ${version}" \
               --notes-file release-notes.md \
-              "build/libs/carrybabyanimals-${version}.jar" \
-              "build/libs/carrybabyanimals-${version}-sources.jar"
+              "build/release-assets/carrybabyanimals-${version}-fabric.jar" \
+              "build/release-assets/carrybabyanimals-${version}-fabric-sources.jar" \
+              "build/release-assets/carrybabyanimals-${version}-neoforge.jar" \
+              "build/release-assets/carrybabyanimals-${version}-neoforge-sources.jar"
           fi
 
       - name: Publish to Modrinth
@@ -96,12 +116,14 @@ jobs:
           ./scripts/upload-modrinth.ps1 `
             -Slug "carrybabyanimals" `
             -Version $version `
-            -JarPath "build/libs/carrybabyanimals-$version.jar" `
-            -SourcesJarPath "build/libs/carrybabyanimals-$version-sources.jar" `
+            -FabricJarPath "fabric/build/libs/carrybabyanimals-$version-fabric.jar" `
+            -FabricSourcesJarPath "fabric/build/libs/carrybabyanimals-$version-sources.jar" `
+            -NeoForgeJarPath "neoforge/build/libs/carrybabyanimals-$version-neoforge.jar" `
+            -NeoForgeSourcesJarPath "neoforge/build/libs/carrybabyanimals-$version-sources.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
 
-      - name: Publish to CurseForge
+      - name: Publish Fabric to CurseForge
         shell: pwsh
         env:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
@@ -111,7 +133,23 @@ jobs:
           ./scripts/upload-curseforge.ps1 `
             -Slug "carry-baby-animals" `
             -Version $version `
-            -JarPath "build/libs/carrybabyanimals-$version.jar" `
+            -Loader "fabric" `
+            -JarPath "fabric/build/libs/carrybabyanimals-$version-fabric.jar" `
+            -ChangelogPath "release-notes.md" `
+            -DescriptionPath "docs/marketplace-description.md"
+
+      - name: Publish NeoForge to CurseForge
+        shell: pwsh
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          ./scripts/upload-curseforge.ps1 `
+            -Slug "carry-baby-animals" `
+            -Version $version `
+            -Loader "neoforge" `
+            -JarPath "neoforge/build/libs/carrybabyanimals-$version-neoforge.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
 
