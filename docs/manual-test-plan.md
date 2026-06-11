@@ -7,9 +7,14 @@ Use this matrix before release candidates and after changes that touch carry sta
 | Environment | Purpose | Required setup |
 | --- | --- | --- |
 | Singleplayer modded client | Validate the normal player experience and local integrated-server behavior. | Fabric client with Carry Baby Animals installed. |
+| Singleplayer NeoForge client | Validate the NeoForge integrated-server path, JSON config files, ModStatus, and carried render behavior. | NeoForge client with Carry Baby Animals installed. |
 | Multiplayer, all modded clients | Validate server authority, tracking replay, held render, and render suppression for nearby players. | Dedicated Fabric server and at least two Fabric clients with the mod installed. |
+| Multiplayer, all NeoForge modded clients | Validate NeoForge server authority, tracking replay, held render, render suppression, and ModStatus. | Dedicated NeoForge server and at least two NeoForge clients with the mod installed. |
 | Multiplayer, vanilla-compatible client mix | Validate graceful fallback for clients that do not support the custom carry packets. | Dedicated Fabric server with the mod installed, one modded client, and one compatible client without this mod. |
+| NeoForge vanilla-compatible client mix | Validate NeoForge custom-payload gating and vanilla passenger fallback. | Dedicated NeoForge server with the mod installed, one NeoForge modded client, and one compatible client without this mod. |
 | Permissions server | Validate Fabric Permissions API behavior through a provider such as LuckPerms. | Dedicated Fabric server with Fabric Permissions API, Carry Baby Animals, and the permission provider installed. |
+| NeoForge permissions/fallback server | Validate NeoForge permission defaults and document provider availability. | Dedicated NeoForge server with Carry Baby Animals installed; use vanilla game-master command permission checks unless a stable NeoForge permission provider is available. |
+| Cross-loader exploratory compatibility | Record whether custom held rendering works across loader transports. | Fabric client to NeoForge server and NeoForge client to Fabric server, if practical. Same-loader custom held rendering plus vanilla passenger fallback is the supported `0.2.1` target. |
 
 ## Singleplayer Modded Client
 
@@ -58,6 +63,18 @@ Use this matrix before release candidates and after changes that touch carry sta
 | Fallback is non-duplicating | Watch from the unmodded observer during carry and cleanup. | The baby appears as a single vanilla passenger, typically above the player, and clears when dropped. |
 | Parent reunion fallback | Trigger Parent Reunion while the unmodded observer is nearby. | The observer remains connected and sees ordinary server-side heart particles without installing the client mod. |
 | Modded renderer remains upgraded | Watch the same carry from a modded observer at the same time. | The modded observer sees the held render instead of the passenger-position fallback. |
+
+## NeoForge Phase 2 Verification
+
+| Check | Steps | Expected result |
+| --- | --- | --- |
+| NeoForge server config path | Delete `config/carrybabyanimals.json` on a NeoForge client or server, then start with the mod installed. | The file is written in the NeoForge config directory and uses the same defaults as Fabric. |
+| NeoForge client config path | Delete `config/carrybabyanimals-client.json` on a NeoForge client, then start with the mod installed. | The client visual config is written in the NeoForge config directory; no in-game config UI is expected for `0.2.1`. |
+| NeoForge two-client render | On a dedicated NeoForge server, have Player A carry a baby while Player B watches. | Player A and Player B see the held carried-baby render once, the vanilla passenger render is suppressed on modded clients, and tracking replay works after rejoin or moving out and back in. |
+| NeoForge vanilla fallback | Join a NeoForge server with one modded client and one compatible client without Carry Baby Animals. | The unmodded client remains connected and sees the vanilla passenger fallback; the modded client sees the upgraded held render. |
+| NeoForge ModStatus | Test matched version, different build, different version, server-not-detected, unknown, and disconnected states. | Status wording and severity match the Fabric/common behavior. |
+| NeoForge permissions fallback | Test ordinary carrying, own tamed babies, other players' tamed babies, Nursery bypass, and reserved reload permission. | Defaults match common semantics: carry and own tamed carry allowed, others' tamed carry denied, Nursery bypass and reload use game-master command permission fallback. |
+| Cross-loader declaration | Try Fabric-client-to-NeoForge-server and NeoForge-client-to-Fabric-server custom rendering only as time allows. | Record the result. Same-loader custom held rendering plus vanilla passenger fallback remains the `0.2.1` release-blocking requirement. |
 
 ### Phase 5 Extension: Large Baby First-Person Visibility
 

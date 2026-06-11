@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "dev.jasmine.carrybabyanimals.neoforge.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "EntityStartRidingMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

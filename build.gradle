@@ -1,6 +1,5 @@
 plugins {
-    id "net.fabricmc.fabric-loom" version "1.16-SNAPSHOT"
-    id "maven-publish"
+    id "base"
 }
 
 version = project.mod_version
@@ -8,242 +7,6 @@ group = project.maven_group
 
 base {
     archivesName = project.archives_base_name
-}
-
-def generatedBuildInfoDir = layout.buildDirectory.dir("generated/sources/buildInfo/java/commonMain")
-
-def resolveBuildNumber = {
-    if (project.hasProperty("buildNumber")) {
-        String propertyBuildNumber = project.property("buildNumber").toString().trim()
-        if (!propertyBuildNumber.isEmpty()) {
-            return propertyBuildNumber
-        }
-    }
-
-    String githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")
-    if (githubRunNumber != null && !githubRunNumber.trim().isEmpty()) {
-        return githubRunNumber.trim()
-    }
-
-    try {
-        Process process = new ProcessBuilder("git", "rev-parse", "--short", "HEAD")
-                .directory(rootDir)
-                .redirectErrorStream(true)
-                .start()
-        String gitCommit = process.inputStream.getText("UTF-8").trim()
-        if (process.waitFor() == 0 && !gitCommit.isEmpty()) {
-            return gitCommit
-        }
-    } catch (Exception ignored) {
-        // Fall through to a stable local-development value when git is unavailable.
-    }
-
-    return "dev"
-}
-
-def buildNumberProvider = providers.provider { resolveBuildNumber() }
-
-def javaStringLiteral = { String value ->
-    return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-}
-
-sourceSets {
-    commonMain {
-        java.srcDirs = ["src/common/java", generatedBuildInfoDir]
-        resources.srcDirs = ["src/common/resources"]
-    }
-    commonClient {
-        java.srcDir "src/commonClient/java"
-        resources.srcDirs = ["src/commonClient/resources"]
-        compileClasspath += sourceSets.commonMain.output
-        runtimeClasspath += sourceSets.commonMain.output
-    }
-    fabricMain {
-        java.srcDir "src/fabric/java"
-        resources.srcDirs = ["src/fabric/resources"]
-        compileClasspath += sourceSets.commonMain.output + sourceSets.main.output
-        runtimeClasspath += sourceSets.commonMain.output + sourceSets.main.output
-    }
-    fabricClient {
-        java.srcDir "src/fabricClient/java"
-        resources.srcDirs = ["src/fabricClient/resources"]
-        compileClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output + sourceSets.main.output + sourceSets.fabricMain.output
-        runtimeClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output + sourceSets.main.output + sourceSets.fabricMain.output
-    }
-    main {
-        java.srcDirs = ["src/main/java"]
-        compileClasspath += sourceSets.commonMain.output
-        runtimeClasspath += sourceSets.commonMain.output
-    }
-    test {
-        compileClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output + sourceSets.fabricMain.output + sourceSets.fabricClient.output
-        runtimeClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output + sourceSets.fabricMain.output + sourceSets.fabricClient.output
-    }
-}
-
-configurations.named("commonMainImplementation") {
-    extendsFrom configurations.implementation
-}
-
-configurations.named("commonMainCompileOnly") {
-    extendsFrom configurations.compileOnly
-}
-
-configurations.named("commonClientImplementation") {
-    extendsFrom configurations.implementation
-}
-
-configurations.named("commonClientCompileOnly") {
-    extendsFrom configurations.compileOnly
-}
-
-configurations.named("fabricMainImplementation") {
-    extendsFrom configurations.implementation
-}
-
-configurations.named("fabricMainCompileOnly") {
-    extendsFrom configurations.compileOnly
-}
-
-configurations.named("fabricClientImplementation") {
-    extendsFrom configurations.implementation
-}
-
-configurations.named("fabricClientCompileOnly") {
-    extendsFrom configurations.compileOnly
-}
-
-loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        "carrybabyanimals" {
-            sourceSet sourceSets.commonMain
-            sourceSet sourceSets.commonClient
-            sourceSet sourceSets.fabricMain
-            sourceSet sourceSets.fabricClient
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
-    }
-}
-
-// This block must stay after loom {}: Loom creates the named Minecraft configurations
-// and the built-in client source set used by transitional fabricClient classpaths.
-sourceSets {
-    commonMain {
-        compileClasspath += configurations.minecraftCommonNamedCompile
-        runtimeClasspath += configurations.minecraftCommonNamedCompile
-    }
-    commonClient {
-        compileClasspath += configurations.minecraftCommonNamedCompile + configurations.minecraftClientOnlyNamedCompile
-        runtimeClasspath += configurations.minecraftCommonNamedCompile + configurations.minecraftClientOnlyNamedCompile
-    }
-    fabricMain {
-        compileClasspath += configurations.minecraftCommonNamedCompile
-        runtimeClasspath += configurations.minecraftCommonNamedCompile
-    }
-    fabricClient {
-        compileClasspath += configurations.minecraftCommonNamedCompile + configurations.minecraftClientOnlyNamedCompile + sourceSets.client.output
-        runtimeClasspath += configurations.minecraftCommonNamedCompile + configurations.minecraftClientOnlyNamedCompile + sourceSets.client.output
-    }
-    client {
-        compileClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output
-        runtimeClasspath += sourceSets.commonMain.output + sourceSets.commonClient.output
-    }
-}
-
-repositories {
-    maven {
-        name = "Fabric"
-        url = "https://maven.fabricmc.net/"
-    }
-    maven {
-        name = "Terraformers"
-        url = "https://maven.terraformersmc.com/"
-    }
-    mavenCentral()
-}
-
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    compileOnly "me.lucko:fabric-permissions-api:0.7.0"
-    compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
-    testImplementation "org.junit.jupiter:junit-jupiter:5.10.3"
-    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
-    withSourcesJar()
-}
-
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 25
-}
-
-tasks.register("generateBuildInfo") {
-    group = "build"
-    description = "Generates build metadata embedded in the mod jar."
-    inputs.property "buildNumber", buildNumberProvider
-    outputs.dir generatedBuildInfoDir
-
-    doLast {
-        String buildNumber = buildNumberProvider.get()
-        File outputFile = generatedBuildInfoDir.get().file("dev/jasmine/carrybabyanimals/BuildInfo.java").asFile
-        outputFile.parentFile.mkdirs()
-        outputFile.text = """package dev.jasmine.carrybabyanimals;
-
-/**
- * Build metadata generated by Gradle.
- */
-public final class BuildInfo {
-    public static final String BUILD_NUMBER = \"${javaStringLiteral(buildNumber)}\";
-
-    private BuildInfo() {
-    }
-}
-"""
-    }
-}
-
-tasks.named("compileCommonMainJava") {
-    dependsOn tasks.named("generateBuildInfo")
-}
-
-tasks.named("compileFabricMainJava") {
-    dependsOn tasks.named("compileJava")
-}
-
-tasks.named("compileFabricClientJava") {
-    dependsOn tasks.named("compileClientJava")
-}
-
-tasks.named("compileTestJava") {
-    dependsOn tasks.named("compileFabricClientJava")
-}
-
-tasks.named("sourcesJar") {
-    dependsOn tasks.named("generateBuildInfo")
-}
-
-tasks.named("jar") {
-    from sourceSets.commonMain.output
-    from sourceSets.commonClient.output
-    from sourceSets.fabricMain.output
-    from sourceSets.fabricClient.output
-}
-
-test {
-    useJUnitPlatform()
 }
 
 tasks.register("checkChangelog", Exec) {
@@ -285,26 +48,6 @@ tasks.register("checkCommonSourceSetsLoaderNeutral") {
     }
 }
 
-tasks.register("checkFabricModJsonPresent") {
-    group = "verification"
-    description = "Ensures Fabric metadata moved with the fabric source set and gets version expansion."
-    dependsOn tasks.named("processFabricMainResources")
-
-    doLast {
-        File sourceMetadata = file("src/fabric/resources/fabric.mod.json")
-        if (!sourceMetadata.exists()) {
-            throw new GradleException("Missing Fabric metadata: ${rootDir.relativePath(sourceMetadata)}")
-        }
-        File processedMetadata = new File(tasks.named("processFabricMainResources").get().destinationDir, "fabric.mod.json")
-        if (!processedMetadata.exists()) {
-            throw new GradleException("Missing processed Fabric metadata: ${rootDir.relativePath(processedMetadata)}")
-        }
-        if (processedMetadata.getText("UTF-8").contains('${version}')) {
-            throw new GradleException("Fabric metadata version was not expanded: ${rootDir.relativePath(processedMetadata)}")
-        }
-    }
-}
-
 tasks.register("checkLegacyProductionRootsEmpty") {
     group = "verification"
     description = "Ensures Phase 1 production code no longer lives in src/main or src/client."
@@ -326,9 +69,13 @@ tasks.register("checkLegacyProductionRootsEmpty") {
 }
 
 tasks.named("check") {
+    dependsOn ":fabric:build"
+    dependsOn ":fabric:checkFabricArtifact"
+    dependsOn ":fabric:checkFabricModJsonPresent"
+    dependsOn ":neoforge:build"
+    dependsOn ":neoforge:checkNeoForgeArtifact"
     dependsOn tasks.named("checkChangelog")
     dependsOn tasks.named("checkCommonSourceSetsLoaderNeutral")
-    dependsOn tasks.named("checkFabricModJsonPresent")
     dependsOn tasks.named("checkLegacyProductionRootsEmpty")
     dependsOn tasks.named("checkReleasePublishingSources")
     dependsOn tasks.named("checkReleaseNotesStyle")
@@ -343,11 +90,4 @@ tasks.register("showPublicReleaseNotes", Exec) {
         }
     }
     commandLine "pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${rootDir}/scripts/check-changelogs.ps1", "-RepoRoot", rootDir, "-ReleasePrep", "-Version", project.findProperty("releaseVersion") ?: ""
-}
-
-tasks.named("processFabricMainResources") {
-    inputs.property "version", project.version
-    filesMatching("fabric.mod.json") {
-        expand "version": inputs.properties.version
-    }
 }

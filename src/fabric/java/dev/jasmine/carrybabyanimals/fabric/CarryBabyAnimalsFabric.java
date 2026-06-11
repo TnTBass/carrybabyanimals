@@ -12,7 +12,7 @@ import dev.jasmine.carrybabyanimals.config.CarryConfigManager;
 import dev.jasmine.carrybabyanimals.cozy.CozyFeedbackScheduler;
 import dev.jasmine.carrybabyanimals.fabric.permissions.FabricCarryPermissions;
 import dev.jasmine.carrybabyanimals.modstatus.CarryBabyAnimalsModStatus;
-import dev.jasmine.carrybabyanimals.network.CarryNetworking;
+import dev.jasmine.carrybabyanimals.fabric.network.FabricCarryNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -49,7 +49,7 @@ public final class CarryBabyAnimalsFabric implements ModInitializer {
             new CarryAttachment(),
             AI_CONTROLLER,
             COZY_FEEDBACK_SCHEDULER,
-            CarryNetworking.SENDER
+                FabricCarryNetworking.SENDER
     );
 
     @Override
@@ -58,8 +58,8 @@ public final class CarryBabyAnimalsFabric implements ModInitializer {
         CarryBabyAnimalsModStatus.useCurrentVersion(currentVersion());
         loadConfig();
         LOGGER.info("Carry Baby Animals initialized");
-        CarryNetworking.registerS2CPayloads();
-        CarryNetworking.registerC2SPayloads(INTERACTIONS);
+        FabricCarryNetworking.registerS2CPayloads();
+        FabricCarryNetworking.registerC2SPayloads(INTERACTIONS);
         CarryTicker ticker = new CarryTicker(CARRY_MANAGER, INTERACTIONS, CONFIG, COZY_FEEDBACK_SCHEDULER);
 
         ServerTickEvents.END_SERVER_TICK.register(ticker::tick);
@@ -98,16 +98,16 @@ public final class CarryBabyAnimalsFabric implements ModInitializer {
             return INTERACTIONS.onUseBlockWhileCarrying(serverPlayer, state);
         });
         EntityTrackingEvents.START_TRACKING.register((entity, player) ->
-                CarryNetworking.replayTrackedCarry(CARRY_MANAGER, entity, player)
+                FabricCarryNetworking.replayTrackedCarry(CARRY_MANAGER, entity, player)
         );
         EntityTrackingEvents.STOP_TRACKING.register((entity, player) -> {
             if (CARRY_MANAGER.carrierIdFor(entity.getId()).isPresent()) {
-                CarryNetworking.sendClearCarriedToPlayer(player, entity.getId());
+                FabricCarryNetworking.sendClearCarriedToPlayer(player, entity.getId());
             }
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            CarryNetworking.sendServerVersionIfSupported(handler.getPlayer());
-            CarryNetworking.replayVisibleCarries(CARRY_MANAGER, handler.getPlayer());
+            FabricCarryNetworking.sendServerVersionIfSupported(handler.getPlayer());
+            FabricCarryNetworking.replayVisibleCarries(CARRY_MANAGER, handler.getPlayer());
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 INTERACTIONS.dropCurrent(handler.getPlayer())

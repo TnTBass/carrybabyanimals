@@ -1,0 +1,31 @@
+license="MIT"
+issueTrackerURL="https://github.com/TnTBass/carrybabyanimals/issues"
+
+[[mods]]
+modId="carrybabyanimals"
+version="${version}"
+displayName="Carry Baby Animals"
+displayURL="https://modrinth.com/mod/carrybabyanimals"
+logoFile="assets/carrybabyanimals/icon_128.png"
+authors="Tyler, Jasmine"
+description='''Carry and pet baby animals without putting them in your inventory.'''
+
+[[mixins]]
+config="carrybabyanimals.neoforge.mixins.json"
+
+[[mixins]]
+config="carrybabyanimals.neoforge.client.mixins.json"
+
+[[dependencies.carrybabyanimals]]
+modId="neoforge"
+type="required"
+versionRange="[${neoforgeVersion},)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.carrybabyanimals]]
+modId="minecraft"
+type="required"
+versionRange="[${minecraftVersion},)"
+ordering="NONE"
+side="BOTH"

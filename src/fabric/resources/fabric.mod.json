@@ -18,10 +18,10 @@
       "dev.jasmine.carrybabyanimals.fabric.CarryBabyAnimalsFabric"
     ],
     "client": [
-      "dev.jasmine.carrybabyanimals.client.CarryBabyAnimalsClient"
+      "dev.jasmine.carrybabyanimals.fabric.client.CarryBabyAnimalsFabricClient"
     ],
     "modmenu": [
-      "dev.jasmine.carrybabyanimals.client.config.CarryBabyAnimalsModMenuIntegration"
+      "dev.jasmine.carrybabyanimals.fabric.client.config.CarryBabyAnimalsModMenuIntegration"
     ]
   },
   "mixins": [

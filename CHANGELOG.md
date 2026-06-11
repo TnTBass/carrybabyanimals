@@ -4,6 +4,10 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
+- NeoForge players can now pick up baby animals by sneak-right-clicking them with empty hands.
+- NeoForge players can now open the Carry Baby Animals config screen from NeoForge's Mods menu, including the existing connection/build status indicator.
+- NeoForge Nursery Mode bypass no longer treats OP status as an automatic bypass while a real NeoForge permission integration is unavailable.
+
 ## 0.2.0
 
 - Client-side carried-baby visuals now look better, with gentler arm placement, safer first-person positioning for large babies, subtle movement, animal-specific reactions, and clearer sleepy/asleep poses.

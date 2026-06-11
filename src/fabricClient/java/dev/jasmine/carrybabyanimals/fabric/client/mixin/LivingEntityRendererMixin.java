@@ -1,7 +1,7 @@
 package dev.jasmine.carrybabyanimals.fabric.client.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import dev.jasmine.carrybabyanimals.client.render.CarriedBabyRenderState;
+import dev.jasmine.carrybabyanimals.fabric.client.render.CarriedBabyRenderState;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.SubmitNodeCollector;

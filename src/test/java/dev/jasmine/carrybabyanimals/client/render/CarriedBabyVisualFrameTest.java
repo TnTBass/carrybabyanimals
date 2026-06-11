@@ -1,5 +1,6 @@
 package dev.jasmine.carrybabyanimals.client.render;
 
+import dev.jasmine.carrybabyanimals.fabric.client.render.CarriedBabyRenderState;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

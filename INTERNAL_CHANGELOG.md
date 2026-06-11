@@ -4,6 +4,9 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Local dirty Fabric and NeoForge builds now append a UTC timestamp to the generated MSK build metadata, so repeated playtest jars from the same commit can be distinguished without changing the public mod version.
+- Implemented the Phase 2 NeoForge adapter/build foundation, including loader-suffixed Fabric and NeoForge jars, NeoForge metadata, config paths, permissions fallback, networking, client ModStatus/config wiring, render hooks, and artifact verification gates; manual NeoForge verification remains required before release prep.
+- Added a Phase 2 implementation plan for adding a separate NeoForge adapter/build on top of the accepted Fabric-preserving multiloader baseline.
 - Accepted the Phase 1 Fabric-preserving multiloader refactor baseline after a clean general playtest found no issues in the exercised paths; remaining untested manual-test-plan items stay as residual risk for later verification.
 - Implemented the Phase 1 Fabric-preserving multiloader source layout, moving loader-neutral code into common/commonClient roots and Fabric entrypoints, resources, mixins, networking, permissions, ModMenu, config path, and render hooks into Fabric adapter roots.
 - Added a Phase 1 implementation plan for the Fabric-preserving multiloader refactor, covering common/Fabric source layout, adapter boundaries, verification gates, and Revue-reviewed handoff scope.
