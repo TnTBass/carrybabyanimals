@@ -7,11 +7,21 @@ import dev.jasmine.carrybabyanimals.modstatus.CarryBabyAnimalsModStatus;
 import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class NeoForgeCarryNetworkingTest {
+    @Test
+    void carryPayloadRecipientsIncludeCarrierAndBothTrackingSetsOnce() {
+        assertEquals(
+                List.of(1, 2, 3, 4),
+                List.copyOf(NeoForgeCarryNetworking.carryPayloadRecipientIds(1, List.of(2, 3), List.of(3, 4)))
+        );
+    }
+
     @Test
     void payloadChannelsUseFabricCompatibleIds() {
         assertEquals(id("set_carried"), NeoForgeCarryNetworking.SetCarriedPayload.TYPE.id());

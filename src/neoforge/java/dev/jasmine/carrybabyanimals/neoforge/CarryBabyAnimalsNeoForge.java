@@ -35,6 +35,9 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @Mod(CarryBabyAnimals.MOD_ID)
 public final class CarryBabyAnimalsNeoForge {
@@ -51,9 +54,12 @@ public final class CarryBabyAnimalsNeoForge {
             COZY_FEEDBACK_SCHEDULER,
             NeoForgeCarryNetworking.SENDER
     );
+    private static final Set<EntityInteractKey> HANDLED_ENTITY_INTERACTIONS = new HashSet<>();
+    private static long handledEntityInteractGameTime = Long.MIN_VALUE;
 
     public CarryBabyAnimalsNeoForge(IEventBus modBus, ModContainer modContainer) {
         NeoForgeCarryPermissions.install();
+        warnUnsupportedPermissionProvider();
         CarryBabyAnimalsModStatus.useCurrentVersion(currentVersion());
         loadConfig();
         modBus.addListener(CarryBabyAnimalsNeoForge::registerPayloads);
@@ -92,14 +98,16 @@ public final class CarryBabyAnimalsNeoForge {
         if (!(event.getEntity() instanceof ServerPlayer player)) {
             return;
         }
-        applyInteractionResult(event, INTERACTIONS.onEntityInteract(player, event.getTarget(), event.getHand()));
+        InteractionResult result = handleEntityInteract(player, event.getTarget(), event.getHand());
+        applyInteractionResult(event, result);
     }
 
     private static void onEntityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) {
             return;
         }
-        applyInteractionResult(event, INTERACTIONS.onEntityInteract(player, event.getTarget(), event.getHand()));
+        InteractionResult result = handleEntityInteract(player, event.getTarget(), event.getHand());
+        applyInteractionResult(event, result);
     }
 
     private static void onAttackEntity(AttackEntityEvent event) {
@@ -226,6 +234,36 @@ public final class CarryBabyAnimalsNeoForge {
         }
     }
 
+    private static InteractionResult handleEntityInteract(
+            ServerPlayer player,
+            net.minecraft.world.entity.Entity target,
+            net.minecraft.world.InteractionHand hand
+    ) {
+        long gameTime = player.level().getGameTime();
+        if (handledEntityInteractGameTime != gameTime) {
+            HANDLED_ENTITY_INTERACTIONS.clear();
+            handledEntityInteractGameTime = gameTime;
+        }
+        EntityInteractKey key = new EntityInteractKey(player.getUUID(), target.getId(), hand);
+        if (HANDLED_ENTITY_INTERACTIONS.contains(key)) {
+            return InteractionResult.PASS;
+        }
+        InteractionResult result = INTERACTIONS.onEntityInteract(player, target, hand);
+        if (result != InteractionResult.PASS) {
+            HANDLED_ENTITY_INTERACTIONS.add(key);
+        }
+        return result;
+    }
+
+    private static void warnUnsupportedPermissionProvider() {
+        if (ModList.get().isLoaded("luckperms")) {
+            CarryBabyAnimals.LOGGER.warn(
+                    "LuckPerms is installed, but Carry Baby Animals does not yet read NeoForge permission nodes; {} is ignored on NeoForge and currently defaults to disabled.",
+                    dev.jasmine.carrybabyanimals.permissions.CarryPermissions.NURSERY_BYPASS
+            );
+        }
+    }
+
     private static void loadConfig() {
         Path configPath = NeoForgePaths.configPath(FMLPaths.CONFIGDIR.get());
         try {
@@ -241,5 +279,8 @@ public final class CarryBabyAnimalsNeoForge {
                 .getModContainerById(CarryBabyAnimals.MOD_ID)
                 .map(container -> container.getModInfo().getVersion().toString())
                 .orElse("unknown");
+    }
+
+    private record EntityInteractKey(UUID playerId, int targetEntityId, net.minecraft.world.InteractionHand hand) {
     }
 }

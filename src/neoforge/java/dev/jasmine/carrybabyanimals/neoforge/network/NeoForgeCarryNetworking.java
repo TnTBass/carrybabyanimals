@@ -26,8 +26,10 @@ import net.neoforged.neoforge.network.registration.NetworkPayloadSetup;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public final class NeoForgeCarryNetworking {
@@ -151,8 +153,23 @@ public final class NeoForgeCarryNetworking {
     }
 
     private static void sendToCarrierAndTracking(ServerPlayer carrier, Entity baby, CustomPacketPayload payload) {
-        sendIfSupported(carrier, payload);
-        trackingPlayers(baby).forEach(player -> sendIfSupported(player, payload));
+        Set<ServerPlayer> recipients = new LinkedHashSet<>();
+        recipients.add(carrier);
+        recipients.addAll(trackingPlayers(carrier));
+        recipients.addAll(trackingPlayers(baby));
+        recipients.forEach(player -> sendIfSupported(player, payload));
+    }
+
+    static Set<Integer> carryPayloadRecipientIds(
+            int carrierId,
+            Iterable<Integer> carrierTrackerIds,
+            Iterable<Integer> babyTrackerIds
+    ) {
+        Set<Integer> recipientIds = new LinkedHashSet<>();
+        recipientIds.add(carrierId);
+        carrierTrackerIds.forEach(recipientIds::add);
+        babyTrackerIds.forEach(recipientIds::add);
+        return recipientIds;
     }
 
     private static boolean isVisibleCarryRecipient(ServerPlayer player, ServerPlayer carrier, Entity baby) {

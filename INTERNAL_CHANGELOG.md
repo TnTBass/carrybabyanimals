@@ -4,6 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Actioned Revue findings on the NeoForge adapter by centralizing MSK build-number generation, warning when LuckPerms is installed but NeoForge permission nodes are not yet honored, deduplicating same-tick NeoForge entity interaction events, and sending carry payloads to carrier trackers as well as baby trackers.
 - Local dirty Fabric and NeoForge builds now append a UTC timestamp to the generated MSK build metadata, so repeated playtest jars from the same commit can be distinguished without changing the public mod version.
 - Implemented the Phase 2 NeoForge adapter/build foundation, including loader-suffixed Fabric and NeoForge jars, NeoForge metadata, config paths, permissions fallback, networking, client ModStatus/config wiring, render hooks, and artifact verification gates; manual NeoForge verification remains required before release prep.
 - Added a Phase 2 implementation plan for adding a separate NeoForge adapter/build on top of the accepted Fabric-preserving multiloader baseline.

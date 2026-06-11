@@ -16,44 +16,7 @@ base {
 
 def generatedBuildInfoDir = layout.buildDirectory.dir("generated/sources/buildInfo/java/main")
 
-def resolveBuildNumber = {
-    if (rootProject.hasProperty("buildNumber")) {
-        String propertyBuildNumber = rootProject.property("buildNumber").toString().trim()
-        if (!propertyBuildNumber.isEmpty()) {
-            return propertyBuildNumber
-        }
-    }
-
-    String githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")
-    if (githubRunNumber != null && !githubRunNumber.trim().isEmpty()) {
-        return githubRunNumber.trim()
-    }
-
-    try {
-        Process process = new ProcessBuilder("git", "rev-parse", "--short", "HEAD")
-                .directory(rootDir)
-                .redirectErrorStream(true)
-                .start()
-        String gitCommit = process.inputStream.getText("UTF-8").trim()
-        if (process.waitFor() == 0 && !gitCommit.isEmpty()) {
-            Process statusProcess = new ProcessBuilder("git", "status", "--porcelain")
-                    .directory(rootDir)
-                    .redirectErrorStream(true)
-                    .start()
-            String gitStatus = statusProcess.inputStream.getText("UTF-8").trim()
-            if (statusProcess.waitFor() == 0 && !gitStatus.isEmpty()) {
-                return gitCommit + ".dirty." + new Date().format("yyyyMMddHHmmss", TimeZone.getTimeZone("UTC"))
-            }
-            return gitCommit
-        }
-    } catch (Exception ignored) {
-        // Fall through to a stable local-development value when git is unavailable.
-    }
-
-    return "dev"
-}
-
-def buildNumberProvider = providers.provider { resolveBuildNumber() }
+def buildNumberProvider = providers.provider { rootProject.ext.resolveBuildNumber() }
 
 def javaStringLiteral = { String value ->
     return value

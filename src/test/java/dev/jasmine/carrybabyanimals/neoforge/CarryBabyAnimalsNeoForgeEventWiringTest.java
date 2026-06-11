@@ -24,6 +24,8 @@ final class CarryBabyAnimalsNeoForgeEventWiringTest {
 
         assertTrue(source.contains("PlayerInteractEvent.EntityInteractSpecific"));
         assertTrue(source.contains("onEntityInteractSpecific"));
+        assertTrue(source.contains("HANDLED_ENTITY_INTERACTIONS"));
+        assertTrue(source.contains("EntityInteractKey"));
     }
 
     @Test
