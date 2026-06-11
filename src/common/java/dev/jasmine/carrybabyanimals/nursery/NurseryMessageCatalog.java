@@ -20,6 +20,16 @@ public final class NurseryMessageCatalog {
     public String message(NurseryHazard hazard, String displayName, int variantIndex) {
         List<String> variants = MESSAGES.getOrDefault(hazard, MESSAGES.get(NurseryHazard.SUFFOCATION));
         int index = Math.floorMod(variantIndex, variants.size());
-        return variants.get(index).formatted(displayName);
+        String template = variants.get(index);
+        // Sentence-start templates use plain %s so generated "baby ..." names can be capitalized.
+        String formattedName = template.startsWith("%s") ? capitalizeStartingBaby(displayName) : displayName;
+        return template.formatted(formattedName);
+    }
+
+    private static String capitalizeStartingBaby(String displayName) {
+        if (displayName.startsWith("baby ")) {
+            return "Baby " + displayName.substring("baby ".length());
+        }
+        return displayName;
     }
 }
