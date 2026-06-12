@@ -6,22 +6,11 @@ param(
     [string] $Version = "",
 
     [Parameter(Mandatory = $false)]
+    [ValidateSet("fabric", "neoforge")]
+    [string] $Loader = "fabric",
+
+    [Parameter(Mandatory = $false)]
     [string] $JarPath,
-
-    [Parameter(Mandatory = $false)]
-    [string] $SourcesJarPath,
-
-    [Parameter(Mandatory = $false)]
-    [string] $FabricJarPath,
-
-    [Parameter(Mandatory = $false)]
-    [string] $FabricSourcesJarPath,
-
-    [Parameter(Mandatory = $false)]
-    [string] $NeoForgeJarPath,
-
-    [Parameter(Mandatory = $false)]
-    [string] $NeoForgeSourcesJarPath,
 
     [Parameter(Mandatory = $false)]
     [string] $ChangelogPath = "release-notes.md",
@@ -37,7 +26,7 @@ $ErrorActionPreference = 'Stop'
 
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $UploadDir = Join-Path $RepoRoot "build/modrinth-upload"
-$VersionDataPath = Join-Path $UploadDir "modrinth-version-data.json"
+$VersionDataPath = Join-Path $UploadDir "modrinth-$Loader-version-data.json"
 $Curl = if ($IsWindows) { "curl.exe" } else { "curl" }
 
 function Get-RequiredEnv {
@@ -151,75 +140,52 @@ if ($SyncDescriptionOnly) {
     return
 }
 
-if ([string]::IsNullOrWhiteSpace($FabricJarPath)) {
-    $FabricJarPath = if ([string]::IsNullOrWhiteSpace($JarPath)) {
+if ([string]::IsNullOrWhiteSpace($JarPath)) {
+    $JarPath = if ($Loader -eq "neoforge") {
+        "neoforge/build/libs/carrybabyanimals-$Version-neoforge.jar"
+    } else {
         "fabric/build/libs/carrybabyanimals-$Version-fabric.jar"
-    } else {
-        $JarPath
     }
 }
-if ([string]::IsNullOrWhiteSpace($FabricSourcesJarPath)) {
-    $FabricSourcesJarPath = if ([string]::IsNullOrWhiteSpace($SourcesJarPath)) {
-        "fabric/build/libs/carrybabyanimals-$Version-sources.jar"
-    } else {
-        $SourcesJarPath
-    }
-}
-if ([string]::IsNullOrWhiteSpace($NeoForgeJarPath)) {
-    $NeoForgeJarPath = "neoforge/build/libs/carrybabyanimals-$Version-neoforge.jar"
-}
-if ([string]::IsNullOrWhiteSpace($NeoForgeSourcesJarPath)) {
-    $NeoForgeSourcesJarPath = "neoforge/build/libs/carrybabyanimals-$Version-sources.jar"
+
+$jarFullPath = Resolve-RepoPath $JarPath
+if (-not (Test-Path -LiteralPath $jarFullPath)) {
+    throw "Jar not found: $JarPath"
 }
 
-$fabricJarFullPath = Resolve-RepoPath $FabricJarPath
-$fabricSourcesFullPath = Resolve-RepoPath $FabricSourcesJarPath
-$neoForgeJarFullPath = Resolve-RepoPath $NeoForgeJarPath
-$neoForgeSourcesFullPath = Resolve-RepoPath $NeoForgeSourcesJarPath
-if (-not (Test-Path -LiteralPath $fabricJarFullPath)) {
-    throw "Fabric jar not found: $FabricJarPath"
-}
-if (-not (Test-Path -LiteralPath $fabricSourcesFullPath)) {
-    throw "Fabric sources jar not found: $FabricSourcesJarPath"
-}
-if (-not (Test-Path -LiteralPath $neoForgeJarFullPath)) {
-    throw "NeoForge jar not found: $NeoForgeJarPath"
-}
-if (-not (Test-Path -LiteralPath $neoForgeSourcesFullPath)) {
-    throw "NeoForge sources jar not found: $NeoForgeSourcesJarPath"
-}
-
+$modrinthVersionNumber = "$Version-$Loader"
 $existingVersion = Invoke-ModrinthApi -Method "GET" -Uri "https://api.modrinth.com/v2/project/$projectId/version" -Headers $headers |
-    Where-Object { $_.version_number -eq $Version } |
+    Where-Object { $_.version_number -eq $modrinthVersionNumber } |
     Select-Object -First 1
 if ($null -ne $existingVersion) {
-    Write-Host "Modrinth $Slug $Version already exists. EnvironmentSynced=$EnvironmentSynced DescriptionSynced=$DescriptionSynced"
+    Write-Host "Modrinth $Slug $modrinthVersionNumber already exists. EnvironmentSynced=$EnvironmentSynced DescriptionSynced=$DescriptionSynced"
     return
 }
 
+$dependencies = @()
+if ($Loader -eq "fabric") {
+    $dependencies += @{
+        project_id = "P7dR8mSH"
+        version_id = $null
+        file_name = $null
+        dependency_type = "required"
+    }
+}
+
 $versionData = @{
-    name = "Carry Baby Animals $Version for Minecraft $minecraftVersion"
-    version_number = $Version
+    name = $modrinthVersionNumber
+    version_number = $modrinthVersionNumber
     changelog = Read-PublicChangelog $ChangelogPath
-    # Modrinth dependencies are version-wide, not scoped per loader. Keep Fabric API optional
-    # here so the combined Fabric+NeoForge version does not require Fabric API for NeoForge installs.
-    dependencies = @(
-        @{
-            project_id = "P7dR8mSH"
-            version_id = $null
-            file_name = $null
-            dependency_type = "optional"
-        }
-    )
+    dependencies = $dependencies
     game_versions = @($minecraftVersion)
     version_type = "release"
-    loaders = @("fabric", "neoforge")
+    loaders = @($Loader)
     featured = $true
     status = "listed"
     requested_status = "listed"
     project_id = $projectId
-    file_parts = @("fabric", "fabric-sources", "neoforge", "neoforge-sources")
-    primary_file = "fabric"
+    file_parts = @("mod")
+    primary_file = "mod"
 } | ConvertTo-Json -Depth 20
 $versionData | Set-Content -LiteralPath $VersionDataPath -Encoding UTF8
 
@@ -229,10 +195,7 @@ $versionResponse = & $Curl -sS `
     -H "User-Agent: TnTBass/carrybabyanimals" `
     -H "Accept: application/json" `
     -F "data=<$VersionDataPath;type=application/json" `
-    -F "fabric=@$fabricJarFullPath" `
-    -F "fabric-sources=@$fabricSourcesFullPath" `
-    -F "neoforge=@$neoForgeJarFullPath" `
-    -F "neoforge-sources=@$neoForgeSourcesFullPath"
+    -F "mod=@$jarFullPath"
 
 if ($LASTEXITCODE -ne 0) {
     throw "curl failed while creating Modrinth version."
@@ -243,4 +206,4 @@ if ($modrinthVersion.PSObject.Properties.Name -contains "error") {
     throw "Modrinth version creation failed: $($modrinthVersion.error): $($modrinthVersion.description)"
 }
 
-Write-Host "Published Modrinth $Slug $Version. EnvironmentSynced=$EnvironmentSynced DescriptionSynced=$DescriptionSynced"
+Write-Host "Published Modrinth $Slug $modrinthVersionNumber. EnvironmentSynced=$EnvironmentSynced DescriptionSynced=$DescriptionSynced"

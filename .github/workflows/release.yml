@@ -107,7 +107,7 @@ jobs:
               "build/release-assets/carrybabyanimals-${version}-neoforge-sources.jar"
           fi
 
-      - name: Publish to Modrinth
+      - name: Publish Fabric to Modrinth
         shell: pwsh
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
@@ -116,10 +116,22 @@ jobs:
           ./scripts/upload-modrinth.ps1 `
             -Slug "carrybabyanimals" `
             -Version $version `
-            -FabricJarPath "fabric/build/libs/carrybabyanimals-$version-fabric.jar" `
-            -FabricSourcesJarPath "fabric/build/libs/carrybabyanimals-$version-sources.jar" `
-            -NeoForgeJarPath "neoforge/build/libs/carrybabyanimals-$version-neoforge.jar" `
-            -NeoForgeSourcesJarPath "neoforge/build/libs/carrybabyanimals-$version-sources.jar" `
+            -Loader "fabric" `
+            -JarPath "fabric/build/libs/carrybabyanimals-$version-fabric.jar" `
+            -ChangelogPath "release-notes.md" `
+            -DescriptionPath "docs/marketplace-description.md"
+
+      - name: Publish NeoForge to Modrinth
+        shell: pwsh
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          ./scripts/upload-modrinth.ps1 `
+            -Slug "carrybabyanimals" `
+            -Version $version `
+            -Loader "neoforge" `
+            -JarPath "neoforge/build/libs/carrybabyanimals-$version-neoforge.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
 

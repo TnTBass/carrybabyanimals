@@ -4,6 +4,9 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Split Modrinth release publishing into separate Fabric and NeoForge version rows with loader-suffixed Modrinth version numbers, and stopped uploading sources jars to Modrinth.
+- Added reusable MultiGolem-facing multiloader lessons from the CarryBabyAnimals NeoForge release, including permission-provider modernization and marketplace publishing edge cases.
+
 ## 0.3.0
 
 - Updated the GitHub, Modrinth, and CurseForge release paths for loader-suffixed Fabric and NeoForge artifacts, including loader-specific CurseForge retry support.
