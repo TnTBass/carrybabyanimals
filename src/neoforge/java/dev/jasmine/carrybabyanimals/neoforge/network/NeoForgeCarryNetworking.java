@@ -194,7 +194,7 @@ public final class NeoForgeCarryNetworking {
     }
 
     private static boolean supports(ServerPlayer player, CustomPacketPayload.Type<?> type) {
-        // NeoForge 26.1.2.68-beta exposes no public can-send helper; recheck this internal API before upgrading.
+        // NeoForge 26.2.0.6-beta exposes no public can-send helper; recheck this internal API before upgrading.
         NetworkPayloadSetup setup = ChannelAttributes.getPayloadSetup(player.connection.getConnection());
         return setup != null && setup.getChannel(ConnectionProtocol.PLAY, type.id()) != null;
     }

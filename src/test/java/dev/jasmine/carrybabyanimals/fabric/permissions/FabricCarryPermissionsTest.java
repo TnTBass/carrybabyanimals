@@ -38,7 +38,7 @@ final class FabricCarryPermissionsTest {
         assertTrue(modern.calls.isEmpty());
         assertEquals(List.of(CarryPermissions.CARRY_TAMED + ":true"), legacy.calls);
         assertEquals(
-                List.of("Old deprecated permissions API detected. Please update to Fabric API version 0.149.0+26.1.2 or newer."),
+                List.of("Old deprecated permissions API detected. Please update to Fabric API version 0.152.2+26.2 or newer."),
                 warnings.messages
         );
     }

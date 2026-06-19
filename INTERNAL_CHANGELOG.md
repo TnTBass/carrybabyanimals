@@ -4,6 +4,12 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+## 0.3.1
+
+- Removed dirty-worktree timestamp suffixes from generated ModStatus build metadata so local smoke-test jars show stable commit identifiers.
+- Changed loader metadata to use the pinned Minecraft build target as an open lower bound while keeping marketplace game-version metadata exact to the tested build target.
+- Pinned Minecraft 26.2 compile coordinates to current pre-release upstream artifacts, including ModMenu `20.0.0-alpha.1` and NeoForge `26.2.0.6-beta`; re-check for stable replacements before the next Minecraft bump.
+- Normalized Fabric and NeoForge artifact filenames to `carrybabyanimals-<loader>-<modversion>+mc<minecraftversion>.jar` for Gradle builds, GitHub Release assets, and marketplace upload paths.
 - Split Modrinth release publishing into separate Fabric and NeoForge version rows with loader-suffixed Modrinth version numbers, and stopped uploading sources jars to Modrinth.
 - Added reusable MultiGolem-facing multiloader lessons from the CarryBabyAnimals NeoForge release, including permission-provider modernization and marketplace publishing edge cases.
 

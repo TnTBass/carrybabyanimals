@@ -50,24 +50,28 @@ jobs:
         shell: bash
         run: |
           version="${{ steps.version.outputs.version }}"
-          test -f "fabric/build/libs/carrybabyanimals-${version}-fabric.jar"
-          test -f "fabric/build/libs/carrybabyanimals-${version}-sources.jar"
-          test -f "neoforge/build/libs/carrybabyanimals-${version}-neoforge.jar"
-          test -f "neoforge/build/libs/carrybabyanimals-${version}-sources.jar"
+          minecraft_version="$(grep '^minecraft_version=' gradle.properties | cut -d= -f2-)"
+          artifact_version="${version}+mc${minecraft_version}"
+          test -f "fabric/build/libs/carrybabyanimals-fabric-${artifact_version}.jar"
+          test -f "fabric/build/libs/carrybabyanimals-fabric-${artifact_version}-sources.jar"
+          test -f "neoforge/build/libs/carrybabyanimals-neoforge-${artifact_version}.jar"
+          test -f "neoforge/build/libs/carrybabyanimals-neoforge-${artifact_version}-sources.jar"
 
       - name: Stage release assets
         shell: bash
         run: |
           version="${{ steps.version.outputs.version }}"
+          minecraft_version="$(grep '^minecraft_version=' gradle.properties | cut -d= -f2-)"
+          artifact_version="${version}+mc${minecraft_version}"
           mkdir -p build/release-assets
-          cp "fabric/build/libs/carrybabyanimals-${version}-fabric.jar" \
-            "build/release-assets/carrybabyanimals-${version}-fabric.jar"
-          cp "fabric/build/libs/carrybabyanimals-${version}-sources.jar" \
-            "build/release-assets/carrybabyanimals-${version}-fabric-sources.jar"
-          cp "neoforge/build/libs/carrybabyanimals-${version}-neoforge.jar" \
-            "build/release-assets/carrybabyanimals-${version}-neoforge.jar"
-          cp "neoforge/build/libs/carrybabyanimals-${version}-sources.jar" \
-            "build/release-assets/carrybabyanimals-${version}-neoforge-sources.jar"
+          cp "fabric/build/libs/carrybabyanimals-fabric-${artifact_version}.jar" \
+            "build/release-assets/carrybabyanimals-fabric-${artifact_version}.jar"
+          cp "fabric/build/libs/carrybabyanimals-fabric-${artifact_version}-sources.jar" \
+            "build/release-assets/carrybabyanimals-fabric-${artifact_version}-sources.jar"
+          cp "neoforge/build/libs/carrybabyanimals-neoforge-${artifact_version}.jar" \
+            "build/release-assets/carrybabyanimals-neoforge-${artifact_version}.jar"
+          cp "neoforge/build/libs/carrybabyanimals-neoforge-${artifact_version}-sources.jar" \
+            "build/release-assets/carrybabyanimals-neoforge-${artifact_version}-sources.jar"
 
       - name: Extract public release notes
         shell: bash
@@ -88,23 +92,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           version="${{ steps.version.outputs.version }}"
+          minecraft_version="$(grep '^minecraft_version=' gradle.properties | cut -d= -f2-)"
+          artifact_version="${version}+mc${minecraft_version}"
           if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
             gh release edit "${GITHUB_REF_NAME}" \
               --title "Carry Baby Animals ${version}" \
               --notes-file release-notes.md
             gh release upload "${GITHUB_REF_NAME}" --clobber \
-              "build/release-assets/carrybabyanimals-${version}-fabric.jar" \
-              "build/release-assets/carrybabyanimals-${version}-fabric-sources.jar" \
-              "build/release-assets/carrybabyanimals-${version}-neoforge.jar" \
-              "build/release-assets/carrybabyanimals-${version}-neoforge-sources.jar"
+              "build/release-assets/carrybabyanimals-fabric-${artifact_version}.jar" \
+              "build/release-assets/carrybabyanimals-fabric-${artifact_version}-sources.jar" \
+              "build/release-assets/carrybabyanimals-neoforge-${artifact_version}.jar" \
+              "build/release-assets/carrybabyanimals-neoforge-${artifact_version}-sources.jar"
           else
             gh release create "${GITHUB_REF_NAME}" \
               --title "Carry Baby Animals ${version}" \
               --notes-file release-notes.md \
-              "build/release-assets/carrybabyanimals-${version}-fabric.jar" \
-              "build/release-assets/carrybabyanimals-${version}-fabric-sources.jar" \
-              "build/release-assets/carrybabyanimals-${version}-neoforge.jar" \
-              "build/release-assets/carrybabyanimals-${version}-neoforge-sources.jar"
+              "build/release-assets/carrybabyanimals-fabric-${artifact_version}.jar" \
+              "build/release-assets/carrybabyanimals-fabric-${artifact_version}-sources.jar" \
+              "build/release-assets/carrybabyanimals-neoforge-${artifact_version}.jar" \
+              "build/release-assets/carrybabyanimals-neoforge-${artifact_version}-sources.jar"
           fi
 
       - name: Publish Fabric to Modrinth
@@ -113,11 +119,13 @@ jobs:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
         run: |
           $version = "${{ steps.version.outputs.version }}"
+          $minecraftVersion = (Select-String -Path "gradle.properties" -Pattern "^minecraft_version=(.+)$").Matches[0].Groups[1].Value
+          $artifactVersion = "$version+mc$minecraftVersion"
           ./scripts/upload-modrinth.ps1 `
             -Slug "carrybabyanimals" `
             -Version $version `
             -Loader "fabric" `
-            -JarPath "fabric/build/libs/carrybabyanimals-$version-fabric.jar" `
+            -JarPath "fabric/build/libs/carrybabyanimals-fabric-$artifactVersion.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
 
@@ -127,11 +135,13 @@ jobs:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
         run: |
           $version = "${{ steps.version.outputs.version }}"
+          $minecraftVersion = (Select-String -Path "gradle.properties" -Pattern "^minecraft_version=(.+)$").Matches[0].Groups[1].Value
+          $artifactVersion = "$version+mc$minecraftVersion"
           ./scripts/upload-modrinth.ps1 `
             -Slug "carrybabyanimals" `
             -Version $version `
             -Loader "neoforge" `
-            -JarPath "neoforge/build/libs/carrybabyanimals-$version-neoforge.jar" `
+            -JarPath "neoforge/build/libs/carrybabyanimals-neoforge-$artifactVersion.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
 
@@ -142,11 +152,13 @@ jobs:
           CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
         run: |
           $version = "${{ steps.version.outputs.version }}"
+          $minecraftVersion = (Select-String -Path "gradle.properties" -Pattern "^minecraft_version=(.+)$").Matches[0].Groups[1].Value
+          $artifactVersion = "$version+mc$minecraftVersion"
           ./scripts/upload-curseforge.ps1 `
             -Slug "carry-baby-animals" `
             -Version $version `
             -Loader "fabric" `
-            -JarPath "fabric/build/libs/carrybabyanimals-$version-fabric.jar" `
+            -JarPath "fabric/build/libs/carrybabyanimals-fabric-$artifactVersion.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
 
@@ -157,11 +169,13 @@ jobs:
           CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
         run: |
           $version = "${{ steps.version.outputs.version }}"
+          $minecraftVersion = (Select-String -Path "gradle.properties" -Pattern "^minecraft_version=(.+)$").Matches[0].Groups[1].Value
+          $artifactVersion = "$version+mc$minecraftVersion"
           ./scripts/upload-curseforge.ps1 `
             -Slug "carry-baby-animals" `
             -Version $version `
             -Loader "neoforge" `
-            -JarPath "neoforge/build/libs/carrybabyanimals-$version-neoforge.jar" `
+            -JarPath "neoforge/build/libs/carrybabyanimals-neoforge-$artifactVersion.jar" `
             -ChangelogPath "release-notes.md" `
             -DescriptionPath "docs/marketplace-description.md"
 

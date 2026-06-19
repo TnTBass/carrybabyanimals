@@ -8,10 +8,10 @@ The mod is built around a simple idea: baby animals stay as real world entities,
 
 ## Requirements
 
-- Minecraft 26.1.2
-- Fabric Loader 0.19.2 or newer, or NeoForge 26.1.2.74 or newer
+- Minecraft 26.2
+- Fabric Loader 0.19.3 or newer, or NeoForge 26.2.0.6-beta or newer
 - Java 25 or newer
-- Fabric API 0.149.0+26.1.2 or newer when running on Fabric
+- Fabric API 0.152.2+26.2 or newer when running on Fabric
 
 Optional:
 

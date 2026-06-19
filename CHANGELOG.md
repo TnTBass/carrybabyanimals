@@ -4,6 +4,10 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
+## 0.3.1
+
+- Updated compatibility to Minecraft 26.2 for Fabric and NeoForge.
+
 ## 0.3.0
 
 - Added NeoForge modloader support with the same Carry Baby Animals gameplay as Fabric.

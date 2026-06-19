@@ -16,7 +16,9 @@ base {
 def generatedBuildInfoDir = layout.buildDirectory.dir("generated/sources/buildInfo/java/main")
 
 def buildNumberProvider = providers.provider { rootProject.ext.resolveBuildNumber() }
-def expectedFabricArtifactName = "${rootProject.archives_base_name}-${version}-fabric.jar"
+def fabricArchiveBaseName = "${rootProject.archives_base_name}-fabric"
+def artifactVersion = "${version}+mc${rootProject.minecraft_version}"
+def expectedFabricArtifactName = "${fabricArchiveBaseName}-${artifactVersion}.jar"
 
 def javaStringLiteral = { String value ->
     return value
@@ -96,7 +98,8 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.withType(AbstractArchiveTask).configureEach {
-    archiveBaseName = rootProject.archives_base_name
+    archiveBaseName = fabricArchiveBaseName
+    archiveVersion = artifactVersion
 }
 
 tasks.register("generateBuildInfo") {
@@ -133,11 +136,11 @@ tasks.named("sourcesJar") {
 }
 
 tasks.named("jar") {
-    archiveClassifier = "fabric"
+    archiveClassifier = ""
 }
 
 tasks.matching { it.name == "remapJar" }.configureEach {
-    archiveClassifier = "fabric"
+    archiveClassifier = ""
 }
 
 test {
@@ -158,8 +161,11 @@ tasks.register("checkFabricModJsonPresent") {
         if (!processedMetadata.exists()) {
             throw new GradleException("Missing processed Fabric metadata: ${rootDir.relativePath(processedMetadata)}")
         }
-        if (processedMetadata.getText("UTF-8").contains('${version}')) {
-            throw new GradleException("Fabric metadata version was not expanded: ${rootDir.relativePath(processedMetadata)}")
+        String processedText = processedMetadata.getText("UTF-8")
+        ["version", "minecraftVersion", "loaderVersion", "fabricVersion"].each { token ->
+            if (processedText.contains("\${${token}}")) {
+                throw new GradleException("Fabric metadata ${token} was not expanded: ${rootDir.relativePath(processedMetadata)}")
+            }
         }
     }
 }
@@ -170,8 +176,16 @@ tasks.named("check") {
 
 tasks.named("processResources") {
     inputs.property "version", project.version
+    inputs.property "minecraftVersion", rootProject.minecraft_version
+    inputs.property "loaderVersion", rootProject.loader_version
+    inputs.property "fabricVersion", rootProject.fabric_version
     filesMatching("fabric.mod.json") {
-        expand "version": inputs.properties.version
+        expand(
+                "version": inputs.properties.version,
+                "minecraftVersion": inputs.properties.minecraftVersion,
+                "loaderVersion": inputs.properties.loaderVersion,
+                "fabricVersion": inputs.properties.fabricVersion
+        )
     }
 }
 

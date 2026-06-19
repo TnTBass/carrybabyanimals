@@ -17,7 +17,9 @@ base {
 def generatedBuildInfoDir = layout.buildDirectory.dir("generated/sources/buildInfo/java/main")
 
 def buildNumberProvider = providers.provider { rootProject.ext.resolveBuildNumber() }
-def expectedNeoForgeArtifactName = "${rootProject.archives_base_name}-${version}-neoforge.jar"
+def neoForgeArchiveBaseName = "${rootProject.archives_base_name}-neoforge"
+def artifactVersion = "${version}+mc${rootProject.minecraft_version}"
+def expectedNeoForgeArtifactName = "${neoForgeArchiveBaseName}-${artifactVersion}.jar"
 
 def javaStringLiteral = { String value ->
     return value
@@ -96,7 +98,8 @@ dependencies {
 }
 
 tasks.withType(AbstractArchiveTask).configureEach {
-    archiveBaseName = rootProject.archives_base_name
+    archiveBaseName = neoForgeArchiveBaseName
+    archiveVersion = artifactVersion
 }
 
 tasks.register("generateBuildInfo") {
@@ -133,7 +136,7 @@ tasks.named("sourcesJar") {
 }
 
 tasks.named("jar") {
-    archiveClassifier = "neoforge"
+    archiveClassifier = ""
 }
 
 test {

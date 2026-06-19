@@ -114,10 +114,11 @@ New-Item -ItemType Directory -Force -Path $UploadDir | Out-Null
 Assert-PublicDescriptionExists $DescriptionPath
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
+    $artifactVersion = "$Version+mc$minecraftVersion"
     $JarPath = if ($Loader -eq "neoforge") {
-        "neoforge/build/libs/carrybabyanimals-$Version-neoforge.jar"
+        "neoforge/build/libs/carrybabyanimals-neoforge-$artifactVersion.jar"
     } else {
-        "fabric/build/libs/carrybabyanimals-$Version-fabric.jar"
+        "fabric/build/libs/carrybabyanimals-fabric-$artifactVersion.jar"
     }
 }
 

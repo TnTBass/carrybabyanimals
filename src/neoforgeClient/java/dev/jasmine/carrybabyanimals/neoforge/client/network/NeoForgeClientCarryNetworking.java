@@ -41,7 +41,7 @@ public final class NeoForgeClientCarryNetworking {
         if (Minecraft.getInstance().getConnection() == null) {
             return false;
         }
-        // NeoForge 26.1.2.68-beta exposes no public can-send helper; recheck this internal API before upgrading.
+        // NeoForge 26.2.0.6-beta exposes no public can-send helper; recheck this internal API before upgrading.
         NetworkPayloadSetup setup = ChannelAttributes.getPayloadSetup(Minecraft.getInstance().getConnection().getConnection());
         return setup != null && setup.getChannel(ConnectionProtocol.PLAY, type.id()) != null;
     }

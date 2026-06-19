@@ -12,7 +12,7 @@ public final class FabricCarryPermissions implements CarryPermissions.Permission
     private static final String MODERN_FABRIC_PERMISSIONS_API = "fabric-permission-api-v1";
     private static final String LEGACY_FABRIC_PERMISSIONS_API = "fabric-permissions-api-v0";
     private static final String LEGACY_WARNING =
-            "Old deprecated permissions API detected. Please update to Fabric API version 0.149.0+26.1.2 or newer.";
+            "Old deprecated permissions API detected. Please update to Fabric API version 0.152.2+26.2 or newer.";
 
     private final Provider modernProvider;
     private final Provider legacyProvider;

@@ -48,6 +48,17 @@ function Get-Text {
     return Get-Content -Raw -LiteralPath $path
 }
 
+function Get-GradleProperty {
+    param([string] $Name)
+
+    $propertiesPath = Join-Path $RepoRoot 'gradle.properties'
+    $match = Get-Content -LiteralPath $propertiesPath | Where-Object { $_ -match "^$([regex]::Escape($Name))=(.+)$" } | Select-Object -First 1
+    if (-not $match) {
+        throw "gradle.properties is missing $Name."
+    }
+    return ($match -replace "^$([regex]::Escape($Name))=", "").Trim()
+}
+
 function Test-ReleaseWorkflowPublishesPublicNotesOnly {
     $workflow = Get-Text '.github/workflows/release.yml'
 
@@ -57,12 +68,11 @@ function Test-ReleaseWorkflowPublishesPublicNotesOnly {
     Assert-Contains $workflow 'gh release view "${GITHUB_REF_NAME}"' 'Release workflow must handle reruns when the GitHub release already exists.'
     Assert-Contains $workflow 'gh release upload "${GITHUB_REF_NAME}" --clobber' 'Release workflow must replace release assets on reruns.'
     Assert-Contains $workflow '-ChangelogPath "release-notes.md"' 'Release workflow must pass public release-notes.md to marketplace scripts.'
-    Assert-Contains $workflow 'fabric/build/libs/carrybabyanimals-${version}-fabric.jar' 'Release workflow must publish the loader-suffixed Fabric jar.'
-    Assert-Contains $workflow 'fabric/build/libs/carrybabyanimals-${version}-sources.jar' 'Release workflow must publish the Fabric sources jar.'
-    Assert-Contains $workflow 'neoforge/build/libs/carrybabyanimals-${version}-neoforge.jar' 'Release workflow must publish the loader-suffixed NeoForge jar.'
-    Assert-Contains $workflow 'neoforge/build/libs/carrybabyanimals-${version}-sources.jar' 'Release workflow must publish the NeoForge sources jar.'
-    Assert-Contains $workflow 'build/release-assets/carrybabyanimals-${version}-fabric-sources.jar' 'Release workflow must give the Fabric sources release asset a unique loader-suffixed name.'
-    Assert-Contains $workflow 'build/release-assets/carrybabyanimals-${version}-neoforge-sources.jar' 'Release workflow must give the NeoForge sources release asset a unique loader-suffixed name.'
+    Assert-Contains $workflow 'artifact_version="${version}+mc${minecraft_version}"' 'Release workflow must derive artifact names from mod version plus Minecraft version.'
+    Assert-Contains $workflow 'fabric/build/libs/carrybabyanimals-fabric-${artifact_version}.jar' 'Release workflow must publish the normalized Fabric jar.'
+    Assert-Contains $workflow 'fabric/build/libs/carrybabyanimals-fabric-${artifact_version}-sources.jar' 'Release workflow must publish the normalized Fabric sources jar.'
+    Assert-Contains $workflow 'neoforge/build/libs/carrybabyanimals-neoforge-${artifact_version}.jar' 'Release workflow must publish the normalized NeoForge jar.'
+    Assert-Contains $workflow 'neoforge/build/libs/carrybabyanimals-neoforge-${artifact_version}-sources.jar' 'Release workflow must publish the normalized NeoForge sources jar.'
     Assert-NotContains $workflow '"build/libs/carrybabyanimals-${version}.jar"' 'Release workflow must not publish the old unsuffixed root jar.'
     Assert-NotContains $workflow '"build/libs/carrybabyanimals-${version}-sources.jar"' 'Release workflow must not publish the old unsuffixed root sources jar.'
     Assert-NotContains $workflow 'INTERNAL_CHANGELOG.md' 'Release workflow must not publish maintainer-only INTERNAL_CHANGELOG.md.'
@@ -108,8 +118,9 @@ function Test-ModrinthUploadEnforcesRequiredServerOptionalClient {
     Assert-Contains $workflow 'Publish NeoForge to Modrinth' 'Release workflow must publish a separate NeoForge Modrinth version.'
     Assert-Contains $workflow '-Loader "fabric"' 'Release workflow must pass the Fabric loader to Modrinth.'
     Assert-Contains $workflow '-Loader "neoforge"' 'Release workflow must pass the NeoForge loader to Modrinth.'
-    Assert-Contains $workflow '-JarPath "fabric/build/libs/carrybabyanimals-$version-fabric.jar"' 'Release workflow must pass the Fabric runtime jar path to Modrinth.'
-    Assert-Contains $workflow '-JarPath "neoforge/build/libs/carrybabyanimals-$version-neoforge.jar"' 'Release workflow must pass the NeoForge runtime jar path to Modrinth.'
+    Assert-Contains $workflow '$artifactVersion = "$version+mc$minecraftVersion"' 'Release workflow PowerShell steps must derive normalized artifact versions.'
+    Assert-Contains $workflow '-JarPath "fabric/build/libs/carrybabyanimals-fabric-$artifactVersion.jar"' 'Release workflow must pass the Fabric runtime jar path to Modrinth.'
+    Assert-Contains $workflow '-JarPath "neoforge/build/libs/carrybabyanimals-neoforge-$artifactVersion.jar"' 'Release workflow must pass the NeoForge runtime jar path to Modrinth.'
     Assert-NotContains $script 'SourcesJarPath' 'Modrinth upload must not accept or publish sources jars.'
     Assert-NotContains $script 'FabricSourcesJarPath' 'Modrinth upload must not accept Fabric sources jars.'
     Assert-NotContains $script 'NeoForgeSourcesJarPath' 'Modrinth upload must not accept NeoForge sources jars.'
@@ -160,8 +171,9 @@ function Test-CurseForgeOnlyRetryWorkflow {
     Assert-Contains $workflow 'loader:' 'CurseForge retry workflow must let the maintainer choose which loader to retry.'
     Assert-Contains $workflow 'fabric,neoforge,both' 'CurseForge retry workflow must support retrying either loader or both.'
     Assert-Contains $workflow './scripts/upload-curseforge.ps1' 'CurseForge retry workflow must use the shared CurseForge upload script.'
-    Assert-Contains $workflow '-JarPath "fabric/build/libs/carrybabyanimals-$version-fabric.jar"' 'CurseForge retry workflow must upload the Fabric release jar.'
-    Assert-Contains $workflow '-JarPath "neoforge/build/libs/carrybabyanimals-$version-neoforge.jar"' 'CurseForge retry workflow must upload the NeoForge release jar.'
+    Assert-Contains $workflow '$artifactVersion = "$version+mc$minecraftVersion"' 'CurseForge retry workflow must derive normalized artifact versions.'
+    Assert-Contains $workflow '-JarPath "fabric/build/libs/carrybabyanimals-fabric-$artifactVersion.jar"' 'CurseForge retry workflow must upload the Fabric release jar.'
+    Assert-Contains $workflow '-JarPath "neoforge/build/libs/carrybabyanimals-neoforge-$artifactVersion.jar"' 'CurseForge retry workflow must upload the NeoForge release jar.'
     Assert-Contains $workflow '-Loader "fabric"' 'CurseForge retry workflow must pass the Fabric loader.'
     Assert-Contains $workflow '-Loader "neoforge"' 'CurseForge retry workflow must pass the NeoForge loader.'
     Assert-Contains $workflow 'Report Fabric CurseForge file ID' 'CurseForge retry workflow must report Fabric uploads separately.'
@@ -186,6 +198,13 @@ function Test-GradleRunsReleaseNotesStyleGate {
     Assert-Contains $build 'tasks.register("checkReleaseNotesStyle"' 'Gradle must register checkReleaseNotesStyle.'
     Assert-Contains $build 'scripts/check-changelog-style.py' 'Release notes style gate must run the changelog style checker.'
     Assert-Contains $build 'dependsOn tasks.named("checkReleaseNotesStyle")' 'Gradle check must depend on checkReleaseNotesStyle.'
+}
+
+function Test-BuildMetadataDoesNotExposeDirtyTimestamp {
+    $build = Get-Text 'build.gradle'
+
+    Assert-NotContains $build '.dirty.' 'Generated build metadata must not expose a dirty marker or timestamp in ModStatus displays.'
+    Assert-NotContains $build 'git status --porcelain' 'Generated build metadata must not vary only because the worktree has uncommitted files.'
 }
 
 function Test-ChangelogStyleScriptFlagsDevelopmentLogEntries {
@@ -255,9 +274,28 @@ function Test-FabricPermissionRequirementsUseModernFabricApi {
     if ($modJson.suggests.PSObject.Properties.Name -contains 'fabric-permissions-api-v0') {
         throw 'Legacy Fabric Permissions API must not be advertised as an optional integration.'
     }
-    if ($modJson.depends.'fabric-api' -ne '>=0.149.0+26.1.2') {
+    if ($modJson.depends.'fabric-api' -ne '>=${fabricVersion}') {
         throw 'Fabric API dependency must declare the verified modern permission API baseline.'
     }
+}
+
+function Test-LoaderMetadataUsesOpenMinecraftFloor {
+    $modrinthUpload = Get-Text 'scripts/upload-modrinth.ps1'
+    $curseForgeUpload = Get-Text 'scripts/upload-curseforge.ps1'
+    $fabricBuild = Get-Text 'fabric/build.gradle'
+    $modJson = Get-Text 'src/fabric/resources/fabric.mod.json' | ConvertFrom-Json
+    $neoForgeToml = Get-Text 'src/neoforge/resources/META-INF/neoforge.mods.toml'
+
+    if ($modJson.depends.minecraft -ne '>=${minecraftVersion}') {
+        throw 'Fabric metadata must use the pinned build Minecraft version as an open lower bound.'
+    }
+    Assert-NotContains (Get-Text 'src/fabric/resources/fabric.mod.json') '"minecraft": "26.' 'Fabric metadata must not hard-pin Minecraft to an exact 26.x version.'
+    Assert-Contains $fabricBuild 'inputs.property "minecraftVersion", rootProject.minecraft_version' 'Fabric resource processing must derive the Minecraft metadata floor from gradle.properties.'
+    Assert-Contains $fabricBuild 'inputs.property "fabricVersion", rootProject.fabric_version' 'Fabric resource processing must derive the Fabric API metadata floor from gradle.properties.'
+    Assert-Contains $neoForgeToml 'versionRange="[${minecraftVersion},)"' 'NeoForge metadata must use minecraftVersion as an open lower-bound range.'
+    Assert-Contains $modrinthUpload '$minecraftVersion = Get-GradleProperty "minecraft_version"' 'Modrinth upload must resolve the pinned build target for exact tested game-version metadata.'
+    Assert-Contains $modrinthUpload 'game_versions = @($minecraftVersion)' 'Modrinth upload must keep the pinned build target as the exact tested game version.'
+    Assert-Contains $curseForgeUpload '$minecraftVersion = Get-GradleProperty "minecraft_version"' 'CurseForge upload must resolve the pinned build target for exact tested game-version metadata.'
 }
 
 function Test-MarketplaceDescriptionExists {
@@ -269,7 +307,7 @@ function Test-MarketplaceDescriptionExists {
     Assert-Contains $description 'client' 'Marketplace description must explain optional client setup.'
     Assert-Contains $description 'server-required and the client mod is highly recommended' 'Marketplace description must describe the player-facing setup as server-required with the client mod highly recommended.'
     Assert-Contains $description 'Marketplace environment metadata may list the client as optional' 'Marketplace description must explain why marketplace environment metadata can still list the client as optional.'
-    Assert-Contains $description 'Fabric API 0.149.0+26.1.2 or newer when running on Fabric' 'Marketplace description must document the verified Fabric API baseline.'
+    Assert-Contains $description 'Fabric API 0.152.2+26.2 or newer when running on Fabric' 'Marketplace description must document the verified Fabric API baseline.'
     Assert-Contains $description 'NeoForge servers use NeoForge''s built-in permission API' 'Marketplace description must document NeoForge permission provider behavior.'
 }
 
@@ -286,7 +324,7 @@ function Test-ReadmeContainsReleaseCriticalFacts {
     Assert-Contains $readme 'allowCarryingOtherPlayersTamedAnimals' 'README must document the tamed-animal ownership configuration option.'
     Assert-Contains $readme 'pettingCooldownTicks' 'README must document the petting cooldown configuration option.'
     Assert-Contains $readme 'Supported animal names:' 'README must document supported config animal names.'
-    Assert-Contains $readme 'Fabric API 0.149.0+26.1.2 or newer when running on Fabric' 'README must document the verified Fabric API baseline.'
+    Assert-Contains $readme 'Fabric API 0.152.2+26.2 or newer when running on Fabric' 'README must document the verified Fabric API baseline.'
     Assert-Contains $readme 'NeoForge servers use NeoForge''s built-in permission API' 'README must document NeoForge permission provider behavior.'
     Assert-Contains $readme 'If no loader permission provider is active' 'README must document permission behavior without a loader permission provider.'
     Assert-Contains $readme 'Players cannot carry another player''s tamed baby animals.' 'README must document the no-permissions fallback for other players'' tamed animals.'
@@ -304,9 +342,11 @@ Test-CurseForgeUploadDocumentsSideLimitAndDependencies
 Test-CurseForgeOnlyRetryWorkflow
 Test-GradleRunsReleasePublishingSourceGate
 Test-GradleRunsReleaseNotesStyleGate
+Test-BuildMetadataDoesNotExposeDirtyTimestamp
 Test-ChangelogStyleScriptFlagsDevelopmentLogEntries
 Test-ChangelogStyleScriptAllowsPlayerAdminReleaseNotes
 Test-FabricPermissionRequirementsUseModernFabricApi
+Test-LoaderMetadataUsesOpenMinecraftFloor
 Test-MarketplaceDescriptionExists
 Test-ReadmeContainsReleaseCriticalFacts
 Test-PowerShellPublishingScriptsParse
