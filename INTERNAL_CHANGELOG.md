@@ -4,6 +4,8 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Restored friendly Modrinth per-version names while keeping loader-suffixed Modrinth version numbers for split Fabric and NeoForge uploads.
+
 ## 0.3.1
 
 - Removed dirty-worktree timestamp suffixes from generated ModStatus build metadata so local smoke-test jars show stable commit identifiers.

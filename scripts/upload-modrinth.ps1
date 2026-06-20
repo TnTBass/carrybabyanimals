@@ -172,9 +172,10 @@ if ($Loader -eq "fabric") {
         dependency_type = "required"
     }
 }
+$loaderDisplayName = if ($Loader -eq "neoforge") { "NeoForge" } else { "Fabric" }
 
 $versionData = @{
-    name = $modrinthVersionNumber
+    name = "Carry Baby Animals $Version for Minecraft $minecraftVersion ($loaderDisplayName)"
     version_number = $modrinthVersionNumber
     changelog = Read-PublicChangelog $ChangelogPath
     dependencies = $dependencies
