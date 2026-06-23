@@ -155,9 +155,13 @@ if (-not (Test-Path -LiteralPath $jarFullPath)) {
 }
 
 $modrinthVersionNumber = $artifactVersion
-$existingVersion = Invoke-ModrinthApi -Method "GET" -Uri "https://api.modrinth.com/v2/project/$projectId/version" -Headers $headers |
-    Where-Object { $_.version_number -eq $modrinthVersionNumber -and $_.loaders -contains $Loader } |
-    Select-Object -First 1
+$projectVersions = Invoke-ModrinthApi -Method "GET" -Uri "https://api.modrinth.com/v2/project/$projectId/version" -Headers $headers
+$matchingVersions = foreach ($projectVersion in $projectVersions) {
+    if (($projectVersion.version_number -eq $modrinthVersionNumber) -and ($projectVersion.loaders -contains $Loader)) {
+        $projectVersion
+    }
+}
+$existingVersion = $matchingVersions | Select-Object -First 1
 if ($null -ne $existingVersion) {
     Write-Host "Modrinth $Slug $modrinthVersionNumber already exists. EnvironmentSynced=$EnvironmentSynced DescriptionSynced=$DescriptionSynced"
     return
