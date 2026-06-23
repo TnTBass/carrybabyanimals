@@ -4,6 +4,10 @@ Public release notes for players and server admins. These notes are safe to publ
 
 ## Unreleased
 
+## 0.3.2
+
+- Fixed a launch crash risk when Carry Baby Animals is installed with Advanced Hook Launchers.
+
 ## 0.3.1
 
 - Updated compatibility to Minecraft 26.2 for Fabric and NeoForge.

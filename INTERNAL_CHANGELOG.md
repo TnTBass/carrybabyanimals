@@ -4,7 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
-- Restored friendly Modrinth per-version names while keeping loader-suffixed Modrinth version numbers for split Fabric and NeoForge uploads.
+- Aligned Modrinth version rows with the other mods by using `modversion+mc<minecraftversion>` as the shared public version number while still uploading separate Fabric and NeoForge files.
 
 ## 0.3.1
 

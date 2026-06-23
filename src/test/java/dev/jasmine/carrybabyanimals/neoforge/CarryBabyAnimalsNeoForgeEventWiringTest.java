@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class CarryBabyAnimalsNeoForgeEventWiringTest {
@@ -78,6 +79,26 @@ final class CarryBabyAnimalsNeoForgeEventWiringTest {
         assertTrue(modMetadata.contains("carrybabyanimals.neoforge.mixins.json"));
         assertTrue(Files.exists(mixinClass));
         assertTrue(Files.exists(mixinConfig));
+    }
+
+    @Test
+    void neoforgeCarryAttachmentMixinAvoidsExclusiveRedirects() throws IOException {
+        String source = Files.readString(repoRoot().resolve(Path.of(
+                "src",
+                "neoforge",
+                "java",
+                "dev",
+                "jasmine",
+                "carrybabyanimals",
+                "neoforge",
+                "mixin",
+                "EntityStartRidingMixin.java"
+        )));
+
+        assertTrue(source.contains("@Inject"));
+        assertTrue(source.contains("CallbackInfoReturnable<Boolean>"));
+        assertFalse(source.contains("@Redirect"));
+        assertFalse(source.contains("EntityType;canSerialize()Z"));
     }
 
     private static Path repoRoot() {

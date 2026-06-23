@@ -140,8 +140,8 @@ if ($SyncDescriptionOnly) {
     return
 }
 
+$artifactVersion = "$Version+mc$minecraftVersion"
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
-    $artifactVersion = "$Version+mc$minecraftVersion"
     $JarPath = if ($Loader -eq "neoforge") {
         "neoforge/build/libs/carrybabyanimals-neoforge-$artifactVersion.jar"
     } else {
@@ -154,9 +154,9 @@ if (-not (Test-Path -LiteralPath $jarFullPath)) {
     throw "Jar not found: $JarPath"
 }
 
-$modrinthVersionNumber = "$Version-$Loader"
+$modrinthVersionNumber = $artifactVersion
 $existingVersion = Invoke-ModrinthApi -Method "GET" -Uri "https://api.modrinth.com/v2/project/$projectId/version" -Headers $headers |
-    Where-Object { $_.version_number -eq $modrinthVersionNumber } |
+    Where-Object { $_.version_number -eq $modrinthVersionNumber -and $_.loaders -contains $Loader } |
     Select-Object -First 1
 if ($null -ne $existingVersion) {
     Write-Host "Modrinth $Slug $modrinthVersionNumber already exists. EnvironmentSynced=$EnvironmentSynced DescriptionSynced=$DescriptionSynced"
@@ -172,10 +172,8 @@ if ($Loader -eq "fabric") {
         dependency_type = "required"
     }
 }
-$loaderDisplayName = if ($Loader -eq "neoforge") { "NeoForge" } else { "Fabric" }
-
 $versionData = @{
-    name = "Carry Baby Animals $Version for Minecraft $minecraftVersion ($loaderDisplayName)"
+    name = "Carry Baby Animals $Version for Minecraft $minecraftVersion"
     version_number = $modrinthVersionNumber
     changelog = Read-PublicChangelog $ChangelogPath
     dependencies = $dependencies
