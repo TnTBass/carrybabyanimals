@@ -59,6 +59,18 @@ function Get-GradleProperty {
     return ($match -replace "^$([regex]::Escape($Name))=", "").Trim()
 }
 
+function Assert-CurrentRequirementsRow {
+    param([string] $Text, [string] $Document)
+
+    $version = Get-GradleProperty 'mod_version'
+    $minecraft = Get-GradleProperty 'minecraft_version'
+    $fabricLoader = Get-GradleProperty 'loader_version'
+    $fabricApi = Get-GradleProperty 'fabric_version'
+    $neoForge = Get-GradleProperty 'neoforge_version'
+    $row = "| $version | $minecraft | $fabricLoader | $fabricApi | $neoForge |"
+    Assert-Contains $Text $row "$Document requirements table must include the current release and its pinned dependency baselines."
+}
+
 function Test-ReleaseWorkflowPublishesPublicNotesOnly {
     $workflow = Get-Text '.github/workflows/release.yml'
 
@@ -313,7 +325,7 @@ function Test-MarketplaceDescriptionExists {
     Assert-Contains $description 'client' 'Marketplace description must explain optional client setup.'
     Assert-Contains $description 'server-required and the client mod is highly recommended' 'Marketplace description must describe the player-facing setup as server-required with the client mod highly recommended.'
     Assert-Contains $description 'Marketplace environment metadata may list the client as optional' 'Marketplace description must explain why marketplace environment metadata can still list the client as optional.'
-    Assert-Contains $description 'Fabric API 0.161.0+26.3 or newer when running on Fabric' 'Marketplace description must document the verified Fabric API baseline.'
+    Assert-CurrentRequirementsRow $description 'Marketplace description'
     Assert-Contains $description 'NeoForge servers use NeoForge''s built-in permission API' 'Marketplace description must document NeoForge permission provider behavior.'
 }
 
@@ -330,7 +342,7 @@ function Test-ReadmeContainsReleaseCriticalFacts {
     Assert-Contains $readme 'allowCarryingOtherPlayersTamedAnimals' 'README must document the tamed-animal ownership configuration option.'
     Assert-Contains $readme 'pettingCooldownTicks' 'README must document the petting cooldown configuration option.'
     Assert-Contains $readme 'Supported animal names:' 'README must document supported config animal names.'
-    Assert-Contains $readme 'Fabric API 0.161.0+26.3 or newer when running on Fabric' 'README must document the verified Fabric API baseline.'
+    Assert-CurrentRequirementsRow $readme 'README'
     Assert-Contains $readme 'NeoForge servers use NeoForge''s built-in permission API' 'README must document NeoForge permission provider behavior.'
     Assert-Contains $readme 'If no loader permission provider is active' 'README must document permission behavior without a loader permission provider.'
     Assert-Contains $readme 'Players cannot carry another player''s tamed baby animals.' 'README must document the no-permissions fallback for other players'' tamed animals.'

@@ -4,6 +4,7 @@ Maintainer-only notes for repo, build, workflow, release-process, and other inte
 
 ## Unreleased
 
+- Replaced the latest-only requirements in the README and marketplace description with a table covering every published release and its dependency baselines.
 - Added required Client and Server environment tags to CurseForge file uploads and made CurseForge retries use the published GitHub jars so build metadata stays identical across marketplaces.
 - Aligned Modrinth version rows with the other mods by using `modversion+mc<minecraftversion>` as the shared public version number while still uploading separate Fabric and NeoForge files.
 

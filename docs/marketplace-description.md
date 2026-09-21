@@ -33,10 +33,18 @@ Carry Baby Animals does not make another mod's custom entity compatible with van
 
 ## Requirements
 
-- Minecraft 26.3
-- Fabric Loader 0.19.5 or newer, or NeoForge 26.3.0.8-beta or newer
-- Java 25 or newer
-- Fabric API 0.161.0+26.3 or newer when running on Fabric
+All releases require **Java 25 or newer**. Choose the file for your Minecraft version and loader.
+
+| Carry Baby Animals | Minecraft | Fabric Loader minimum | Fabric API baseline | NeoForge minimum |
+| --- | --- | --- | --- | --- |
+| 0.3.3 | 26.3 | 0.19.5 | 0.161.0+26.3 | 26.3.0.8-beta |
+| 0.3.1–0.3.2 | 26.2 | 0.19.3 | 0.152.2+26.2 | 26.2.0.6-beta |
+| 0.3.0 | 26.1.2 | 0.19.2 | 0.149.0+26.1.2 | 26.1.2.74 |
+| 0.1.0–0.2.0 | 26.1.2 | 0.19.2 | 0.149.0+26.1.2 | Not available |
+
+Fabric API is required only for Fabric builds. The API versions shown are the versions each release was built against; use these or newer compatible releases for the same Minecraft version. Newer loader versions must also support the Minecraft version in that row.
+
+**Version 0.1.0 only:** Fabric Permissions API 0.7.0 or newer is also required. It became optional in 0.1.1.
 
 Optional:
 
