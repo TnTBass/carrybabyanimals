@@ -52,6 +52,19 @@ jobs:
       - name: Build
         run: ./gradlew build
 
+      - name: Download published release jars
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          minecraft_version="$(grep '^minecraft_version=' gradle.properties | cut -d= -f2-)"
+          for loader in fabric neoforge; do
+            gh release download "v${RELEASE_VERSION}" \
+              --pattern "carrybabyanimals-${loader}-${RELEASE_VERSION}+mc${minecraft_version}.jar" \
+              --dir "${loader}/build/libs" --clobber
+          done
+
       - name: Extract public release notes
         shell: bash
         run: |

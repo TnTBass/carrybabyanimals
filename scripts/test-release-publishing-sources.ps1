@@ -172,6 +172,7 @@ function Test-CurseForgeOnlyRetryWorkflow {
     $workflow = Get-Text '.github/workflows/retry-curseforge-upload.yml'
 
     Assert-Contains $workflow 'workflow_dispatch' 'CurseForge retry workflow must be manually runnable.'
+    Assert-Contains $workflow 'gh release download "v${RELEASE_VERSION}"' 'CurseForge retries must upload the published release jars to preserve identical build metadata across marketplaces.'
     Assert-Contains $workflow 'mod_version=${{ inputs.version }}' 'CurseForge retry workflow must verify the checked-out branch matches the requested version.'
     Assert-Contains $workflow 'loader:' 'CurseForge retry workflow must let the maintainer choose which loader to retry.'
     Assert-Contains $workflow 'fabric,neoforge,both' 'CurseForge retry workflow must support retrying either loader or both.'

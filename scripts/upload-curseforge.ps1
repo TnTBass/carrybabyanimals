@@ -158,6 +158,9 @@ $metadataPayload = @{
     gameVersions = @(
         Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name $minecraftVersion
         $loaderGameVersionId
+        # These describe supported runtimes, not whether clients must install the mod.
+        Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name "Client"
+        Get-CurseForgeGameVersionId -GameVersions $gameVersions -Name "Server"
     )
     releaseType = "release"
 }
