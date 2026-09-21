@@ -33,10 +33,10 @@ Carry Baby Animals does not make another mod's custom entity compatible with van
 
 ## Requirements
 
-- Minecraft 26.2
-- Fabric Loader 0.19.3 or newer, or NeoForge 26.2.0.6-beta or newer
+- Minecraft 26.3
+- Fabric Loader 0.19.5 or newer, or NeoForge 26.3.0.8-beta or newer
 - Java 25 or newer
-- Fabric API 0.152.2+26.2 or newer when running on Fabric
+- Fabric API 0.161.0+26.3 or newer when running on Fabric
 
 Optional:
 

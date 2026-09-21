@@ -78,7 +78,7 @@ public final class CarryBabyAnimalsNeoForge {
 
         NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> ticker.tick(event.getServer()));
         NeoForge.EVENT_BUS.addListener(NeoForgeCarryPermissions::registerNodes);
-        NeoForge.EVENT_BUS.addListener(CarryBabyAnimalsNeoForge::onEntityInteractSpecific);
+        // NeoForge 26.3 routes all entity right-clicks through EntityInteract.
         NeoForge.EVENT_BUS.addListener(CarryBabyAnimalsNeoForge::onEntityInteract);
         NeoForge.EVENT_BUS.addListener(CarryBabyAnimalsNeoForge::onAttackEntity);
         NeoForge.EVENT_BUS.addListener(CarryBabyAnimalsNeoForge::onLeftClickBlock);
@@ -95,14 +95,6 @@ public final class CarryBabyAnimalsNeoForge {
     }
 
     private static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
-        if (!(event.getEntity() instanceof ServerPlayer player)) {
-            return;
-        }
-        InteractionResult result = handleEntityInteract(player, event.getTarget(), event.getHand());
-        applyInteractionResult(event, result);
-    }
-
-    private static void onEntityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) {
             return;
         }
@@ -201,13 +193,6 @@ public final class CarryBabyAnimalsNeoForge {
     }
 
     private static void applyInteractionResult(PlayerInteractEvent.EntityInteract event, InteractionResult result) {
-        if (result != InteractionResult.PASS) {
-            event.setCancellationResult(result);
-            event.setCanceled(true);
-        }
-    }
-
-    private static void applyInteractionResult(PlayerInteractEvent.EntityInteractSpecific event, InteractionResult result) {
         if (result != InteractionResult.PASS) {
             event.setCancellationResult(result);
             event.setCanceled(true);

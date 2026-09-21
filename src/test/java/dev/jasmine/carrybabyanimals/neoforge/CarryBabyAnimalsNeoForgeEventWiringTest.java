@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class CarryBabyAnimalsNeoForgeEventWiringTest {
     @Test
-    void entitySpecificInteractEventsReachCarryInteractionHandler() throws IOException {
+    void unifiedEntityInteractEventsReachCarryInteractionHandler() throws IOException {
         String source = Files.readString(repoRoot().resolve(Path.of(
                 "src",
                 "neoforge",
@@ -23,8 +23,8 @@ final class CarryBabyAnimalsNeoForgeEventWiringTest {
                 "CarryBabyAnimalsNeoForge.java"
         )));
 
-        assertTrue(source.contains("PlayerInteractEvent.EntityInteractSpecific"));
-        assertTrue(source.contains("onEntityInteractSpecific"));
+        assertTrue(source.contains("NeoForge.EVENT_BUS.addListener(CarryBabyAnimalsNeoForge::onEntityInteract)"));
+        assertFalse(source.contains("EntityInteractSpecific"));
         assertTrue(source.contains("HANDLED_ENTITY_INTERACTIONS"));
         assertTrue(source.contains("EntityInteractKey"));
     }
